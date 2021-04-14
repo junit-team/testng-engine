@@ -69,6 +69,7 @@ tasks {
     }
     named<JavaCompile>(moduleSourceSet.compileJavaTaskName) {
         options.release.set(9)
+        options.compilerArgs.addAll(listOf("--module-version", "${project.version}"))
     }
     withType<JavaCompile>().configureEach {
         options.compilerArgs.addAll(listOf("-Xlint:all,-requires-automatic", "-Werror"))
