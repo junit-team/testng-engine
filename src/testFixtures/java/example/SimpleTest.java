@@ -10,29 +10,29 @@
 
 package example;
 
+import static org.testng.Assert.fail;
+
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.fail;
-
 public class SimpleTest {
 
-    @Test
-    public void successful() {
-    }
+	@Test
+	public void successful() {
+	}
 
-    @Test(dependsOnMethods = "successful")
-    public void failing() {
-        fail("boom");
-    }
+	@Test(dependsOnMethods = "successful")
+	public void failing() {
+		fail("boom");
+	}
 
-    @Test(dependsOnMethods = "failing")
-    public void aborted() {
-        throw new SkipException("not today");
-    }
+	@Test(dependsOnMethods = "failing")
+	public void aborted() {
+		throw new SkipException("not today");
+	}
 
-    @Test(enabled = false)
-    public void skipped() {
-    }
+	@Test(enabled = false)
+	public void skipped() {
+	}
 
 }

@@ -10,6 +10,13 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.platform.engine.TestExecutionResult.aborted;
+import static org.junit.platform.engine.TestExecutionResult.failed;
+import static org.junit.platform.engine.TestExecutionResult.successful;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.junit.platform.commons.support.ClassSupport;
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.UniqueId;
@@ -20,13 +27,6 @@ import org.testng.ITestClass;
 import org.testng.ITestListener;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static org.junit.platform.engine.TestExecutionResult.aborted;
-import static org.junit.platform.engine.TestExecutionResult.failed;
-import static org.junit.platform.engine.TestExecutionResult.successful;
 
 class ListenerAdapter implements IClassListener, ITestListener {
 	private final EngineExecutionListener delegate;
@@ -60,12 +60,24 @@ class ListenerAdapter implements IClassListener, ITestListener {
 	public void onTestStart(ITestResult result) {
 		ClassDescriptor classDescriptor = inProgressTestClasses.get(result.getTestClass());
 		ITestNGMethod method = result.getMethod();
-		MethodSource source = MethodSource.from(method.getTestClass().getRealClass().getName(), method.getMethodName(), method.getParameterTypes());
-		UniqueId uniqueId = classDescriptor.getUniqueId().append("method", String.format("%s(%s)", method.getMethodName(), ClassSupport.nullSafeToString(method.getParameterTypes())));
+		Class<?>[] parameterTypes = getParameterTypes(method);
+		MethodSource source = MethodSource.from(method.getTestClass().getRealClass().getName(), method.getMethodName(),
+			parameterTypes);
+		UniqueId uniqueId = classDescriptor.getUniqueId().append("method",
+			String.format("%s(%s)", method.getMethodName(), ClassSupport.nullSafeToString(parameterTypes)));
 		MethodDescriptor methodDescriptor = new MethodDescriptor(uniqueId, result.getName(), source);
 		inProgressTestMethods.put(result.getMethod(), methodDescriptor);
 		delegate.dynamicTestRegistered(methodDescriptor);
 		delegate.executionStarted(methodDescriptor);
+	}
+
+	private Class<?>[] getParameterTypes(ITestNGMethod method) {
+		try {
+			return method.getParameterTypes();
+		}
+		catch (NoSuchMethodError e) {
+			return method.getConstructorOrMethod().getParameterTypes();
+		}
 	}
 
 	@Override

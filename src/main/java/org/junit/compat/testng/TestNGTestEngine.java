@@ -10,6 +10,14 @@
 
 package org.junit.compat.testng;
 
+import static java.util.stream.Collectors.toMap;
+import static org.junit.platform.engine.TestExecutionResult.failed;
+import static org.junit.platform.engine.TestExecutionResult.successful;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.ExecutionRequest;
@@ -19,14 +27,6 @@ import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.ClassSelector;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.TestNG;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toMap;
-import static org.junit.platform.engine.TestExecutionResult.failed;
-import static org.junit.platform.engine.TestExecutionResult.successful;
 
 /**
  * The TestNG {@link TestEngine}.
@@ -58,13 +58,15 @@ public class TestNGTestEngine implements TestEngine {
 			TestNG testNG = new TestNG();
 			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass = request.getRootTestDescriptor().getChildren().stream() //
 					.map(it -> (ClassDescriptor) it) //
-					.collect(toMap(ClassDescriptor::getTestClass, Function.identity(), (a, b) -> a, LinkedHashMap::new));
+					.collect(
+						toMap(ClassDescriptor::getTestClass, Function.identity(), (a, b) -> a, LinkedHashMap::new));
 			testNG.setTestClasses(descriptorsByTestClass.keySet().toArray(new Class<?>[0]));
 			testNG.setUseDefaultListeners(false);
 			testNG.addListener(new ListenerAdapter(listener, descriptorsByTestClass));
 			testNG.run();
 			listener.executionFinished(request.getRootTestDescriptor(), successful());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			listener.executionFinished(request.getRootTestDescriptor(), failed(e));
 		}
 	}
