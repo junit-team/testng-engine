@@ -10,6 +10,14 @@ repositories {
     mavenCentral()
 }
 
+val moduleSourceSet = sourceSets.create("module")
+
+configurations {
+    named(moduleSourceSet.compileClasspathConfigurationName) {
+        extendsFrom(compileClasspath.get())
+    }
+}
+
 val supportedTestNGVersions = listOf(
         "6.9.13.6",
         "6.10",
@@ -56,6 +64,12 @@ tasks {
     }
     compileTestJava {
         options.release.set(16)
+    }
+    named<JavaCompile>(moduleSourceSet.compileJavaTaskName) {
+        options.release.set(9)
+    }
+    jar {
+        from(moduleSourceSet.output)
     }
     val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.replace('.', '_')}") {
