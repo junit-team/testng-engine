@@ -4,6 +4,8 @@ plugins {
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {

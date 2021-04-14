@@ -7,6 +7,11 @@ import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 
+/**
+ * The TestNG {@link TestEngine}.
+ *
+ * @since 1.0
+ */
 public class TestNGTestEngine implements TestEngine {
 
     @Override
