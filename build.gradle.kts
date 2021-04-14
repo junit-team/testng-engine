@@ -77,6 +77,12 @@ tasks {
     jar {
         from(moduleSourceSet.output)
     }
+    withType<Jar>().configureEach {
+        from(rootDir) {
+            include("LICENSE.md")
+            into("META-INF")
+        }
+    }
     val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.replace('.', '_')}") {
             classpath -= testRuntimeClasspath
