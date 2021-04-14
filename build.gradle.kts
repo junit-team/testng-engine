@@ -57,10 +57,6 @@ tasks {
     compileTestJava {
         options.release.set(16)
     }
-    withType<JavaCompile>().configureEach {
-        // Temporary workaround for https://github.com/gradle/gradle/issues/15538
-        options.forkOptions.jvmArgs!!.addAll(listOf("--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"))
-    }
     val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.replace('.', '_')}") {
             classpath -= testRuntimeClasspath
