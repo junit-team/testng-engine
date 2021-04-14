@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
+
 plugins {
     `java-library`
     `maven-publish`
@@ -14,7 +16,9 @@ repositories {
     mavenCentral()
 }
 
-val moduleSourceSet = sourceSets.create("module")
+val moduleSourceSet = sourceSets.create("module") {
+    compileClasspath += sourceSets.main.get().output
+}
 
 configurations {
     named(moduleSourceSet.compileClasspathConfigurationName) {
@@ -72,12 +76,19 @@ tasks {
     named<JavaCompile>(moduleSourceSet.compileJavaTaskName) {
         options.release.set(9)
         options.compilerArgs.addAll(listOf("--module-version", "${project.version}"))
+        val files = files(sourceSets.main.map { it.java.srcDirs })
+        inputs.files(files).withPropertyName("mainSrcDirs").withPathSensitivity(RELATIVE)
+        options.compilerArgumentProviders += CommandLineArgumentProvider {
+            listOf("--patch-module", "org.junit.compat.testng.engine=${files.asPath}")
+        }
     }
     withType<JavaCompile>().configureEach {
         options.compilerArgs.addAll(listOf("-Xlint:all,-requires-automatic", "-Werror"))
     }
     jar {
-        from(moduleSourceSet.output)
+        from(moduleSourceSet.output) {
+            include("module-info.class")
+        }
     }
     withType<Jar>().configureEach {
         from(rootDir) {
