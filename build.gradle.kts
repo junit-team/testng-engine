@@ -1,5 +1,7 @@
 plugins {
     `java-library`
+    `maven-publish`
+    id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
 
 java {
@@ -94,5 +96,41 @@ tasks {
     test {
         enabled = false
         dependsOn(testTasks)
+    }
+}
+
+nexusPublishing {
+    packageGroup.set("org.junit")
+    repositories {
+        sonatype()
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            pom {
+                name.set(project.description)
+                url.set("https://junit.org/junit5/")
+                scm {
+                    connection.set("scm:git:git://github.com/junit-team/testng-engine.git")
+                    developerConnection.set("scm:git:git://github.com/junit-team/testng-engine.git")
+                    url.set("https://github.com/junit-team/testng-engine")
+                }
+                licenses {
+                    license {
+                        name.set("Eclipse Public License v2.0")
+                        url.set("https://www.eclipse.org/legal/epl-v20.html")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("junit-team")
+                        name.set("JUnit team")
+                        email.set("team@junit.org")
+                    }
+                }
+            }
+        }
     }
 }
