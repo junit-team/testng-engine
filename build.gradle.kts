@@ -2,6 +2,7 @@ import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 plugins {
     `java-library`
+    `java-test-fixtures`
     `maven-publish`
     id("com.diffplug.spotless") version "5.12.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
@@ -51,6 +52,7 @@ dependencies {
     api("org.junit.platform:junit-platform-engine")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
+    testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
     implementation("org.testng:testng") {
         version {
             prefer(supportedTestNGVersions.last())
@@ -101,7 +103,9 @@ tasks {
         register<Test>("test_${version.replace('.', '_')}") {
             classpath -= testRuntimeClasspath
             classpath += configuration
-            useJUnitPlatform()
+            useJUnitPlatform {
+                includeEngines("junit-jupiter")
+            }
             systemProperty("testng.version", version)
         }
     }
