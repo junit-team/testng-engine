@@ -3,6 +3,7 @@ import org.gradle.api.tasks.PathSensitivity.RELATIVE
 plugins {
     `java-library`
     `maven-publish`
+    id("com.diffplug.spotless") version "5.12.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
 
@@ -107,6 +108,25 @@ tasks {
     test {
         enabled = false
         dependsOn(testTasks)
+    }
+}
+
+spotless {
+    val licenseHeaderFile = file("gradle/spotless/eclipse-public-license-2.0.java")
+    java {
+        licenseHeaderFile(licenseHeaderFile)
+        importOrderFile(rootProject.file("gradle/spotless/junit-eclipse.importorder"))
+        eclipse().configFile(rootProject.file("gradle/spotless/junit-eclipse-formatter-settings.xml"))
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+            // Doesn't work with Java 15 text blocks, see https://github.com/diffplug/spotless/issues/713
+            removeUnusedImports()
+        }
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format("javaMisc") {
+        target("src/**/package-info.java", "src/**/module-info.java")
+        licenseHeaderFile(licenseHeaderFile, "/\\*\\*")
     }
 }
 
