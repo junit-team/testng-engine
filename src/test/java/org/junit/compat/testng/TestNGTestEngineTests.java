@@ -17,31 +17,77 @@ import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
+import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
-import org.junit.platform.testkit.engine.EventConditions;
+import org.junit.platform.testkit.engine.EngineTestKit;
+import org.testng.SkipException;
 
 public class TestNGTestEngineTests {
 
 	@Test
-	void executesSimpleTestClass() {
-		var results = engine("testng").selectors(selectClass(SimpleTest.class)).execute();
+	void executesSuccessfulTests() {
+		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
 
-		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
-			event(EventConditions.engine(), started()), //
-			event(container(SimpleTest.class), started()), //
+		results.allEvents().assertEventsMatchLooselyInOrder(event(container(SimpleTest.class), started()), //
 			event(test("method:successful()"), started()), //
 			event(test("method:successful()"), finishedSuccessfully()), //
+			event(container(SimpleTest.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void executesFailingTests() {
+		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(SimpleTest.class), started()), //
 			event(test("method:failing()"), started()), //
 			event(test("method:failing()"), finishedWithFailure(message("boom"))), //
+			event(container(SimpleTest.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void executesAbortedTests() {
+		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(SimpleTest.class), started()), //
 			event(test("method:aborted()"), started()), //
-			event(test("method:aborted()"), abortedWithReason()), //
-			event(container(SimpleTest.class), finishedSuccessfully()), //
-			event(EventConditions.engine(), finishedSuccessfully()));
+			event(test("method:aborted()"), abortedWithReason(instanceOf(SkipException.class), message("not today"))), //
+			event(container(SimpleTest.class), finishedSuccessfully()));
+	}
+
+	@Test
+	@RequiresTestNGVersion(max = "6.14.3")
+	void reportsMethodsSkippedDueToFailingDependencyAsSkipped() {
+		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder(event(container(SimpleTest.class), started()), //
+			event(test("method:skippedDueToFailingDependency()"),
+				skippedWithReason(it -> it.contains("depends on not successfully finished methods"))), //
+			event(container(SimpleTest.class), finishedSuccessfully()));
+	}
+
+	@Test
+	@RequiresTestNGVersion(min = "7.0")
+	void reportsMethodsSkippedDueToFailingDependencyAsAborted() {
+		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(SimpleTest.class), started()), //
+			event(test("method:skippedDueToFailingDependency()"), started()), //
+			event(test("method:skippedDueToFailingDependency()"),
+				abortedWithReason(message(it -> it.contains("depends on not successfully finished methods")))), //
+			event(container(SimpleTest.class), finishedSuccessfully()));
+	}
+
+	private static EngineTestKit.Builder testNGEngine() {
+		return engine("testng").configurationParameter("testng.verbose", "10");
 	}
 }

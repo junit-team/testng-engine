@@ -10,6 +10,8 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.compat.testng.TestContext.testNGVersion;
+
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 
@@ -20,6 +22,7 @@ public class TestNGVersionAppendingDisplayNameGenerator extends DisplayNameGener
 	@Override
 	public String generateDisplayNameForMethod(Class<?> testClass, Method testMethod) {
 		var regularDisplayName = super.generateDisplayNameForMethod(testClass, testMethod);
-		return MessageFormat.format("{0} [{1}]", regularDisplayName, System.getProperty("testng.version"));
+		return MessageFormat.format("{0} [{1}]", regularDisplayName, testNGVersion());
 	}
+
 }

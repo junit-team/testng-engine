@@ -25,6 +25,7 @@ import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.ClassSelector;
+import org.junit.platform.engine.support.config.PrefixedConfigurationParameters;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.TestNG;
 
@@ -62,6 +63,9 @@ public class TestNGTestEngine implements TestEngine {
 						toMap(ClassDescriptor::getTestClass, Function.identity(), (a, b) -> a, LinkedHashMap::new));
 			testNG.setTestClasses(descriptorsByTestClass.keySet().toArray(new Class<?>[0]));
 			testNG.setUseDefaultListeners(false);
+			PrefixedConfigurationParameters configurationParameters = new PrefixedConfigurationParameters(
+				request.getConfigurationParameters(), "testng.");
+			configurationParameters.get("verbose", Integer::valueOf).ifPresent(testNG::setVerbose);
 			testNG.addListener(new ListenerAdapter(listener, descriptorsByTestClass));
 			testNG.run();
 			listener.executionFinished(request.getRootTestDescriptor(), successful());

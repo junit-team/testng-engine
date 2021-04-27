@@ -21,18 +21,22 @@ public class SimpleTest {
 	public void successful() {
 	}
 
-	@Test(dependsOnMethods = "successful")
+	@Test
+	public void aborted() {
+		throw new SkipException("not today");
+	}
+
+	@Test
 	public void failing() {
 		fail("boom");
 	}
 
 	@Test(dependsOnMethods = "failing")
-	public void aborted() {
-		throw new SkipException("not today");
+	public void skippedDueToFailingDependency() {
 	}
 
 	@Test(enabled = false)
-	public void skipped() {
+	public void disabled() {
 	}
 
 }

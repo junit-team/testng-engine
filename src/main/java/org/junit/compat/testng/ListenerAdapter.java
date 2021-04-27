@@ -24,6 +24,7 @@ import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.testng.IClass;
 import org.testng.IClassListener;
 import org.testng.ITestClass;
+import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
@@ -37,6 +38,14 @@ class ListenerAdapter implements IClassListener, ITestListener {
 	ListenerAdapter(EngineExecutionListener delegate, Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass) {
 		this.delegate = delegate;
 		this.descriptorsByTestClass = descriptorsByTestClass;
+	}
+
+	@Override
+	public void onStart(ITestContext context) {
+	}
+
+	@Override
+	public void onFinish(ITestContext context) {
 	}
 
 	@Override
@@ -58,26 +67,10 @@ class ListenerAdapter implements IClassListener, ITestListener {
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		ClassDescriptor classDescriptor = inProgressTestClasses.get(result.getTestClass());
-		ITestNGMethod method = result.getMethod();
-		Class<?>[] parameterTypes = getParameterTypes(method);
-		MethodSource source = MethodSource.from(method.getTestClass().getRealClass().getName(), method.getMethodName(),
-			parameterTypes);
-		UniqueId uniqueId = classDescriptor.getUniqueId().append("method",
-			String.format("%s(%s)", method.getMethodName(), ClassSupport.nullSafeToString(parameterTypes)));
-		MethodDescriptor methodDescriptor = new MethodDescriptor(uniqueId, result.getName(), source);
+		MethodDescriptor methodDescriptor = createMethodDescriptor(result);
 		inProgressTestMethods.put(result.getMethod(), methodDescriptor);
 		delegate.dynamicTestRegistered(methodDescriptor);
 		delegate.executionStarted(methodDescriptor);
-	}
-
-	private Class<?>[] getParameterTypes(ITestNGMethod method) {
-		try {
-			return method.getParameterTypes();
-		}
-		catch (NoSuchMethodError e) {
-			return method.getConstructorOrMethod().getParameterTypes();
-		}
 	}
 
 	@Override
@@ -89,12 +82,53 @@ class ListenerAdapter implements IClassListener, ITestListener {
 	@Override
 	public void onTestSkipped(ITestResult result) {
 		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
-		delegate.executionFinished(methodDescriptor, aborted(result.getThrowable()));
+		if (methodDescriptor == null) {
+			methodDescriptor = createMethodDescriptor(result);
+			delegate.dynamicTestRegistered(methodDescriptor);
+			String reason = "<unknown>";
+			if (result.getThrowable() != null) {
+				reason = result.getThrowable().getMessage();
+			}
+			delegate.executionSkipped(methodDescriptor, reason);
+		}
+		else {
+			delegate.executionFinished(methodDescriptor, aborted(result.getThrowable()));
+		}
 	}
 
 	@Override
 	public void onTestFailure(ITestResult result) {
 		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
 		delegate.executionFinished(methodDescriptor, failed(result.getThrowable()));
+	}
+
+	@Override
+	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
+		// TODO
+	}
+
+	@Override
+	public void onTestFailedWithTimeout(ITestResult result) {
+		// TODO
+	}
+
+	private MethodDescriptor createMethodDescriptor(ITestResult result) {
+		ClassDescriptor classDescriptor = inProgressTestClasses.get(result.getTestClass());
+		ITestNGMethod method = result.getMethod();
+		Class<?>[] parameterTypes = getParameterTypes(method);
+		MethodSource source = MethodSource.from(method.getTestClass().getRealClass().getName(), method.getMethodName(),
+			parameterTypes);
+		UniqueId uniqueId = classDescriptor.getUniqueId().append("method",
+			String.format("%s(%s)", method.getMethodName(), ClassSupport.nullSafeToString(parameterTypes)));
+		return new MethodDescriptor(uniqueId, result.getName(), source);
+	}
+
+	private Class<?>[] getParameterTypes(ITestNGMethod method) {
+		try {
+			return method.getParameterTypes();
+		}
+		catch (NoSuchMethodError e) {
+			return method.getConstructorOrMethod().getParameterTypes();
+		}
 	}
 }

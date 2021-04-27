@@ -52,6 +52,7 @@ dependencies {
     api("org.junit.platform:junit-platform-engine")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
+    testImplementation("org.apache.maven:maven-artifact:3.8.1")
     testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
     implementation("org.testng:testng") {
         version {
