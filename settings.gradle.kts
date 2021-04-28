@@ -2,6 +2,7 @@ import com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionW
 
 plugins {
     id("com.gradle.enterprise") version "3.6.1"
+    id("com.gradle.common-custom-user-data-gradle-plugin") version "1.2.1"
 }
 
 rootProject.name = "testng-engine"
