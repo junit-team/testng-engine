@@ -8,9 +8,22 @@ rootProject.name = "testng-engine"
 
 gradleEnterprise {
     buildScan {
+        val isCiServer = System.getenv("CI") != null
+
         server = "https://ge.junit.org"
+
         isCaptureTaskInputFiles = true
-        isUploadInBackground = System.getenv("CI") == null
+        isUploadInBackground = isCiServer
+
+        obfuscation {
+            if (isCiServer) {
+                username { "github" }
+            } else {
+                hostname { null }
+                ipAddresses { emptyList() }
+            }
+        }
+
         this as BuildScanExtensionWithHiddenFeatures
         publishIfAuthenticated()
     }
