@@ -122,7 +122,7 @@ spotless {
         licenseHeaderFile(licenseHeaderFile)
         importOrderFile(rootProject.file("gradle/spotless/junit-eclipse.importorder"))
         eclipse().configFile(rootProject.file("gradle/spotless/junit-eclipse-formatter-settings.xml"))
-        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+        if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
             // Doesn't work with Java 15 text blocks, see https://github.com/diffplug/spotless/issues/713
             removeUnusedImports()
         }
