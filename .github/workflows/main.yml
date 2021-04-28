@@ -21,6 +21,6 @@ jobs:
         with:
           distribution: adopt
           java-version: ${{ matrix.jdk }}
-      - run: ./gradlew build -Dscan.tag.JDK_${{ matrix.jdk }}
+      - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
