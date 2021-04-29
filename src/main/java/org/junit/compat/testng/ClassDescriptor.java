@@ -10,11 +10,18 @@
 
 package org.junit.compat.testng;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.ClassSource;
+import org.testng.ITestNGMethod;
 
 class ClassDescriptor extends AbstractTestDescriptor {
+
+	private final ConcurrentMap<MethodSignature, MethodDescriptor> methodsBySignature = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
 
 	ClassDescriptor(UniqueId uniqueId, Class<?> testClass) {
@@ -37,7 +44,15 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	}
 
 	@Override
-	public boolean mayRegisterTests() {
-		return true;
+	public void addChild(TestDescriptor child) {
+		if (child instanceof MethodDescriptor) {
+			MethodDescriptor methodDescriptor = (MethodDescriptor) child;
+			methodsBySignature.put(methodDescriptor.methodSignature, methodDescriptor);
+		}
+		super.addChild(child);
+	}
+
+	public MethodDescriptor findMethodDescriptor(ITestNGMethod method) {
+		return methodsBySignature.get(MethodSignature.from(method));
 	}
 }

@@ -10,9 +10,12 @@
 
 package org.junit.compat.testng;
 
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
+import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 import static org.junit.platform.testkit.engine.EngineTestKit.engine;
@@ -27,12 +30,15 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import java.util.Map;
+
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.ClassSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.testng.SkipException;
 
@@ -52,6 +58,19 @@ public class TestNGTestEngineTests {
 		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTest.class.getName());
 		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
 		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getChildren()).hasSize(4);
+
+		Map<String, TestDescriptor> methodDescriptors = classDescriptor.getChildren().stream() //
+				.collect(toMap(TestDescriptor::getDisplayName, identity()));
+		assertThat(methodDescriptors.keySet()).containsExactlyInAnyOrder("successful", "failing", "aborted",
+			"skippedDueToFailingDependency");
+		methodDescriptors.forEach((methodName, methodDescriptor) -> {
+			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(methodName);
+			assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+			assertThat(methodDescriptor.getSource()).contains(
+				MethodSource.from(SimpleTest.class.getName(), methodName, ""));
+			assertThat(methodDescriptor.getChildren()).isEmpty();
+		});
 	}
 
 	@Test

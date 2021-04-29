@@ -10,23 +10,29 @@
 
 package org.junit.compat.testng;
 
-import org.junit.platform.engine.TestSource;
+import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
+
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 
 class MethodDescriptor extends AbstractTestDescriptor {
 
-	protected MethodDescriptor(UniqueId uniqueId, String displayName, TestSource source) {
-		super(uniqueId, displayName, source);
+	final MethodSignature methodSignature;
+
+	protected MethodDescriptor(UniqueId uniqueId, String displayName, Class<?> sourceClass,
+			MethodSignature methodSignature) {
+		super(uniqueId, displayName, toMethodSource(sourceClass, methodSignature));
+		this.methodSignature = methodSignature;
+	}
+
+	private static MethodSource toMethodSource(Class<?> sourceClass, MethodSignature methodSignature) {
+		return MethodSource.from(sourceClass.getName(), methodSignature.methodName,
+			nullSafeToString(methodSignature.parameterTypes));
 	}
 
 	@Override
 	public Type getType() {
 		return Type.TEST;
-	}
-
-	@Override
-	public boolean mayRegisterTests() {
-		return false;
 	}
 }
