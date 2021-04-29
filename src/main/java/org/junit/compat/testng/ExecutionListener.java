@@ -19,14 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.testng.IClass;
-import org.testng.IClassListener;
 import org.testng.ITestClass;
-import org.testng.ITestContext;
-import org.testng.ITestListener;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
-class ExecutionListener implements IClassListener, ITestListener {
+class ExecutionListener extends DefaultListener {
+
 	private final EngineExecutionListener delegate;
 	private final Map<IClass, ClassDescriptor> inProgressTestClasses = new ConcurrentHashMap<>();
 	private final Map<ITestNGMethod, MethodDescriptor> inProgressTestMethods = new ConcurrentHashMap<>();
@@ -36,14 +34,6 @@ class ExecutionListener implements IClassListener, ITestListener {
 			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass) {
 		this.delegate = delegate;
 		this.descriptorsByTestClass = descriptorsByTestClass;
-	}
-
-	@Override
-	public void onStart(ITestContext context) {
-	}
-
-	@Override
-	public void onFinish(ITestContext context) {
 	}
 
 	@Override

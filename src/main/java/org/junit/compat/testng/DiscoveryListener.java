@@ -17,14 +17,11 @@ import org.junit.platform.commons.support.ClassSupport;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.IClass;
-import org.testng.IClassListener;
 import org.testng.ITestClass;
-import org.testng.ITestContext;
-import org.testng.ITestListener;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
-class DiscoveryListener implements IClassListener, ITestListener {
+class DiscoveryListener extends DefaultListener {
 
 	private final EngineDescriptor engineDescriptor;
 	private final Map<IClass, ClassDescriptor> classDescriptors = new ConcurrentHashMap<>();
@@ -42,26 +39,9 @@ class DiscoveryListener implements IClassListener, ITestListener {
 		});
 	}
 
-	private ClassDescriptor createClassDescriptor(ITestClass testClass) {
-		return new ClassDescriptor(engineDescriptor.getUniqueId().append("class", testClass.getRealClass().getName()),
-			testClass.getRealClass());
-	}
-
-	@Override
-	public void onAfterClass(ITestClass testClass) {
-	}
-
 	@Override
 	public void onTestStart(ITestResult result) {
 		addMethodDescriptor(result);
-	}
-
-	@Override
-	public void onTestSuccess(ITestResult result) {
-	}
-
-	@Override
-	public void onTestFailure(ITestResult result) {
 	}
 
 	@Override
@@ -69,25 +49,14 @@ class DiscoveryListener implements IClassListener, ITestListener {
 		addMethodDescriptor(result);
 	}
 
-	@Override
-	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-	}
-
-	@Override
-	public void onTestFailedWithTimeout(ITestResult result) {
-	}
-
-	@Override
-	public void onStart(ITestContext context) {
-	}
-
-	@Override
-	public void onFinish(ITestContext context) {
-	}
-
 	private void addMethodDescriptor(ITestResult result) {
 		ClassDescriptor classDescriptor = classDescriptors.get(result.getTestClass());
 		classDescriptor.addChild(createMethodDescriptor(classDescriptor, result));
+	}
+
+	private ClassDescriptor createClassDescriptor(ITestClass testClass) {
+		return new ClassDescriptor(engineDescriptor.getUniqueId().append("class", testClass.getRealClass().getName()),
+			testClass.getRealClass());
 	}
 
 	private MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
