@@ -22,6 +22,11 @@ class ClassDescriptor extends AbstractTestDescriptor {
 		this.testClass = testClass;
 	}
 
+	@Override
+	public String getLegacyReportingName() {
+		return testClass.getName();
+	}
+
 	Class<?> getTestClass() {
 		return testClass;
 	}

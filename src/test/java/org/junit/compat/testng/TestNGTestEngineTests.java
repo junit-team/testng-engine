@@ -10,7 +10,11 @@
 
 package org.junit.compat.testng;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
+import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 import static org.junit.platform.testkit.engine.EngineTestKit.engine;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -26,10 +30,29 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
+import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.ClassSource;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.testng.SkipException;
 
 public class TestNGTestEngineTests {
+
+	@Test
+	void discoversTestMethods() {
+		var request = request().selectors(selectClass(SimpleTest.class)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo(SimpleTest.class.getSimpleName());
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTest.class.getName());
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+	}
 
 	@Test
 	void executesSuccessfulTests() {
