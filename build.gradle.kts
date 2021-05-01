@@ -100,6 +100,13 @@ tasks {
             into("META-INF")
         }
     }
+    supportedTestNGConfigurationsByVersion.forEach { (version, configuration) ->
+        register<Test>("testFixtures_${version.replace('.', '_')}") {
+            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            testClassesDirs = sourceSets.testFixtures.get().output
+            useTestNG()
+        }
+    }
     val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.replace('.', '_')}") {
             classpath -= testRuntimeClasspath
