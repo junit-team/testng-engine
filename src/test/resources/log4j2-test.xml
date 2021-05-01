@@ -6,7 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="org.junit.compat" level="debug" />
+    <Logger name="org.junit.compat" level="info" />
     <Root level="error">
       <AppenderRef ref="Console" />
     </Root>
