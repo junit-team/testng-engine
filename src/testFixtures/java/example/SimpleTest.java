@@ -15,9 +15,10 @@ import static org.testng.Assert.fail;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
+@Test(groups = "foo")
 public class SimpleTest {
 
-	@Test
+	@Test(groups = "bar")
 	public void successful() {
 	}
 

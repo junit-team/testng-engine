@@ -12,6 +12,9 @@ package org.junit.compat.testng;
 
 import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
 
+import java.util.Set;
+
+import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.MethodSource;
@@ -22,11 +25,18 @@ import org.testng.internal.IParameterInfo;
 class MethodDescriptor extends AbstractTestDescriptor {
 
 	final MethodSignature methodSignature;
+	private final Set<TestTag> tags;
 
 	protected MethodDescriptor(UniqueId uniqueId, String displayName, Class<?> sourceClass,
-			MethodSignature methodSignature) {
+			MethodSignature methodSignature, Set<TestTag> tags) {
 		super(uniqueId, displayName, toMethodSource(sourceClass, methodSignature));
 		this.methodSignature = methodSignature;
+		this.tags = tags;
+	}
+
+	@Override
+	public Set<TestTag> getTags() {
+		return tags;
 	}
 
 	private static MethodSource toMethodSource(Class<?> sourceClass, MethodSignature methodSignature) {

@@ -40,6 +40,7 @@ import example.SimpleTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.ClassSource;
 import org.junit.platform.engine.support.descriptor.MethodSource;
@@ -74,10 +75,13 @@ public class TestNGTestEngineTests {
 		methodDescriptors.forEach((methodName, methodDescriptor) -> {
 			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(methodName);
 			assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+			assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
 			assertThat(methodDescriptor.getSource()).contains(
 				MethodSource.from(SimpleTest.class.getName(), methodName, ""));
 			assertThat(methodDescriptor.getChildren()).isEmpty();
 		});
+		assertThat(methodDescriptors.get("successful").getTags()) //
+				.containsExactlyInAnyOrder(TestTag.create("foo"), TestTag.create("bar"));
 	}
 
 	@Test

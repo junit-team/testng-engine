@@ -11,10 +11,15 @@
 package org.junit.compat.testng;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.compat.testng.MethodDescriptor.toMethodId;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.ITestClass;
@@ -22,6 +27,7 @@ import org.testng.ITestResult;
 
 class DiscoveryListener extends DefaultListener {
 
+	private final Map<String, TestTag> testTags = new ConcurrentHashMap<>();
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final EngineDescriptor engineDescriptor;
 
@@ -61,8 +67,8 @@ class DiscoveryListener extends DefaultListener {
 	}
 
 	private ClassDescriptor createClassDescriptor(ITestClass testClass) {
-		return new ClassDescriptor(engineDescriptor.getUniqueId().append("class", testClass.getRealClass().getName()),
-			testClass.getRealClass());
+		UniqueId uniqueId = engineDescriptor.getUniqueId().append("class", testClass.getRealClass().getName());
+		return new ClassDescriptor(uniqueId, testClass.getRealClass());
 	}
 
 	private MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
@@ -75,7 +81,12 @@ class DiscoveryListener extends DefaultListener {
 		}
 		UniqueId uniqueId = parent.getUniqueId().append("method", toMethodId(result, methodSignature));
 		Class<?> sourceClass = result.getMethod().getTestClass().getRealClass();
-		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature);
+		Set<TestTag> tags = Arrays.stream(result.getMethod().getGroups()).map(this::createTag).collect(toSet());
+		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags);
+	}
+
+	private TestTag createTag(String value) {
+		return testTags.computeIfAbsent(value, TestTag::create);
 	}
 
 }
