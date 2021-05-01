@@ -32,6 +32,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import java.util.Map;
 
+import example.DataProviderMethodTest;
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
@@ -74,10 +75,77 @@ public class TestNGTestEngineTests {
 	}
 
 	@Test
+	void discoversDataProviderTestMethods() {
+		var request = request().selectors(selectClass(DataProviderMethodTest.class)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		var classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getChildren()).hasSize(5);
+
+		var methodDescriptors = classDescriptor.getChildren().stream() //
+				.collect(toMap(TestDescriptor::getDisplayName, identity()));
+		assertThat(methodDescriptors.keySet()).containsExactlyInAnyOrder("test", "test[0](a)", "test[1](b)",
+			"test[0](1)", "test[1](2)");
+		methodDescriptors.forEach((displayName, methodDescriptor) -> {
+			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(displayName);
+			assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+			assertThat(methodDescriptor.getChildren()).isEmpty();
+		});
+
+		assertThat(methodDescriptors.get("test").getSource()) //
+				.contains(MethodSource.from(DataProviderMethodTest.class.getName(), "test", ""));
+		assertThat(methodDescriptors.get("test").getUniqueId().getLastSegment().getValue()) //
+				.isEqualTo("test()");
+		assertThat(methodDescriptors.get("test[0](a)").getSource()) //
+				.contains(MethodSource.from(DataProviderMethodTest.class.getName(), "test", String.class.getName()));
+		assertThat(methodDescriptors.get("test[0](a)").getUniqueId().getLastSegment().getValue()) //
+				.isEqualTo("test(java.lang.String)_0");
+		assertThat(methodDescriptors.get("test[1](b)").getSource()) //
+				.contains(MethodSource.from(DataProviderMethodTest.class.getName(), "test", String.class.getName()));
+		assertThat(methodDescriptors.get("test[1](b)").getUniqueId().getLastSegment().getValue()) //
+				.isEqualTo("test(java.lang.String)_1");
+		assertThat(methodDescriptors.get("test[0](1)").getSource()) //
+				.contains(MethodSource.from(DataProviderMethodTest.class.getName(), "test", int.class.getName()));
+		assertThat(methodDescriptors.get("test[0](1)").getUniqueId().getLastSegment().getValue()) //
+				.isEqualTo("test(int)_0");
+		assertThat(methodDescriptors.get("test[1](2)").getSource()) //
+				.contains(MethodSource.from(DataProviderMethodTest.class.getName(), "test", int.class.getName()));
+		assertThat(methodDescriptors.get("test[1](2)").getUniqueId().getLastSegment().getValue()) //
+				.isEqualTo("test(int)_1");
+	}
+
+	@Test
+	void executesDataProviderTestMethods() {
+		var results = testNGEngine().selectors(selectClass(DataProviderMethodTest.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(DataProviderMethodTest.class), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedWithFailure(message("parameterless"))), //
+			event(container(DataProviderMethodTest.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(DataProviderMethodTest.class), started()), //
+			event(test("method:test(java.lang.String)_0"), started()), //
+			event(test("method:test(java.lang.String)_0"), finishedWithFailure(message("a"))), //
+			event(test("method:test(java.lang.String)_1"), started()), //
+			event(test("method:test(java.lang.String)_1"), finishedWithFailure(message("b"))), //
+			event(container(DataProviderMethodTest.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(DataProviderMethodTest.class), started()), //
+			event(test("method:test(int)_0"), started()), //
+			event(test("method:test(int)_0"), finishedWithFailure(message("1"))), //
+			event(test("method:test(int)_1"), started()), //
+			event(test("method:test(int)_1"), finishedWithFailure(message("2"))), //
+			event(container(DataProviderMethodTest.class), finishedSuccessfully()));
+	}
+
+	@Test
 	void executesSuccessfulTests() {
 		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
 
-		results.allEvents().assertEventsMatchLooselyInOrder(event(container(SimpleTest.class), started()), //
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(SimpleTest.class), started()), //
 			event(test("method:successful()"), started()), //
 			event(test("method:successful()"), finishedSuccessfully()), //
 			event(container(SimpleTest.class), finishedSuccessfully()));

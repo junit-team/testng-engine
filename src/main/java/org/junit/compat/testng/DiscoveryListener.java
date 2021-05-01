@@ -10,15 +10,17 @@
 
 package org.junit.compat.testng;
 
+import static java.util.stream.Collectors.joining;
+import static org.junit.compat.testng.MethodDescriptor.toMethodId;
+
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.junit.platform.commons.support.ClassSupport;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.IClass;
 import org.testng.ITestClass;
-import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
 class DiscoveryListener extends DefaultListener {
@@ -60,12 +62,16 @@ class DiscoveryListener extends DefaultListener {
 	}
 
 	private MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
-		ITestNGMethod method = result.getMethod();
-		Class<?> sourceClass = method.getTestClass().getRealClass();
-		MethodSignature methodSignature = MethodSignature.from(method);
-		UniqueId uniqueId = parent.getUniqueId().append("method", String.format("%s(%s)", method.getMethodName(),
-			ClassSupport.nullSafeToString(methodSignature.parameterTypes)));
-		return new MethodDescriptor(uniqueId, result.getName(), sourceClass, methodSignature);
+		MethodSignature methodSignature = MethodSignature.from(result.getMethod());
+		String name = result.getName();
+		if (result.getParameters().length > 0) {
+			int invocationCount = result.getMethod().getCurrentInvocationCount();
+			String paramList = Arrays.stream(result.getParameters()).map(String::valueOf).collect(joining(", "));
+			name = String.format("%s[%d](%s)", name, invocationCount, paramList);
+		}
+		UniqueId uniqueId = parent.getUniqueId().append("method", toMethodId(result, methodSignature));
+		Class<?> sourceClass = result.getMethod().getTestClass().getRealClass();
+		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature);
 	}
 
 }

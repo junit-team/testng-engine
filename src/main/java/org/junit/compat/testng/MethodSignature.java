@@ -24,7 +24,7 @@ class MethodSignature {
 		return new MethodSignature(method.getMethodName(), getParameterTypes(method));
 	}
 
-	private static Class<?>[] getParameterTypes(ITestNGMethod method) {
+	public static Class<?>[] getParameterTypes(ITestNGMethod method) {
 		try {
 			return method.getParameterTypes();
 		}

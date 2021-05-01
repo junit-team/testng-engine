@@ -15,6 +15,8 @@ import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.testng.ITestNGMethod;
+import org.testng.ITestResult;
 
 class MethodDescriptor extends AbstractTestDescriptor {
 
@@ -29,6 +31,16 @@ class MethodDescriptor extends AbstractTestDescriptor {
 	private static MethodSource toMethodSource(Class<?> sourceClass, MethodSignature methodSignature) {
 		return MethodSource.from(sourceClass.getName(), methodSignature.methodName,
 			nullSafeToString(methodSignature.parameterTypes));
+	}
+
+	static String toMethodId(ITestResult result, MethodSignature methodSignature) {
+		ITestNGMethod method = result.getMethod();
+		if (result.getParameters().length > 0) {
+			String paramTypeList = nullSafeToString(methodSignature.parameterTypes);
+			int invocationCount = method.getCurrentInvocationCount();
+			return String.format("%s(%s)_%d", method.getMethodName(), paramTypeList, invocationCount);
+		}
+		return method.getMethodName() + "()";
 	}
 
 	@Override

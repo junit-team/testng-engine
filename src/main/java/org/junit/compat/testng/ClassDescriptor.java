@@ -17,11 +17,11 @@ import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.ClassSource;
-import org.testng.ITestNGMethod;
+import org.testng.ITestResult;
 
 class ClassDescriptor extends AbstractTestDescriptor {
 
-	private final ConcurrentMap<MethodSignature, MethodDescriptor> methodsBySignature = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, MethodDescriptor> methodsById = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
 
 	ClassDescriptor(UniqueId uniqueId, Class<?> testClass) {
@@ -47,12 +47,12 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	public void addChild(TestDescriptor child) {
 		if (child instanceof MethodDescriptor) {
 			MethodDescriptor methodDescriptor = (MethodDescriptor) child;
-			methodsBySignature.put(methodDescriptor.methodSignature, methodDescriptor);
+			methodsById.put(child.getUniqueId().getLastSegment().getValue(), methodDescriptor);
 		}
 		super.addChild(child);
 	}
 
-	public MethodDescriptor findMethodDescriptor(ITestNGMethod method) {
-		return methodsBySignature.get(MethodSignature.from(method));
+	public MethodDescriptor findMethodDescriptor(ITestResult result) {
+		return methodsById.get(MethodDescriptor.toMethodId(result, MethodSignature.from(result.getMethod())));
 	}
 }

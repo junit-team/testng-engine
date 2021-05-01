@@ -100,6 +100,6 @@ class ExecutionListener extends DefaultListener {
 
 	private MethodDescriptor findMethodDescriptor(ITestResult result) {
 		ClassDescriptor classDescriptor = inProgressTestClasses.get(result.getTestClass());
-		return classDescriptor.findMethodDescriptor(result.getMethod());
+		return classDescriptor.findMethodDescriptor(result);
 	}
 }
