@@ -30,6 +30,7 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 import example.DataProviderMethodTest;
@@ -37,6 +38,7 @@ import example.FactoryWithDataProviderTest;
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.ClassSource;
@@ -45,6 +47,9 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 import org.testng.SkipException;
 
 public class TestNGTestEngineTests {
+
+	@TempDir
+	Path tempDir;
 
 	@Test
 	void discoversTestMethods() {
@@ -244,7 +249,10 @@ public class TestNGTestEngineTests {
 			event(container(SimpleTest.class), finishedSuccessfully()));
 	}
 
-	private static EngineTestKit.Builder testNGEngine() {
-		return EngineTestKit.engine("testng").configurationParameter("testng.verbose", "10");
+	private EngineTestKit.Builder testNGEngine() {
+		return EngineTestKit.engine("testng") //
+				.configurationParameter("testng.verbose", "10") //
+				.configurationParameter("testng.useDefaultListeners", "false") //
+				.configurationParameter("testng.outputDirectory", tempDir.toString());
 	}
 }

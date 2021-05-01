@@ -47,7 +47,7 @@ public class TestNGTestEngine implements TestEngine {
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
 		EngineDescriptor engineDescriptor = new EngineDescriptor(uniqueId, "TestNG");
-		TestNG testNG = createTestNG(request.getConfigurationParameters());
+		TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.DISCOVERY);
 		Stream<? extends Class<?>> testClasses = request.getSelectorsByType(ClassSelector.class).stream() //
 				.map(ClassSelector::getJavaClass);
 		setTestClasses(testNG, testClasses);
@@ -61,7 +61,7 @@ public class TestNGTestEngine implements TestEngine {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
 		listener.executionStarted(request.getRootTestDescriptor());
 		try {
-			TestNG testNG = createTestNG(request.getConfigurationParameters());
+			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION);
 			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass = request.getRootTestDescriptor().getChildren().stream() //
 					.map(it -> (ClassDescriptor) it) //
 					.collect(
@@ -80,13 +80,10 @@ public class TestNGTestEngine implements TestEngine {
 		testNG.setTestClasses(testClasses.toArray(Class[]::new));
 	}
 
-	private TestNG createTestNG(ConfigurationParameters configurationParameters) {
+	private TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase) {
 		TestNG testNG = new TestNG();
-		testNG.setUseDefaultListeners(false);
 		testNG.addListener(LoggingListener.INSTANCE);
-		PrefixedConfigurationParameters prefixedConfigurationParameters = new PrefixedConfigurationParameters(
-			configurationParameters, "testng.");
-		prefixedConfigurationParameters.get("verbose", Integer::valueOf).ifPresent(testNG::setVerbose);
+		phase.configure(testNG, new PrefixedConfigurationParameters(configurationParameters, "testng."));
 		return testNG;
 	}
 
@@ -105,5 +102,25 @@ public class TestNGTestEngine implements TestEngine {
 				System.setProperty(key, originalValue);
 			}
 		}
+	}
+
+	enum Phase {
+		DISCOVERY {
+			@Override
+			void configure(TestNG testNG, ConfigurationParameters config) {
+				testNG.setUseDefaultListeners(false);
+			}
+		},
+
+		EXECUTION {
+			@Override
+			void configure(TestNG testNG, ConfigurationParameters config) {
+				testNG.setUseDefaultListeners(config.getBoolean("useDefaultListeners").orElse(false));
+				config.get("outputDirectory").ifPresent(testNG::setOutputDirectory);
+				config.get("verbose", Integer::valueOf).ifPresent(testNG::setVerbose);
+			}
+		};
+
+		abstract void configure(TestNG testNG, ConfigurationParameters config);
 	}
 }
