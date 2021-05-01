@@ -53,6 +53,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
     testImplementation("org.apache.maven:maven-artifact:3.8.1")
+    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.14.1"))
+    testRuntimeOnly("org.apache.logging.log4j:log4j-core")
+    testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
     testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
     implementation("org.testng:testng") {
         version {
@@ -115,6 +118,7 @@ tasks {
                 includeEngines("junit-jupiter")
             }
             systemProperty("testng.version", version)
+            systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
         }
     }
     test {

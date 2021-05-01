@@ -83,6 +83,7 @@ public class TestNGTestEngine implements TestEngine {
 	private TestNG createTestNG(ConfigurationParameters configurationParameters) {
 		TestNG testNG = new TestNG();
 		testNG.setUseDefaultListeners(false);
+		testNG.addListener(LoggingListener.INSTANCE);
 		PrefixedConfigurationParameters prefixedConfigurationParameters = new PrefixedConfigurationParameters(
 			configurationParameters, "testng.");
 		prefixedConfigurationParameters.get("verbose", Integer::valueOf).ifPresent(testNG::setVerbose);
