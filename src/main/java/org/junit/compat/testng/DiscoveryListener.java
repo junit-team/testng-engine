@@ -14,19 +14,16 @@ import static java.util.stream.Collectors.joining;
 import static org.junit.compat.testng.MethodDescriptor.toMethodId;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
-import org.testng.IClass;
 import org.testng.ITestClass;
 import org.testng.ITestResult;
 
 class DiscoveryListener extends DefaultListener {
 
+	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final EngineDescriptor engineDescriptor;
-	private final Map<IClass, ClassDescriptor> classDescriptors = new ConcurrentHashMap<>();
 
 	public DiscoveryListener(EngineDescriptor engineDescriptor) {
 		this.engineDescriptor = engineDescriptor;
@@ -34,10 +31,17 @@ class DiscoveryListener extends DefaultListener {
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		classDescriptors.computeIfAbsent(testClass, __ -> {
+		testClassRegistry.start(testClass, () -> {
 			ClassDescriptor classDescriptor = createClassDescriptor(testClass);
 			engineDescriptor.addChild(classDescriptor);
 			return classDescriptor;
+		});
+	}
+
+	@Override
+	public void onAfterClass(ITestClass testClass) {
+		testClassRegistry.finish(testClass, __ -> {
+			// do nothing
 		});
 	}
 
@@ -52,7 +56,7 @@ class DiscoveryListener extends DefaultListener {
 	}
 
 	private void addMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = classDescriptors.get(result.getTestClass());
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass());
 		classDescriptor.addChild(createMethodDescriptor(classDescriptor, result));
 	}
 

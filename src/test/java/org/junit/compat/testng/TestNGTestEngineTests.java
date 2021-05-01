@@ -18,9 +18,9 @@ import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
-import static org.junit.platform.testkit.engine.EngineTestKit.engine;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.engine;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
@@ -33,6 +33,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 import java.util.Map;
 
 import example.DataProviderMethodTest;
+import example.FactoryWithDataProviderTest;
 import example.SimpleTest;
 
 import org.junit.jupiter.api.Test;
@@ -141,6 +142,51 @@ public class TestNGTestEngineTests {
 	}
 
 	@Test
+	void discoversFactoryWithDataProviderTestClass() {
+		var request = request().selectors(selectClass(FactoryWithDataProviderTest.class)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		var classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getChildren()).hasSize(4);
+
+		var methodDescriptors = classDescriptor.getChildren().stream() //
+				.collect(toMap(descriptor -> descriptor.getUniqueId().getLastSegment().getValue(), identity()));
+		assertThat(methodDescriptors.keySet()).containsExactlyInAnyOrder("a()@0", "a()@1", "b()@0", "b()@1");
+	}
+
+	@Test
+	void executesFactoryWithDataProviderTestClass() {
+		var results = testNGEngine().selectors(selectClass(FactoryWithDataProviderTest.class)).execute();
+
+		results.containerEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(container(FactoryWithDataProviderTest.class), started()), //
+			event(container(FactoryWithDataProviderTest.class), finishedSuccessfully()), //
+			event(engine(), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(FactoryWithDataProviderTest.class), started()), //
+			event(test("method:a()@0"), started()), //
+			event(test("method:a()@0"), finishedWithFailure(message("a"))), //
+			event(container(FactoryWithDataProviderTest.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(FactoryWithDataProviderTest.class), started()), //
+			event(test("method:a()@1"), started()), //
+			event(test("method:a()@1"), finishedWithFailure(message("b"))), //
+			event(container(FactoryWithDataProviderTest.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(FactoryWithDataProviderTest.class), started()), //
+			event(test("method:b()@0"), started()), //
+			event(test("method:b()@0"), finishedWithFailure(message("a"))), //
+			event(container(FactoryWithDataProviderTest.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(FactoryWithDataProviderTest.class), started()), //
+			event(test("method:b()@1"), started()), //
+			event(test("method:b()@1"), finishedWithFailure(message("b"))), //
+			event(container(FactoryWithDataProviderTest.class), finishedSuccessfully()));
+	}
+
+	@Test
 	void executesSuccessfulTests() {
 		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
 
@@ -178,7 +224,8 @@ public class TestNGTestEngineTests {
 	void reportsMethodsSkippedDueToFailingDependencyAsSkipped() {
 		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
 
-		results.allEvents().assertEventsMatchLooselyInOrder(event(container(SimpleTest.class), started()), //
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(SimpleTest.class), started()), //
 			event(test("method:skippedDueToFailingDependency()"),
 				skippedWithReason(it -> it.contains("depends on not successfully finished methods"))), //
 			event(container(SimpleTest.class), finishedSuccessfully()));
@@ -198,6 +245,6 @@ public class TestNGTestEngineTests {
 	}
 
 	private static EngineTestKit.Builder testNGEngine() {
-		return engine("testng").configurationParameter("testng.verbose", "10");
+		return EngineTestKit.engine("testng").configurationParameter("testng.verbose", "10");
 	}
 }

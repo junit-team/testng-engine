@@ -17,6 +17,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.internal.IParameterInfo;
 
 class MethodDescriptor extends AbstractTestDescriptor {
 
@@ -35,12 +36,37 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	static String toMethodId(ITestResult result, MethodSignature methodSignature) {
 		ITestNGMethod method = result.getMethod();
+		String id;
 		if (result.getParameters().length > 0) {
 			String paramTypeList = nullSafeToString(methodSignature.parameterTypes);
 			int invocationCount = method.getCurrentInvocationCount();
-			return String.format("%s(%s)_%d", method.getMethodName(), paramTypeList, invocationCount);
+			id = String.format("%s(%s)_%d", method.getMethodName(), paramTypeList, invocationCount);
 		}
-		return method.getMethodName() + "()";
+		else {
+			id = method.getMethodName() + "()";
+		}
+		Object[] instances = result.getTestClass().getInstances(true);
+		if (instances.length > 1) {
+			Object instance = result.getInstance();
+			int instanceIndex = 0;
+			for (int i = 0; i < instances.length; i++) {
+				if (unwrap(instances[i]) == instance) {
+					instanceIndex = i;
+					break;
+				}
+			}
+			id = id + "@" + instanceIndex;
+		}
+		return id;
+	}
+
+	private static Object unwrap(Object instance) {
+		try {
+			return IParameterInfo.embeddedInstance(instance);
+		}
+		catch (NoClassDefFoundError ignored) {
+			return instance;
+		}
 	}
 
 	@Override

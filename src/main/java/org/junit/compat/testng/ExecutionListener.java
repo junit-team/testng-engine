@@ -18,16 +18,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.EngineExecutionListener;
-import org.testng.IClass;
 import org.testng.ITestClass;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
 class ExecutionListener extends DefaultListener {
 
-	private final EngineExecutionListener delegate;
-	private final Map<IClass, ClassDescriptor> inProgressTestClasses = new ConcurrentHashMap<>();
+	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final Map<ITestNGMethod, MethodDescriptor> inProgressTestMethods = new ConcurrentHashMap<>();
+
+	private final EngineExecutionListener delegate;
 	private final Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass;
 
 	ExecutionListener(EngineExecutionListener delegate,
@@ -40,17 +40,18 @@ class ExecutionListener extends DefaultListener {
 	public void onBeforeClass(ITestClass testClass) {
 		ClassDescriptor classDescriptor = descriptorsByTestClass.get(testClass.getRealClass());
 		if (classDescriptor != null) {
-			inProgressTestClasses.put(testClass, classDescriptor);
-			delegate.executionStarted(classDescriptor);
+			testClassRegistry.start(testClass, () -> {
+				delegate.executionStarted(classDescriptor);
+				return classDescriptor;
+			});
 		}
 	}
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		ClassDescriptor classDescriptor = inProgressTestClasses.remove(testClass);
-		if (classDescriptor != null) {
+		testClassRegistry.finish(testClass, classDescriptor -> {
 			delegate.executionFinished(classDescriptor, successful());
-		}
+		});
 	}
 
 	@Override
@@ -99,7 +100,7 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	private MethodDescriptor findMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = inProgressTestClasses.get(result.getTestClass());
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass());
 		return classDescriptor.findMethodDescriptor(result);
 	}
 }
