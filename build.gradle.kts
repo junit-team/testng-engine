@@ -5,7 +5,7 @@ plugins {
     `java-test-fixtures`
     `maven-publish`
     id("com.diffplug.spotless") version "5.12.0"
-    id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 java {
@@ -156,6 +156,11 @@ nexusPublishing {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            from(components["java"].apply {
+                this as AdhocComponentWithVariants
+                withVariantsFromConfiguration(configurations.testFixturesApiElements.get()) { skip() }
+                withVariantsFromConfiguration(configurations.testFixturesRuntimeElements.get()) { skip() }
+            })
             pom {
                 name.set(project.description)
                 url.set("https://junit.org/junit5/")
