@@ -17,6 +17,7 @@ import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -53,7 +54,7 @@ public class TestNGTestEngineTests {
 	Path tempDir;
 
 	@Test
-	void discoversTestMethods() {
+	void discoversAllTestMethodsForClassSelector() {
 		var request = request().selectors(selectClass(SimpleTest.class)).build();
 
 		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
@@ -81,6 +82,33 @@ public class TestNGTestEngineTests {
 			assertThat(methodDescriptor.getChildren()).isEmpty();
 		});
 		assertThat(methodDescriptors.get("successful").getTags()) //
+				.containsExactlyInAnyOrder(TestTag.create("foo"), TestTag.create("bar"));
+	}
+
+	@Test
+	void discoversSingleTestMethodsForMethodSelector() {
+		var request = request().selectors(selectMethod(SimpleTest.class, "successful")).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo(SimpleTest.class.getSimpleName());
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTest.class.getName());
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo("successful");
+		assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+		assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
+		assertThat(methodDescriptor.getSource()).contains(
+			MethodSource.from(SimpleTest.class.getName(), "successful", ""));
+		assertThat(methodDescriptor.getChildren()).isEmpty();
+		assertThat(methodDescriptor.getTags()) //
 				.containsExactlyInAnyOrder(TestTag.create("foo"), TestTag.create("bar"));
 	}
 

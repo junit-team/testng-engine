@@ -10,6 +10,7 @@
 
 package org.junit.compat.testng;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
@@ -28,8 +29,10 @@ import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.ClassSelector;
+import org.junit.platform.engine.discovery.MethodSelector;
 import org.junit.platform.engine.support.config.PrefixedConfigurationParameters;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
+import org.testng.CommandLineArgs;
 import org.testng.TestNG;
 
 /**
@@ -47,12 +50,22 @@ public class TestNGTestEngine implements TestEngine {
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
 		EngineDescriptor engineDescriptor = new EngineDescriptor(uniqueId, "TestNG");
-		TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.DISCOVERY);
+
+		CommandLineArgs commandLineArgs = new CommandLineArgs();
+		commandLineArgs.useDefaultListeners = String.valueOf(false);
+
+		commandLineArgs.commandLineMethods = request.getSelectorsByType(MethodSelector.class).stream() //
+				.map(m -> m.getClassName() + "." + m.getMethodName()).collect(toList());
+
+		TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.DISCOVERY, commandLineArgs);
+		testNG.addListener(new DiscoveryListener(engineDescriptor));
+
 		Stream<? extends Class<?>> testClasses = request.getSelectorsByType(ClassSelector.class).stream() //
 				.map(ClassSelector::getJavaClass);
 		setTestClasses(testNG, testClasses);
-		testNG.addListener(new DiscoveryListener(engineDescriptor));
+
 		withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+
 		return engineDescriptor;
 	}
 
@@ -61,7 +74,7 @@ public class TestNGTestEngine implements TestEngine {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
 		listener.executionStarted(request.getRootTestDescriptor());
 		try {
-			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION);
+			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION, new CommandLineArgs());
 			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass = request.getRootTestDescriptor().getChildren().stream() //
 					.map(it -> (ClassDescriptor) it) //
 					.collect(
@@ -80,8 +93,10 @@ public class TestNGTestEngine implements TestEngine {
 		testNG.setTestClasses(testClasses.toArray(Class[]::new));
 	}
 
-	private TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase) {
-		TestNG testNG = new TestNG();
+	private TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase,
+			CommandLineArgs commandLineArgs) {
+		ConfigurableTestNG testNG = new ConfigurableTestNG();
+		testNG.configure(commandLineArgs);
 		testNG.addListener(LoggingListener.INSTANCE);
 		phase.configure(testNG, new PrefixedConfigurationParameters(configurationParameters, "testng."));
 		return testNG;
@@ -122,5 +137,12 @@ public class TestNGTestEngine implements TestEngine {
 		};
 
 		abstract void configure(TestNG testNG, ConfigurationParameters config);
+	}
+
+	private static class ConfigurableTestNG extends TestNG {
+		@Override
+		public void configure(CommandLineArgs cla) {
+			super.configure(cla);
+		}
 	}
 }
