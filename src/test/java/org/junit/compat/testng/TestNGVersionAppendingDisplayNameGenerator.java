@@ -17,7 +17,7 @@ import java.text.MessageFormat;
 
 import org.junit.jupiter.api.DisplayNameGenerator;
 
-public class TestNGVersionAppendingDisplayNameGenerator extends DisplayNameGenerator.Standard {
+class TestNGVersionAppendingDisplayNameGenerator extends DisplayNameGenerator.Standard {
 
 	@Override
 	public String generateDisplayNameForMethod(Class<?> testClass, Method testMethod) {

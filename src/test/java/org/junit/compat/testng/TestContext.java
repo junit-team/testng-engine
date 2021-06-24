@@ -12,7 +12,7 @@ package org.junit.compat.testng;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
-public class TestContext {
+class TestContext {
 
 	static ComparableVersion testNGVersion() {
 		return new ComparableVersion(System.getProperty("testng.version"));

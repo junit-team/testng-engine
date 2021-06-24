@@ -30,7 +30,7 @@ import org.junit.platform.commons.support.AnnotationSupport;
 @Retention(RUNTIME)
 @Target(METHOD)
 @ExtendWith(RequiresTestNGVersion.Extension.class)
-public @interface RequiresTestNGVersion {
+@interface RequiresTestNGVersion {
 	String min() default "";
 
 	String max() default "";
