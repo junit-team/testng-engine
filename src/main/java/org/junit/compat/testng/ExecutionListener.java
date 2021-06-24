@@ -28,17 +28,16 @@ class ExecutionListener extends DefaultListener {
 	private final Map<ITestNGMethod, MethodDescriptor> inProgressTestMethods = new ConcurrentHashMap<>();
 
 	private final EngineExecutionListener delegate;
-	private final Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass;
+	private final TestNGEngineDescriptor engineDescriptor;
 
-	ExecutionListener(EngineExecutionListener delegate,
-			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass) {
+	ExecutionListener(EngineExecutionListener delegate, TestNGEngineDescriptor engineDescriptor) {
 		this.delegate = delegate;
-		this.descriptorsByTestClass = descriptorsByTestClass;
+		this.engineDescriptor = engineDescriptor;
 	}
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		ClassDescriptor classDescriptor = descriptorsByTestClass.get(testClass.getRealClass());
+		ClassDescriptor classDescriptor = engineDescriptor.findClassDescriptor(testClass.getRealClass());
 		if (classDescriptor != null) {
 			testClassRegistry.start(testClass, () -> {
 				delegate.executionStarted(classDescriptor);
@@ -49,9 +48,8 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		testClassRegistry.finish(testClass, classDescriptor -> {
-			delegate.executionFinished(classDescriptor, successful());
-		});
+		testClassRegistry.finish(testClass,
+			classDescriptor -> delegate.executionFinished(classDescriptor, successful()));
 	}
 
 	@Override

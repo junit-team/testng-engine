@@ -23,8 +23,10 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 
 import example.SimpleTest;
+import example.TwoTestMethods;
 
 import org.junit.jupiter.api.Test;
+import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
@@ -93,5 +95,23 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine().selectors(selectMethod(SimpleTest.class, "successful")).execute();
 		results.testEvents().assertStatistics(stats -> stats.started(1).finished(1));
+	}
+
+	@Test
+	void supportsDiscoveryOfClassAndMethodSelector() {
+		DiscoverySelector[] selectors = { //
+				selectClass(TwoTestMethods.class), //
+				selectMethod(TwoTestMethods.class, "one") //
+		};
+		var request = request().selectors(selectors).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getChildren()).hasSize(2);
+
+		var results = testNGEngine().selectors(selectors).execute();
+		results.testEvents().assertStatistics(stats -> stats.started(2).finished(2));
 	}
 }

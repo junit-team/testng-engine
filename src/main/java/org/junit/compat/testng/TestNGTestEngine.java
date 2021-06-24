@@ -10,16 +10,12 @@
 
 package org.junit.compat.testng;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.Collections.emptyList;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.junit.platform.engine.ConfigurationParameters;
 import org.junit.platform.engine.EngineDiscoveryRequest;
@@ -28,11 +24,10 @@ import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.discovery.ClassSelector;
-import org.junit.platform.engine.discovery.MethodSelector;
 import org.junit.platform.engine.support.config.PrefixedConfigurationParameters;
-import org.junit.platform.engine.support.descriptor.EngineDescriptor;
+import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
 import org.testng.CommandLineArgs;
+import org.testng.ITestNGListener;
 import org.testng.TestNG;
 
 /**
@@ -42,6 +37,11 @@ import org.testng.TestNG;
  */
 public class TestNGTestEngine implements TestEngine {
 
+	private static final EngineDiscoveryRequestResolver<TestNGEngineDescriptor> DISCOVERY_REQUEST_RESOLVER = EngineDiscoveryRequestResolver.<TestNGEngineDescriptor> builder()
+			// .addClassContainerSelectorResolver() // TODO add support for PackageSelector etc.
+			.addSelectorResolver(ctx -> new TestNGSelectorResolver()) // TODO use ClassFilter
+			.build();
+
 	@Override
 	public String getId() {
 		return "testng";
@@ -49,21 +49,29 @@ public class TestNGTestEngine implements TestEngine {
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
-		EngineDescriptor engineDescriptor = new EngineDescriptor(uniqueId, "TestNG");
+		TestNGEngineDescriptor engineDescriptor = new TestNGEngineDescriptor(uniqueId);
+		DISCOVERY_REQUEST_RESOLVER.resolve(request, engineDescriptor);
 
-		Stream<String> methodNames = request.getSelectorsByType(MethodSelector.class).stream() //
-				.map(m -> toQualifiedMethodName(m.getClassName(), m.getMethodName()));
+		Class<?>[] testClasses = engineDescriptor.getTestClasses();
+		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
+		DiscoveryListener listener = new DiscoveryListener(engineDescriptor);
 
-		CommandLineArgs commandLineArgs = createCommandLineArgs(methodNames);
+		if (testClasses.length > 0) {
+			TestNG testNG = createTestNG(Phase.DISCOVERY, request.getConfigurationParameters(), testClasses,
+				emptyList());
+			testNG.addListener(listener);
 
-		TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.DISCOVERY, commandLineArgs);
-		testNG.addListener(new DiscoveryListener(engineDescriptor));
+			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+		}
 
-		Stream<? extends Class<?>> testClasses = request.getSelectorsByType(ClassSelector.class).stream() //
-				.map(ClassSelector::getJavaClass);
-		setTestClasses(testNG, testClasses);
+		if (!methodNames.isEmpty()) {
+			TestNG testNG = createTestNG(Phase.DISCOVERY, request.getConfigurationParameters(), null, methodNames);
+			testNG.addListener(listener);
 
-		withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+		}
+
+		engineDescriptor.finalizeDiscovery();
 
 		return engineDescriptor;
 	}
@@ -71,49 +79,44 @@ public class TestNGTestEngine implements TestEngine {
 	@Override
 	public void execute(ExecutionRequest request) {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
-		listener.executionStarted(request.getRootTestDescriptor());
+		TestNGEngineDescriptor engineDescriptor = (TestNGEngineDescriptor) request.getRootTestDescriptor();
+		listener.executionStarted(engineDescriptor);
 		try {
-			Stream<String> methodNames = request.getRootTestDescriptor().getChildren().stream() //
-					.flatMap(it -> it.getChildren().stream()) //
-					.map(it -> (MethodDescriptor) it) //
-					.map(MethodDescriptor::getMethodSource) //
-					.map(source -> toQualifiedMethodName(source.getClassName(), source.getMethodName()));
-			CommandLineArgs commandLineArgs = createCommandLineArgs(methodNames);
-
-			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION, commandLineArgs);
-
-			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass = request.getRootTestDescriptor().getChildren().stream() //
-					.map(it -> (ClassDescriptor) it) //
-					.collect(
-						toMap(ClassDescriptor::getTestClass, Function.identity(), (a, b) -> a, LinkedHashMap::new));
-			testNG.addListener(new ExecutionListener(listener, descriptorsByTestClass));
-
+			Class<?>[] testClasses = engineDescriptor.getTestClasses();
+			List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
+			TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,
+				methodNames);
+			testNG.addListener(createExecutionListener(listener, engineDescriptor));
 			testNG.run();
-			listener.executionFinished(request.getRootTestDescriptor(), successful());
+			listener.executionFinished(engineDescriptor, successful());
 		}
 		catch (Exception e) {
-			listener.executionFinished(request.getRootTestDescriptor(), failed(e));
+			listener.executionFinished(engineDescriptor, failed(e));
 		}
 	}
 
-	private void setTestClasses(TestNG testNG, Stream<? extends Class<?>> testClasses) {
-		testNG.setTestClasses(testClasses.toArray(Class[]::new));
+	private ITestNGListener createExecutionListener(EngineExecutionListener listener,
+			TestNGEngineDescriptor engineDescriptor) {
+		return new ExecutionListener(listener, engineDescriptor);
 	}
 
-	private static CommandLineArgs createCommandLineArgs(Stream<String> methodNames) {
-		CommandLineArgs commandLineArgs = new CommandLineArgs();
-		commandLineArgs.useDefaultListeners = String.valueOf(false);
-		commandLineArgs.commandLineMethods = methodNames.collect(toList());
-		return commandLineArgs;
-	}
-
-	private static TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase,
-			CommandLineArgs commandLineArgs) {
+	private ConfigurableTestNG createTestNG(Phase phase, ConfigurationParameters configurationParameters,
+			Class<?>[] testClasses, List<String> methodNames) {
 		ConfigurableTestNG testNG = new ConfigurableTestNG();
-		testNG.configure(commandLineArgs);
+		if (!methodNames.isEmpty()) {
+			testNG.configure(createCommandLineArgs(methodNames));
+		}
 		testNG.addListener(LoggingListener.INSTANCE);
 		phase.configure(testNG, new PrefixedConfigurationParameters(configurationParameters, "testng."));
+		testNG.setTestClasses(testClasses);
 		return testNG;
+	}
+
+	private static CommandLineArgs createCommandLineArgs(List<String> methodNames) {
+		CommandLineArgs commandLineArgs = new CommandLineArgs();
+		commandLineArgs.useDefaultListeners = String.valueOf(false);
+		commandLineArgs.commandLineMethods = methodNames;
+		return commandLineArgs;
 	}
 
 	@SuppressWarnings("SameParameterValue")

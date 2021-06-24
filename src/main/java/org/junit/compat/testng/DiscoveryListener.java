@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.testng.ITestClass;
 import org.testng.ITestResult;
 
@@ -29,19 +28,15 @@ class DiscoveryListener extends DefaultListener {
 
 	private final Map<String, TestTag> testTags = new ConcurrentHashMap<>();
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
-	private final EngineDescriptor engineDescriptor;
+	private final TestNGEngineDescriptor engineDescriptor;
 
-	public DiscoveryListener(EngineDescriptor engineDescriptor) {
+	public DiscoveryListener(TestNGEngineDescriptor engineDescriptor) {
 		this.engineDescriptor = engineDescriptor;
 	}
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		testClassRegistry.start(testClass, () -> {
-			ClassDescriptor classDescriptor = createClassDescriptor(testClass);
-			engineDescriptor.addChild(classDescriptor);
-			return classDescriptor;
-		});
+		testClassRegistry.start(testClass, () -> engineDescriptor.findClassDescriptor(testClass.getRealClass()));
 	}
 
 	@Override
