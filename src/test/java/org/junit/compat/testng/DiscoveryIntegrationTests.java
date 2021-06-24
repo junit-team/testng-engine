@@ -90,5 +90,8 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptor.getChildren()).isEmpty();
 		assertThat(methodDescriptor.getTags()) //
 				.containsExactlyInAnyOrder(TestTag.create("foo"), TestTag.create("bar"));
+
+		var results = testNGEngine().selectors(selectMethod(SimpleTest.class, "successful")).execute();
+		results.testEvents().assertStatistics(stats -> stats.started(1).finished(1));
 	}
 }

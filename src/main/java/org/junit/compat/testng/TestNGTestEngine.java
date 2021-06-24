@@ -51,11 +51,10 @@ public class TestNGTestEngine implements TestEngine {
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
 		EngineDescriptor engineDescriptor = new EngineDescriptor(uniqueId, "TestNG");
 
-		CommandLineArgs commandLineArgs = new CommandLineArgs();
-		commandLineArgs.useDefaultListeners = String.valueOf(false);
+		Stream<String> methodNames = request.getSelectorsByType(MethodSelector.class).stream() //
+				.map(m -> toQualifiedMethodName(m.getClassName(), m.getMethodName()));
 
-		commandLineArgs.commandLineMethods = request.getSelectorsByType(MethodSelector.class).stream() //
-				.map(m -> m.getClassName() + "." + m.getMethodName()).collect(toList());
+		CommandLineArgs commandLineArgs = createCommandLineArgs(methodNames);
 
 		TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.DISCOVERY, commandLineArgs);
 		testNG.addListener(new DiscoveryListener(engineDescriptor));
@@ -74,13 +73,21 @@ public class TestNGTestEngine implements TestEngine {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
 		listener.executionStarted(request.getRootTestDescriptor());
 		try {
-			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION, new CommandLineArgs());
+			Stream<String> methodNames = request.getRootTestDescriptor().getChildren().stream() //
+					.flatMap(it -> it.getChildren().stream()) //
+					.map(it -> (MethodDescriptor) it) //
+					.map(MethodDescriptor::getMethodSource) //
+					.map(source -> toQualifiedMethodName(source.getClassName(), source.getMethodName()));
+			CommandLineArgs commandLineArgs = createCommandLineArgs(methodNames);
+
+			TestNG testNG = createTestNG(request.getConfigurationParameters(), Phase.EXECUTION, commandLineArgs);
+
 			Map<? extends Class<?>, ClassDescriptor> descriptorsByTestClass = request.getRootTestDescriptor().getChildren().stream() //
 					.map(it -> (ClassDescriptor) it) //
 					.collect(
 						toMap(ClassDescriptor::getTestClass, Function.identity(), (a, b) -> a, LinkedHashMap::new));
-			setTestClasses(testNG, descriptorsByTestClass.keySet().stream());
 			testNG.addListener(new ExecutionListener(listener, descriptorsByTestClass));
+
 			testNG.run();
 			listener.executionFinished(request.getRootTestDescriptor(), successful());
 		}
@@ -93,7 +100,14 @@ public class TestNGTestEngine implements TestEngine {
 		testNG.setTestClasses(testClasses.toArray(Class[]::new));
 	}
 
-	private TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase,
+	private static CommandLineArgs createCommandLineArgs(Stream<String> methodNames) {
+		CommandLineArgs commandLineArgs = new CommandLineArgs();
+		commandLineArgs.useDefaultListeners = String.valueOf(false);
+		commandLineArgs.commandLineMethods = methodNames.collect(toList());
+		return commandLineArgs;
+	}
+
+	private static TestNG createTestNG(ConfigurationParameters configurationParameters, Phase phase,
 			CommandLineArgs commandLineArgs) {
 		ConfigurableTestNG testNG = new ConfigurableTestNG();
 		testNG.configure(commandLineArgs);
@@ -117,6 +131,10 @@ public class TestNGTestEngine implements TestEngine {
 				System.setProperty(key, originalValue);
 			}
 		}
+	}
+
+	private static String toQualifiedMethodName(String className, String methodName) {
+		return className + "." + methodName;
 	}
 
 	enum Phase {

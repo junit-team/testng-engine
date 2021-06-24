@@ -83,4 +83,9 @@ class MethodDescriptor extends AbstractTestDescriptor {
 	public Type getType() {
 		return Type.TEST;
 	}
+
+	@SuppressWarnings("OptionalGetWithoutIsPresent")
+	MethodSource getMethodSource() {
+		return getSource().map(it -> (MethodSource) it).get();
+	}
 }
