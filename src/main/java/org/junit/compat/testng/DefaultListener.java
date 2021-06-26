@@ -11,12 +11,14 @@
 package org.junit.compat.testng;
 
 import org.testng.IClassListener;
+import org.testng.IConfigurationListener;
 import org.testng.ITestClass;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
-abstract class DefaultListener implements IClassListener, ITestListener {
+abstract class DefaultListener implements IClassListener, ITestListener, IConfigurationListener {
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
@@ -56,5 +58,37 @@ abstract class DefaultListener implements IClassListener, ITestListener {
 
 	@Override
 	public void onFinish(ITestContext context) {
+	}
+
+	@Override
+	public void onConfigurationSuccess(ITestResult tr) {
+	}
+
+	@Override
+	public void onConfigurationSuccess(ITestResult tr, ITestNGMethod tm) {
+	}
+
+	@Override
+	public void onConfigurationFailure(ITestResult tr) {
+	}
+
+	@Override
+	public void onConfigurationFailure(ITestResult tr, ITestNGMethod tm) {
+	}
+
+	@Override
+	public void onConfigurationSkip(ITestResult tr) {
+	}
+
+	@Override
+	public void onConfigurationSkip(ITestResult tr, ITestNGMethod tm) {
+	}
+
+	@Override
+	public void beforeConfiguration(ITestResult tr) {
+	}
+
+	@Override
+	public void beforeConfiguration(ITestResult tr, ITestNGMethod tm) {
 	}
 }

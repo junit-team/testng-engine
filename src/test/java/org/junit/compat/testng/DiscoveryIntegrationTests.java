@@ -171,14 +171,18 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void discoversAllClassesViaPackageSelector() {
-		var request = request().selectors(selectPackage(SimpleTest.class.getPackageName())).build();
+		var packageName = SimpleTest.class.getPackageName();
+		var request = request().selectors(selectPackage(packageName)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
-				.containsExactlyInAnyOrder(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName(),
-					InheritingSubClass.class.getSimpleName());
+				.contains(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName());
+		assertThat(rootDescriptor.getChildren()) //
+				.extracting(
+					descriptor -> ((ClassSource) descriptor.getSource().orElseThrow()).getJavaClass().getPackageName()) //
+				.containsOnly(packageName);
 	}
 
 	@Test

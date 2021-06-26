@@ -22,6 +22,7 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import example.basics.FailingBeforeClassTestCase;
 import example.basics.InheritingSubClass;
 import example.basics.SimpleTest;
 
@@ -90,4 +91,14 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 				abortedWithReason(message(it -> it.contains("depends on not successfully finished methods")))), //
 			event(container(SimpleTest.class), finishedSuccessfully()));
 	}
+
+	@Test
+	void reportsFailureFromBeforeClassMethod() {
+		var results = testNGEngine().selectors(selectClass(FailingBeforeClassTestCase.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(FailingBeforeClassTestCase.class), started()), //
+			event(container(FailingBeforeClassTestCase.class), finishedWithFailure(message("boom"))));
+	}
+
 }
