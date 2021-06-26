@@ -27,10 +27,13 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import example.basics.InheritingSubClass;
 import example.basics.SimpleTest;
 import example.basics.TwoTestMethods;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestTag;
@@ -46,9 +49,10 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	private final TestNGTestEngine testEngine = new TestNGTestEngine();
 	private final UniqueId engineId = UniqueId.forEngine(testEngine.getId());
 
-	@Test
-	void discoversAllTestMethodsForClassSelector() {
-		var request = request().selectors(selectClass(SimpleTest.class)).build();
+	@ParameterizedTest
+	@ValueSource(classes = { SimpleTest.class, InheritingSubClass.class })
+	void discoversAllTestMethodsForClassSelector(Class<?> testClass) {
+		var request = request().selectors(selectClass(testClass)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
@@ -56,10 +60,10 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
-		assertThat(classDescriptor.getDisplayName()).isEqualTo(SimpleTest.class.getSimpleName());
-		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTest.class.getName());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo(testClass.getSimpleName());
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(testClass.getName());
 		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
-		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(testClass));
 		assertThat(classDescriptor.getChildren()).hasSize(4);
 
 		Map<String, TestDescriptor> methodDescriptors = classDescriptor.getChildren().stream() //
@@ -70,8 +74,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(methodName);
 			assertThat(methodDescriptor.getType()).isEqualTo(TEST);
 			assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
-			assertThat(methodDescriptor.getSource()).contains(
-				MethodSource.from(SimpleTest.class.getName(), methodName, ""));
+			assertThat(methodDescriptor.getSource()).contains(MethodSource.from(testClass.getName(), methodName, ""));
 			assertThat(methodDescriptor.getChildren()).isEmpty();
 		});
 		assertThat(methodDescriptors.get("successful").getTags()) //
@@ -173,7 +176,8 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
-				.containsExactlyInAnyOrder(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName());
+				.containsExactlyInAnyOrder(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName(),
+					InheritingSubClass.class.getSimpleName());
 	}
 
 	@Test

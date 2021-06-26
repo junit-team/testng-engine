@@ -22,22 +22,26 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import example.basics.InheritingSubClass;
 import example.basics.SimpleTest;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testng.SkipException;
 
 class ReportingIntegrationTests extends AbstractIntegrationTests {
 
-	@Test
-	void executesSuccessfulTests() {
-		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+	@ParameterizedTest
+	@ValueSource(classes = { SimpleTest.class, InheritingSubClass.class })
+	void executesSuccessfulTests(Class<?> testClass) {
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(SimpleTest.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:successful()"), started()), //
 			event(test("method:successful()"), finishedSuccessfully()), //
-			event(container(SimpleTest.class), finishedSuccessfully()));
+			event(container(testClass), finishedSuccessfully()));
 	}
 
 	@Test
