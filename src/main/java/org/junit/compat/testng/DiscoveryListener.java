@@ -70,11 +70,6 @@ class DiscoveryListener extends DefaultListener {
 		classDescriptor.addChild(createMethodDescriptor(classDescriptor, result));
 	}
 
-	private ClassDescriptor createClassDescriptor(ITestClass testClass) {
-		UniqueId uniqueId = engineDescriptor.getUniqueId().append("class", testClass.getRealClass().getName());
-		return new ClassDescriptor(uniqueId, testClass.getRealClass());
-	}
-
 	private MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
 		MethodSignature methodSignature = MethodSignature.from(result.getMethod());
 		String name = result.getName();
@@ -83,7 +78,8 @@ class DiscoveryListener extends DefaultListener {
 			String paramList = Arrays.stream(result.getParameters()).map(String::valueOf).collect(joining(", "));
 			name = String.format("%s[%d](%s)", name, invocationCount, paramList);
 		}
-		UniqueId uniqueId = parent.getUniqueId().append("method", toMethodId(result, methodSignature));
+		UniqueId uniqueId = parent.getUniqueId().append(MethodDescriptor.SEGMENT_TYPE,
+			toMethodId(result, methodSignature));
 		Class<?> sourceClass = result.getMethod().getTestClass().getRealClass();
 		Set<TestTag> tags = Arrays.stream(result.getMethod().getGroups()).map(this::createTag).collect(toSet());
 		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags);

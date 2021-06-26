@@ -24,6 +24,8 @@ import org.testng.internal.IParameterInfo;
 
 class MethodDescriptor extends AbstractTestDescriptor {
 
+	static final String SEGMENT_TYPE = "method";
+
 	final MethodSignature methodSignature;
 	private final Set<TestTag> tags;
 

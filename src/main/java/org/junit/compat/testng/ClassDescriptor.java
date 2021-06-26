@@ -28,6 +28,8 @@ import org.testng.ITestResult;
 
 class ClassDescriptor extends AbstractTestDescriptor {
 
+	static final String SEGMENT_TYPE = "class";
+
 	private final ConcurrentMap<String, MethodDescriptor> methodsById = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
 	ExecutionStrategy executionStrategy = new IncludeMethodsExecutionStrategy();

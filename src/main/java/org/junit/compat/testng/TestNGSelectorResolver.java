@@ -54,17 +54,17 @@ class TestNGSelectorResolver implements SelectorResolver {
 	public Resolution resolve(UniqueIdSelector selector, Context context) {
 		UniqueId uniqueId = selector.getUniqueId();
 		Segment lastSegment = uniqueId.getLastSegment();
-		if ("class".equals(lastSegment.getType())) {
+		if (ClassDescriptor.SEGMENT_TYPE.equals(lastSegment.getType())) {
 			return Resolution.selectors(singleton(selectClass(lastSegment.getValue())));
 		}
-		if ("method".equals(lastSegment.getType())) {
+		if (MethodDescriptor.SEGMENT_TYPE.equals(lastSegment.getType())) {
 			String methodName = lastSegment.getValue();
 			int i = methodName.indexOf('(');
 			if (i != -1) {
 				methodName = methodName.substring(0, i);
 			}
 			Segment previousSegment = uniqueId.removeLastSegment().getLastSegment();
-			if ("class".equals(previousSegment.getType())) {
+			if (ClassDescriptor.SEGMENT_TYPE.equals(previousSegment.getType())) {
 				String className = previousSegment.getValue();
 				return Resolution.selectors(singleton(selectMethod(className, methodName)));
 			}
@@ -73,7 +73,7 @@ class TestNGSelectorResolver implements SelectorResolver {
 	}
 
 	private ClassDescriptor createClassDescriptor(ClassSelector selector, TestDescriptor parent) {
-		return new ClassDescriptor(parent.getUniqueId().append("class", selector.getClassName()),
+		return new ClassDescriptor(parent.getUniqueId().append(ClassDescriptor.SEGMENT_TYPE, selector.getClassName()),
 			selector.getJavaClass());
 	}
 }
