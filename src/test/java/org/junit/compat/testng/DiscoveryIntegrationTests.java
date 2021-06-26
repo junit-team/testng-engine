@@ -18,6 +18,7 @@ import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
@@ -153,5 +154,16 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptor.getSource()).contains(
 			MethodSource.from(SimpleTest.class.getName(), "successful", ""));
 		assertThat(methodDescriptor.getChildren()).isEmpty();
+	}
+
+	@Test
+	void discoversAllClassesViaPackageSelector() {
+		var request = request().selectors(selectPackage(SimpleTest.class.getPackageName())).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		assertThat(rootDescriptor.getChildren()) //
+				.extracting(TestDescriptor::getDisplayName) //
+				.containsExactlyInAnyOrder(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName());
 	}
 }

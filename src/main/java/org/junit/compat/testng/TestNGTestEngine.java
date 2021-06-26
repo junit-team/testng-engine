@@ -37,8 +37,8 @@ import org.testng.TestNG;
  */
 public class TestNGTestEngine implements TestEngine {
 
-	private static final EngineDiscoveryRequestResolver<TestNGEngineDescriptor> DISCOVERY_REQUEST_RESOLVER = EngineDiscoveryRequestResolver.<TestNGEngineDescriptor> builder()
-			// .addClassContainerSelectorResolver() // TODO add support for PackageSelector etc.
+	private static final EngineDiscoveryRequestResolver<TestNGEngineDescriptor> DISCOVERY_REQUEST_RESOLVER = EngineDiscoveryRequestResolver.<TestNGEngineDescriptor> builder() //
+			.addClassContainerSelectorResolver(new IsTestNGTestClass()) //
 			.addSelectorResolver(ctx -> new TestNGSelectorResolver()) // TODO use ClassFilter
 			.build();
 
