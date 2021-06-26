@@ -56,6 +56,7 @@ dependencies {
     testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.14.1"))
     testRuntimeOnly("org.apache.logging.log4j:log4j-core")
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
+    testFixturesImplementation("junit:junit:4.13.2")
     testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
     implementation("org.testng:testng") {
         version {

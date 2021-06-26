@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import example.basics.InheritingSubClass;
+import example.basics.JUnitTestClass;
 import example.basics.SimpleTest;
 import example.basics.TwoTestMethods;
 
@@ -215,5 +216,14 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		rootDescriptor = testEngine.discover(request, engineId);
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
+	}
+
+	@Test
+	void doesNotDiscoverJUnit4TestClasses() {
+		var request = request().selectors(selectClass(JUnitTestClass.class)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getChildren()).isEmpty();
 	}
 }
