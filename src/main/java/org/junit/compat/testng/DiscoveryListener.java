@@ -15,10 +15,12 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.compat.testng.MethodDescriptor.toMethodId;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.testng.ITestClass;
@@ -32,6 +34,13 @@ class DiscoveryListener extends DefaultListener {
 
 	public DiscoveryListener(TestNGEngineDescriptor engineDescriptor) {
 		this.engineDescriptor = engineDescriptor;
+	}
+
+	public void finalizeDiscovery() {
+		Set<ClassDescriptor> classDescriptors = new HashSet<>(engineDescriptor.getClassDescriptors());
+		classDescriptors.removeAll(testClassRegistry.getClassDescriptors());
+		classDescriptors.forEach(TestDescriptor::removeFromHierarchy);
+		engineDescriptor.finalizeDiscovery();
 	}
 
 	@Override

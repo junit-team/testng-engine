@@ -114,4 +114,12 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		var results = testNGEngine().selectors(selectors).execute();
 		results.testEvents().assertStatistics(stats -> stats.started(2).finished(2));
 	}
+
+	@Test
+	void ignoredNonTestNGClasses() {
+		var request = request().selectors(selectClass(Object.class)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
 }

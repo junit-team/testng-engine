@@ -71,7 +71,7 @@ public class TestNGTestEngine implements TestEngine {
 			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
 		}
 
-		engineDescriptor.finalizeDiscovery();
+		listener.finalizeDiscovery();
 
 		return engineDescriptor;
 	}

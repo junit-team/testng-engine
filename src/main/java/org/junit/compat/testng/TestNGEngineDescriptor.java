@@ -11,11 +11,13 @@
 package org.junit.compat.testng;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.platform.engine.TestDescriptor;
@@ -39,6 +41,10 @@ class TestNGEngineDescriptor extends EngineDescriptor {
 
 	public ClassDescriptor findClassDescriptor(Class<?> testClass) {
 		return classDescriptorsByTestClass.get(testClass);
+	}
+
+	Set<ClassDescriptor> getClassDescriptors() {
+		return classDescriptors().collect(toSet());
 	}
 
 	Class<?>[] getTestClasses() {

@@ -11,6 +11,7 @@
 package org.junit.compat.testng;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -20,10 +21,15 @@ import org.testng.IClass;
 
 class TestClassRegistry {
 
+	private final Set<ClassDescriptor> classDescriptors = ConcurrentHashMap.newKeySet();
 	private final Map<IClass, Entry> testClasses = new ConcurrentHashMap<>();
 
 	void start(IClass testClass, Supplier<ClassDescriptor> onFirst) {
-		Entry entry = testClasses.computeIfAbsent(testClass, __ -> new Entry(onFirst.get()));
+		Entry entry = testClasses.computeIfAbsent(testClass, __ -> {
+			ClassDescriptor classDescriptor = onFirst.get();
+			classDescriptors.add(classDescriptor);
+			return new Entry(classDescriptor);
+		});
 		entry.inProgress.incrementAndGet();
 	}
 
@@ -43,6 +49,10 @@ class TestClassRegistry {
 			}
 			return value;
 		});
+	}
+
+	Set<ClassDescriptor> getClassDescriptors() {
+		return classDescriptors;
 	}
 
 	private static class Entry {
