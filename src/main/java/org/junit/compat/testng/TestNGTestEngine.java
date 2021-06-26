@@ -136,10 +136,6 @@ public class TestNGTestEngine implements TestEngine {
 		}
 	}
 
-	private static String toQualifiedMethodName(String className, String methodName) {
-		return className + "." + methodName;
-	}
-
 	enum Phase {
 		DISCOVERY {
 			@Override

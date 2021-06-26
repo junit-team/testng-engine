@@ -26,13 +26,11 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	static final String SEGMENT_TYPE = "method";
 
-	final MethodSignature methodSignature;
 	private final Set<TestTag> tags;
 
 	protected MethodDescriptor(UniqueId uniqueId, String displayName, Class<?> sourceClass,
 			MethodSignature methodSignature, Set<TestTag> tags) {
 		super(uniqueId, displayName, toMethodSource(sourceClass, methodSignature));
-		this.methodSignature = methodSignature;
 		this.tags = tags;
 	}
 
