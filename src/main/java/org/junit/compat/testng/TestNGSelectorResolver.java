@@ -11,12 +11,18 @@
 package org.junit.compat.testng;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 
 import java.util.Optional;
 
+import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.UniqueId.Segment;
 import org.junit.platform.engine.discovery.ClassSelector;
 import org.junit.platform.engine.discovery.MethodSelector;
+import org.junit.platform.engine.discovery.UniqueIdSelector;
 import org.junit.platform.engine.support.discovery.SelectorResolver;
 
 class TestNGSelectorResolver implements SelectorResolver {
@@ -44,8 +50,29 @@ class TestNGSelectorResolver implements SelectorResolver {
 				.orElse(Resolution.unresolved());
 	}
 
-	private ClassDescriptor createClassDescriptor(ClassSelector selector,
-			org.junit.platform.engine.TestDescriptor parent) {
+	@Override
+	public Resolution resolve(UniqueIdSelector selector, Context context) {
+		UniqueId uniqueId = selector.getUniqueId();
+		Segment lastSegment = uniqueId.getLastSegment();
+		if ("class".equals(lastSegment.getType())) {
+			return Resolution.selectors(singleton(selectClass(lastSegment.getValue())));
+		}
+		if ("method".equals(lastSegment.getType())) {
+			String methodName = lastSegment.getValue();
+			int i = methodName.indexOf('(');
+			if (i != -1) {
+				methodName = methodName.substring(0, i);
+			}
+			Segment previousSegment = uniqueId.removeLastSegment().getLastSegment();
+			if ("class".equals(previousSegment.getType())) {
+				String className = previousSegment.getValue();
+				return Resolution.selectors(singleton(selectMethod(className, methodName)));
+			}
+		}
+		return Resolution.unresolved();
+	}
+
+	private ClassDescriptor createClassDescriptor(ClassSelector selector, TestDescriptor parent) {
 		return new ClassDescriptor(parent.getUniqueId().append("class", selector.getClassName()),
 			selector.getJavaClass());
 	}

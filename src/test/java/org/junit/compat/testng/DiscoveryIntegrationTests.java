@@ -18,6 +18,7 @@ import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
 import java.util.Map;
@@ -121,5 +122,36 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
 		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
+
+	@Test
+	void discoversAllTestMethodsForClassUniqueSelector() {
+		var uniqueId = UniqueId.forEngine("testng") //
+				.append("class", SimpleTest.class.getName());
+		var request = request().selectors(selectUniqueId(uniqueId)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getUniqueId()).isEqualTo(uniqueId);
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getChildren()).hasSize(4);
+	}
+
+	@Test
+	void discoversSingleTestMethodsForMethodUniqueIdSelector() {
+		var uniqueId = UniqueId.forEngine("testng") //
+				.append("class", SimpleTest.class.getName()) //
+				.append("method", "successful()");
+		var request = request().selectors(selectUniqueId(uniqueId)).build();
+
+		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getUniqueId()).isEqualTo(uniqueId);
+		assertThat(methodDescriptor.getSource()).contains(
+			MethodSource.from(SimpleTest.class.getName(), "successful", ""));
+		assertThat(methodDescriptor.getChildren()).isEmpty();
 	}
 }
