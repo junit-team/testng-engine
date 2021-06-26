@@ -26,8 +26,8 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.DataProviderMethodTest;
-import example.FactoryWithDataProviderTest;
+import example.dataproviders.DataProviderMethodTest;
+import example.dataproviders.FactoryWithDataProviderTest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestDescriptor;

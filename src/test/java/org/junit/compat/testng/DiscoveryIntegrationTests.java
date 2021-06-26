@@ -23,8 +23,8 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 
 import java.util.Map;
 
-import example.SimpleTest;
-import example.TwoTestMethods;
+import example.basics.SimpleTest;
+import example.basics.TwoTestMethods;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.DiscoverySelector;

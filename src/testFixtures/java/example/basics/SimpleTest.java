@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example;
+package example.basics;
 
 import static org.testng.Assert.fail;
 

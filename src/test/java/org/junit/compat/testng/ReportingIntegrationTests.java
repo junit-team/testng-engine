@@ -22,7 +22,7 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.SimpleTest;
+import example.basics.SimpleTest;
 
 import org.junit.jupiter.api.Test;
 import org.testng.SkipException;

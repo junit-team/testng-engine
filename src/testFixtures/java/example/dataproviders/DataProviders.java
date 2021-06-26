@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example;
+package example.dataproviders;
 
 import java.util.Iterator;
 import java.util.List;
