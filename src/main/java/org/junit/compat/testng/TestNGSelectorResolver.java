@@ -29,11 +29,11 @@ class TestNGSelectorResolver implements SelectorResolver {
 
 	@Override
 	public Resolution resolve(ClassSelector selector, Context context) {
-		return context.addToParent(parent -> Optional.of(createClassDescriptor(selector, parent))).map(
-			classDescriptor -> Match.exact(classDescriptor, () -> {
-				classDescriptor.selectEntireClass();
-				return emptySet();
-			})) //
+		return context.addToParent(parent -> Optional.of(createClassDescriptor(selector, parent))) //
+				.map(classDescriptor -> Match.exact(classDescriptor, () -> {
+					classDescriptor.selectEntireClass();
+					return emptySet();
+				})) //
 				.map(Resolution::match) //
 				.orElse(Resolution.unresolved());
 	}
@@ -73,7 +73,7 @@ class TestNGSelectorResolver implements SelectorResolver {
 	}
 
 	private ClassDescriptor createClassDescriptor(ClassSelector selector, TestDescriptor parent) {
-		return new ClassDescriptor(parent.getUniqueId().append(ClassDescriptor.SEGMENT_TYPE, selector.getClassName()),
-			selector.getJavaClass());
+		UniqueId uniqueId = parent.getUniqueId().append(ClassDescriptor.SEGMENT_TYPE, selector.getClassName());
+		return new ClassDescriptor(uniqueId, selector.getJavaClass());
 	}
 }
