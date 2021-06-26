@@ -72,7 +72,7 @@ class ClassDescriptor extends AbstractTestDescriptor {
 		executionStrategy = executionStrategy.selectEntireClass();
 	}
 
-	public void finalizeDiscovery() {
+	public void prepareExecution() {
 		executionStrategy = new IncludeMethodsExecutionStrategy(getChildren().stream() //
 				.map(child -> (MethodDescriptor) child) //
 				.map(MethodDescriptor::getMethodSource) //

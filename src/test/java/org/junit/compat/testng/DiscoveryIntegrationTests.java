@@ -20,6 +20,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
+import static org.junit.platform.launcher.TagFilter.includeTags;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
 import java.util.Map;
@@ -34,6 +35,9 @@ import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.ClassSource;
 import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.junit.platform.launcher.core.LauncherConfig;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 
 class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
@@ -165,5 +169,24 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
 				.containsExactlyInAnyOrder(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName());
+	}
+
+	@Test
+	void supportsPostDiscoveryFilters() {
+		var request = request().selectors(selectClass(SimpleTest.class)).filters(includeTags("bar")).build();
+		var launcher = LauncherFactory.create(
+			LauncherConfig.builder().enableTestEngineAutoRegistration(false).addTestEngines(
+				new TestNGTestEngine()).build());
+		var listener = new SummaryGeneratingListener();
+
+		var testPlan = launcher.discover(request);
+		launcher.execute(testPlan, listener);
+
+		var rootIdentifier = getOnlyElement(testPlan.getRoots());
+		var classIdentifier = getOnlyElement(testPlan.getChildren(rootIdentifier));
+		var methodIdentifier = getOnlyElement(testPlan.getChildren(classIdentifier));
+		assertThat(methodIdentifier.getDisplayName()).isEqualTo("successful");
+		assertThat(listener.getSummary().getTestsStartedCount()).isEqualTo(1);
+		assertThat(listener.getSummary().getTestsSucceededCount()).isEqualTo(1);
 	}
 }

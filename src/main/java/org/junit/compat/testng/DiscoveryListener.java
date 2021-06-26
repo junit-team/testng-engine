@@ -40,7 +40,6 @@ class DiscoveryListener extends DefaultListener {
 		Set<ClassDescriptor> classDescriptors = new HashSet<>(engineDescriptor.getClassDescriptors());
 		classDescriptors.removeAll(testClassRegistry.getClassDescriptors());
 		classDescriptors.forEach(TestDescriptor::removeFromHierarchy);
-		engineDescriptor.finalizeDiscovery();
 	}
 
 	@Override

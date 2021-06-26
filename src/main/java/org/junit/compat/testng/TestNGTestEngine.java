@@ -82,6 +82,7 @@ public class TestNGTestEngine implements TestEngine {
 		TestNGEngineDescriptor engineDescriptor = (TestNGEngineDescriptor) request.getRootTestDescriptor();
 		listener.executionStarted(engineDescriptor);
 		try {
+			engineDescriptor.prepareExecution();
 			Class<?>[] testClasses = engineDescriptor.getTestClasses();
 			List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
 			TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,

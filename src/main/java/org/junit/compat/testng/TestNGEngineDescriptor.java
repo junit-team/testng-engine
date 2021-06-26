@@ -60,8 +60,8 @@ class TestNGEngineDescriptor extends EngineDescriptor {
 				.collect(toList());
 	}
 
-	void finalizeDiscovery() {
-		classDescriptors().forEach(ClassDescriptor::finalizeDiscovery);
+	void prepareExecution() {
+		classDescriptors().forEach(ClassDescriptor::prepareExecution);
 	}
 
 	private Stream<ClassDescriptor> classDescriptors() {
