@@ -138,9 +138,11 @@ public class TestNGTestEngine implements TestEngine {
 	}
 
 	enum Phase {
+
 		DISCOVERY {
 			@Override
 			void configure(TestNG testNG, ConfigurationParameters config) {
+				testNG.setVerbose(0);
 				testNG.setUseDefaultListeners(false);
 			}
 		},
@@ -148,9 +150,9 @@ public class TestNGTestEngine implements TestEngine {
 		EXECUTION {
 			@Override
 			void configure(TestNG testNG, ConfigurationParameters config) {
+				testNG.setVerbose(config.get("verbose", Integer::valueOf).orElse(0));
 				testNG.setUseDefaultListeners(config.getBoolean("useDefaultListeners").orElse(false));
 				config.get("outputDirectory").ifPresent(testNG::setOutputDirectory);
-				config.get("verbose", Integer::valueOf).ifPresent(testNG::setVerbose);
 			}
 		};
 
