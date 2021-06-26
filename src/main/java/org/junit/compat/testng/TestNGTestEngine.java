@@ -39,7 +39,7 @@ public class TestNGTestEngine implements TestEngine {
 
 	private static final EngineDiscoveryRequestResolver<TestNGEngineDescriptor> DISCOVERY_REQUEST_RESOLVER = EngineDiscoveryRequestResolver.<TestNGEngineDescriptor> builder() //
 			.addClassContainerSelectorResolver(new IsTestNGTestClass()) //
-			.addSelectorResolver(ctx -> new TestNGSelectorResolver()) // TODO use ClassFilter
+			.addSelectorResolver(ctx -> new TestNGSelectorResolver(ctx.getClassNameFilter())) //
 			.build();
 
 	@Override

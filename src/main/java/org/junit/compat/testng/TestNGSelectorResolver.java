@@ -16,6 +16,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
@@ -27,8 +28,17 @@ import org.junit.platform.engine.support.discovery.SelectorResolver;
 
 class TestNGSelectorResolver implements SelectorResolver {
 
+	private final Predicate<String> classNameFilter;
+
+	TestNGSelectorResolver(Predicate<String> classNameFilter) {
+		this.classNameFilter = classNameFilter;
+	}
+
 	@Override
 	public Resolution resolve(ClassSelector selector, Context context) {
+		if (!classNameFilter.test(selector.getClassName())) {
+			return Resolution.unresolved();
+		}
 		return context.addToParent(parent -> Optional.of(createClassDescriptor(selector, parent))) //
 				.map(classDescriptor -> Match.exact(classDescriptor, () -> {
 					classDescriptor.selectEntireClass();

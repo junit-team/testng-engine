@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
+import static org.junit.platform.engine.discovery.ClassNameFilter.includeClassNamePatterns;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
@@ -24,6 +25,7 @@ import static org.junit.platform.launcher.TagFilter.includeTags;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import example.basics.SimpleTest;
 import example.basics.TwoTestMethods;
@@ -41,11 +43,13 @@ import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 
 class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
+	private final TestNGTestEngine testEngine = new TestNGTestEngine();
+
 	@Test
 	void discoversAllTestMethodsForClassSelector() {
 		var request = request().selectors(selectClass(SimpleTest.class)).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 
 		assertThat(rootDescriptor.getUniqueId()).isEqualTo(UniqueId.forEngine("testng"));
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
@@ -77,7 +81,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	void discoversSingleTestMethodsForMethodSelector() {
 		var request = request().selectors(selectMethod(SimpleTest.class, "successful")).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 
 		assertThat(rootDescriptor.getUniqueId()).isEqualTo(UniqueId.forEngine("testng"));
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
@@ -111,7 +115,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		};
 		var request = request().selectors(selectors).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
@@ -125,7 +129,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	void ignoredNonTestNGClasses() {
 		var request = request().selectors(selectClass(Object.class)).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 		assertThat(rootDescriptor.getChildren()).isEmpty();
 	}
 
@@ -135,7 +139,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 				.append("class", SimpleTest.class.getName());
 		var request = request().selectors(selectUniqueId(uniqueId)).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
 		assertThat(classDescriptor.getUniqueId()).isEqualTo(uniqueId);
@@ -150,7 +154,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 				.append("method", "successful()");
 		var request = request().selectors(selectUniqueId(uniqueId)).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
 		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
@@ -164,7 +168,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	void discoversAllClassesViaPackageSelector() {
 		var request = request().selectors(selectPackage(SimpleTest.class.getPackageName())).build();
 
-		var rootDescriptor = new TestNGTestEngine().discover(request, UniqueId.forEngine("testng"));
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
 
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
@@ -175,8 +179,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	void supportsPostDiscoveryFilters() {
 		var request = request().selectors(selectClass(SimpleTest.class)).filters(includeTags("bar")).build();
 		var launcher = LauncherFactory.create(
-			LauncherConfig.builder().enableTestEngineAutoRegistration(false).addTestEngines(
-				new TestNGTestEngine()).build());
+			LauncherConfig.builder().enableTestEngineAutoRegistration(false).addTestEngines(testEngine).build());
 		var listener = new SummaryGeneratingListener();
 
 		var testPlan = launcher.discover(request);
@@ -188,5 +191,24 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodIdentifier.getDisplayName()).isEqualTo("successful");
 		assertThat(listener.getSummary().getTestsStartedCount()).isEqualTo(1);
 		assertThat(listener.getSummary().getTestsSucceededCount()).isEqualTo(1);
+	}
+
+	@Test
+	void supportsClassNameFilters() {
+		var request = request() //
+				.selectors(selectClass(SimpleTest.class)) //
+				.filters(includeClassNamePatterns(Pattern.quote(TwoTestMethods.class.getName()))) //
+				.build();
+
+		var rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).isEmpty();
+
+		request = request() //
+				.selectors(selectPackage(SimpleTest.class.getPackageName())) //
+				.filters(includeClassNamePatterns(Pattern.quote(TwoTestMethods.class.getName()))) //
+				.build();
+
+		rootDescriptor = testEngine.discover(request, UniqueId.forEngine("testng"));
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
 	}
 }
