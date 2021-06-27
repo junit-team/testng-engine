@@ -14,7 +14,7 @@ gradleEnterprise {
         server = "https://ge.junit.org"
 
         isCaptureTaskInputFiles = true
-        isUploadInBackground = isCiServer
+        isUploadInBackground = !isCiServer
 
         obfuscation {
             if (isCiServer) {
