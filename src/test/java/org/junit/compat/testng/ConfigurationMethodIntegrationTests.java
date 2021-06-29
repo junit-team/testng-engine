@@ -25,6 +25,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import java.lang.annotation.Retention;
 
+import example.configuration.FailingAfterClassConfigurationMethodTestCase;
 import example.configuration.FailingAfterMethodConfigurationMethodTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
@@ -166,6 +167,21 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), finishedSuccessfully()), //
 			event(container(testClass), finishedWithFailure(message("boom"))));
+	}
+
+	@Test
+	void reportsFailureFromAfterClassConfigurationMethodAsEngineLevelFailure() {
+		var testClass = FailingAfterClassConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().debug().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(container(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
+			event(container(testClass), finishedSuccessfully()), //
+			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
 	@Retention(RUNTIME)
