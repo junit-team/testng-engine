@@ -10,5 +10,16 @@
 
 package example.basics;
 
-public class InheritingSubClass extends SimpleTest {
+import org.testng.annotations.Test;
+
+public class TwoMethodsTestCase {
+
+	@Test
+	public void one() {
+	}
+
+	@Test
+	public void two() {
+	}
+
 }

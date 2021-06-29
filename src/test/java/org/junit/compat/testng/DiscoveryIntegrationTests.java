@@ -27,10 +27,10 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import example.basics.InheritingSubClass;
-import example.basics.JUnitTestClass;
-import example.basics.SimpleTest;
-import example.basics.TwoTestMethods;
+import example.basics.InheritingSubClassTestCase;
+import example.basics.JUnitTestCase;
+import example.basics.SimpleTestCase;
+import example.basics.TwoMethodsTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,7 +51,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	private final UniqueId engineId = UniqueId.forEngine(testEngine.getId());
 
 	@ParameterizedTest
-	@ValueSource(classes = { SimpleTest.class, InheritingSubClass.class })
+	@ValueSource(classes = { SimpleTestCase.class, InheritingSubClassTestCase.class })
 	void discoversAllTestMethodsForClassSelector(Class<?> testClass) {
 		var request = request().selectors(selectClass(testClass)).build();
 
@@ -84,7 +84,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void discoversSingleTestMethodsForMethodSelector() {
-		var request = request().selectors(selectMethod(SimpleTest.class, "successful")).build();
+		var request = request().selectors(selectMethod(SimpleTestCase.class, "successful")).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
@@ -92,10 +92,10 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(rootDescriptor.getChildren()).hasSize(1);
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
-		assertThat(classDescriptor.getDisplayName()).isEqualTo(SimpleTest.class.getSimpleName());
-		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTest.class.getName());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo(SimpleTestCase.class.getSimpleName());
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(SimpleTestCase.class.getName());
 		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
-		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTestCase.class));
 		assertThat(classDescriptor.getChildren()).hasSize(1);
 
 		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
@@ -103,20 +103,20 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptor.getType()).isEqualTo(TEST);
 		assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
 		assertThat(methodDescriptor.getSource()).contains(
-			MethodSource.from(SimpleTest.class.getName(), "successful", ""));
+			MethodSource.from(SimpleTestCase.class.getName(), "successful", ""));
 		assertThat(methodDescriptor.getChildren()).isEmpty();
 		assertThat(methodDescriptor.getTags()) //
 				.containsExactlyInAnyOrder(TestTag.create("foo"), TestTag.create("bar"));
 
-		var results = testNGEngine().selectors(selectMethod(SimpleTest.class, "successful")).execute();
+		var results = testNGEngine().selectors(selectMethod(SimpleTestCase.class, "successful")).execute();
 		results.testEvents().assertStatistics(stats -> stats.started(1).finished(1));
 	}
 
 	@Test
 	void supportsDiscoveryOfClassAndMethodSelector() {
 		DiscoverySelector[] selectors = { //
-				selectClass(TwoTestMethods.class), //
-				selectMethod(TwoTestMethods.class, "one") //
+				selectClass(TwoMethodsTestCase.class), //
+				selectMethod(TwoMethodsTestCase.class, "one") //
 		};
 		var request = request().selectors(selectors).build();
 
@@ -141,21 +141,21 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	@Test
 	void discoversAllTestMethodsForClassUniqueSelector() {
 		var uniqueId = engineId //
-				.append("class", SimpleTest.class.getName());
+				.append("class", SimpleTestCase.class.getName());
 		var request = request().selectors(selectUniqueId(uniqueId)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
 		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
 		assertThat(classDescriptor.getUniqueId()).isEqualTo(uniqueId);
-		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTest.class));
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(SimpleTestCase.class));
 		assertThat(classDescriptor.getChildren()).hasSize(4);
 	}
 
 	@Test
 	void discoversSingleTestMethodsForMethodUniqueIdSelector() {
 		var uniqueId = engineId //
-				.append("class", SimpleTest.class.getName()) //
+				.append("class", SimpleTestCase.class.getName()) //
 				.append("method", "successful()");
 		var request = request().selectors(selectUniqueId(uniqueId)).build();
 
@@ -165,20 +165,20 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
 		assertThat(methodDescriptor.getUniqueId()).isEqualTo(uniqueId);
 		assertThat(methodDescriptor.getSource()).contains(
-			MethodSource.from(SimpleTest.class.getName(), "successful", ""));
+			MethodSource.from(SimpleTestCase.class.getName(), "successful", ""));
 		assertThat(methodDescriptor.getChildren()).isEmpty();
 	}
 
 	@Test
 	void discoversAllClassesViaPackageSelector() {
-		var packageName = SimpleTest.class.getPackageName();
+		var packageName = SimpleTestCase.class.getPackageName();
 		var request = request().selectors(selectPackage(packageName)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
-				.contains(SimpleTest.class.getSimpleName(), TwoTestMethods.class.getSimpleName());
+				.contains(SimpleTestCase.class.getSimpleName(), TwoMethodsTestCase.class.getSimpleName());
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(
 					descriptor -> ((ClassSource) descriptor.getSource().orElseThrow()).getJavaClass().getPackageName()) //
@@ -187,7 +187,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void supportsPostDiscoveryFilters() {
-		var request = request().selectors(selectClass(SimpleTest.class)).filters(includeTags("bar")).build();
+		var request = request().selectors(selectClass(SimpleTestCase.class)).filters(includeTags("bar")).build();
 		var launcher = LauncherFactory.create(
 			LauncherConfig.builder().enableTestEngineAutoRegistration(false).addTestEngines(testEngine).build());
 		var listener = new SummaryGeneratingListener();
@@ -206,16 +206,16 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	@Test
 	void supportsClassNameFilters() {
 		var request = request() //
-				.selectors(selectClass(SimpleTest.class)) //
-				.filters(includeClassNamePatterns(Pattern.quote(TwoTestMethods.class.getName()))) //
+				.selectors(selectClass(SimpleTestCase.class)) //
+				.filters(includeClassNamePatterns(Pattern.quote(TwoMethodsTestCase.class.getName()))) //
 				.build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 		assertThat(rootDescriptor.getChildren()).isEmpty();
 
 		request = request() //
-				.selectors(selectPackage(SimpleTest.class.getPackageName())) //
-				.filters(includeClassNamePatterns(Pattern.quote(TwoTestMethods.class.getName()))) //
+				.selectors(selectPackage(SimpleTestCase.class.getPackageName())) //
+				.filters(includeClassNamePatterns(Pattern.quote(TwoMethodsTestCase.class.getName()))) //
 				.build();
 
 		rootDescriptor = testEngine.discover(request, engineId);
@@ -224,7 +224,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void doesNotDiscoverJUnit4TestClasses() {
-		var request = request().selectors(selectClass(JUnitTestClass.class)).build();
+		var request = request().selectors(selectClass(JUnitTestCase.class)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 

@@ -24,8 +24,8 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import example.basics.FailingBeforeClassTestCase;
 import example.basics.FailingBeforeMethodTestCase;
-import example.basics.InheritingSubClass;
-import example.basics.SimpleTest;
+import example.basics.InheritingSubClassTestCase;
+import example.basics.SimpleTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,7 +35,7 @@ import org.testng.SkipException;
 class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 	@ParameterizedTest
-	@ValueSource(classes = { SimpleTest.class, InheritingSubClass.class })
+	@ValueSource(classes = { SimpleTestCase.class, InheritingSubClassTestCase.class })
 	void executesSuccessfulTests(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
@@ -48,49 +48,49 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void executesFailingTests() {
-		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(SimpleTest.class), started()), //
+			event(container(SimpleTestCase.class), started()), //
 			event(test("method:failing()"), started()), //
 			event(test("method:failing()"), finishedWithFailure(message("boom"))), //
-			event(container(SimpleTest.class), finishedSuccessfully()));
+			event(container(SimpleTestCase.class), finishedSuccessfully()));
 	}
 
 	@Test
 	void executesAbortedTests() {
-		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(SimpleTest.class), started()), //
+			event(container(SimpleTestCase.class), started()), //
 			event(test("method:aborted()"), started()), //
 			event(test("method:aborted()"), abortedWithReason(instanceOf(SkipException.class), message("not today"))), //
-			event(container(SimpleTest.class), finishedSuccessfully()));
+			event(container(SimpleTestCase.class), finishedSuccessfully()));
 	}
 
 	@Test
 	@RequiresTestNGVersion(max = "6.14.3")
 	void reportsMethodsSkippedDueToFailingDependencyAsSkipped() {
-		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(SimpleTest.class), started()), //
+			event(container(SimpleTestCase.class), started()), //
 			event(test("method:skippedDueToFailingDependency()"),
 				skippedWithReason(it -> it.contains("depends on not successfully finished methods"))), //
-			event(container(SimpleTest.class), finishedSuccessfully()));
+			event(container(SimpleTestCase.class), finishedSuccessfully()));
 	}
 
 	@Test
 	@RequiresTestNGVersion(min = "7.0")
 	void reportsMethodsSkippedDueToFailingDependencyAsAborted() {
-		var results = testNGEngine().selectors(selectClass(SimpleTest.class)).execute();
+		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(SimpleTest.class), started()), //
+			event(container(SimpleTestCase.class), started()), //
 			event(test("method:skippedDueToFailingDependency()"), started()), //
 			event(test("method:skippedDueToFailingDependency()"),
 				abortedWithReason(message(it -> it.contains("depends on not successfully finished methods")))), //
-			event(container(SimpleTest.class), finishedSuccessfully()));
+			event(container(SimpleTestCase.class), finishedSuccessfully()));
 	}
 
 	@Test

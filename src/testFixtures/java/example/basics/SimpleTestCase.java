@@ -8,29 +8,36 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.dataproviders;
+package example.basics;
 
 import static org.testng.Assert.fail;
 
-import org.testng.annotations.Factory;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-public class FactoryWithDataProviderTest {
+@Test(groups = "foo")
+public class SimpleTestCase {
 
-	private final String param;
-
-	@Factory(dataProvider = "strings", dataProviderClass = DataProviders.class)
-	public FactoryWithDataProviderTest(String param) {
-		this.param = param;
+	@Test(groups = "bar")
+	public void successful() {
 	}
 
 	@Test
-	public void a() {
-		fail(param);
+	public void aborted() {
+		throw new SkipException("not today");
 	}
 
 	@Test
-	public void b() {
-		fail(param);
+	public void failing() {
+		fail("boom");
 	}
+
+	@Test(dependsOnMethods = "failing")
+	public void skippedDueToFailingDependency() {
+	}
+
+	@Test(enabled = false)
+	public void disabled() {
+	}
+
 }

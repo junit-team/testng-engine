@@ -12,7 +12,7 @@ package example.basics;
 
 import org.junit.Test;
 
-public class JUnitTestClass {
+public class JUnitTestCase {
 
 	@Test
 	public void test() {

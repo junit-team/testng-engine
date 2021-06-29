@@ -12,22 +12,25 @@ package example.dataproviders;
 
 import static org.testng.Assert.fail;
 
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
-public class DataProviderMethodTest {
+public class FactoryWithDataProviderTestCase {
 
-	@Test(dataProvider = "strings", dataProviderClass = DataProviders.class)
-	public void test(String value) {
-		fail(value);
-	}
+	private final String param;
 
-	@Test(dataProvider = "ints", dataProviderClass = DataProviders.class)
-	public void test(int value) {
-		fail(String.valueOf(value));
+	@Factory(dataProvider = "strings", dataProviderClass = DataProviders.class)
+	public FactoryWithDataProviderTestCase(String param) {
+		this.param = param;
 	}
 
 	@Test
-	public void test() {
-		fail("parameterless");
+	public void a() {
+		fail(param);
+	}
+
+	@Test
+	public void b() {
+		fail(param);
 	}
 }
