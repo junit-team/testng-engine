@@ -10,6 +10,7 @@
 
 package org.junit.compat.testng;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -22,8 +23,9 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import java.util.stream.Stream;
+import java.lang.annotation.Retention;
 
+import example.configuration.FailingAfterMethodConfigurationMethodTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
 import example.configuration.FailingBeforeSuiteConfigurationMethodTestCase;
@@ -31,7 +33,7 @@ import example.configuration.FailingBeforeTestConfigurationMethodTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
@@ -48,82 +50,84 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	@RequiresTestNGVersion(max = "6.10")
-	void reportsFailureFromBeforeMethodMethodAsAbortedWithoutThrowable() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeMethodConfigurationMethodTestCase.class)).execute();
+	void reportsFailureFromBeforeMethodConfigurationMethodAsAbortedWithoutThrowable() {
+		var testClass = FailingBeforeMethodConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), started()), //
 			event(test("method:b()"), abortedWithReason()), //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class),
-				finishedWithFailure(message("boom"))));
+			event(container(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
 	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromBeforeMethodMethodAsSkipped() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeMethodConfigurationMethodTestCase.class)).execute();
+	void reportsFailureFromBeforeMethodConfigurationMethodAsSkipped() {
+		var testClass = FailingBeforeMethodConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), skippedWithReason("boom")), //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class),
-				finishedWithFailure(message("boom"))));
+			event(container(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
 	@RequiresTestNGVersion(min = "7.0")
-	void reportsFailureFromBeforeMethodMethodAsAbortedWithThrowable() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeMethodConfigurationMethodTestCase.class)).execute();
+	void reportsFailureFromBeforeMethodConfigurationMethodAsAbortedWithThrowable() {
+		var testClass = FailingBeforeMethodConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), started()), //
 			event(test("method:b()"), abortedWithReason(message("boom"))), //
-			event(container(FailingBeforeMethodConfigurationMethodTestCase.class),
-				finishedWithFailure(message("boom"))));
+			event(container(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
 	@RequiresTestNGVersion(max = "6.10")
 	void reportsFailureFromBeforeTestMethodAsAbortedWithoutThrowable() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeTestConfigurationMethodTestCase.class)).execute();
+		var testClass = FailingBeforeTestConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason()), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), finishedSuccessfully()), //
+			event(container(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
 	@RequiresTestNGVersion(max = "6.10")
 	void reportsFailureFromBeforeSuiteMethodAsSkipped() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeSuiteConfigurationMethodTestCase.class)).execute();
+		var testClass = FailingBeforeSuiteConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(FailingBeforeSuiteConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
 			event(test("method:test()"), skippedWithReason(__ -> true)), //
-			event(container(FailingBeforeSuiteConfigurationMethodTestCase.class), finishedSuccessfully()), //
+			event(container(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
 	@ParameterizedTest
-	@MethodSource("testCasesWithEngineLevelConfigurationMethodFailures")
+	@TestCasesWithEngineLevelConfigurationMethodFailures
 	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
 	void reportsFailureFromEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
@@ -137,7 +141,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@ParameterizedTest
-	@MethodSource("testCasesWithEngineLevelConfigurationMethodFailures")
+	@TestCasesWithEngineLevelConfigurationMethodFailures
 	@RequiresTestNGVersion(min = "7.0")
 	void reportsFailureFromEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
@@ -151,9 +155,23 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
-	static Stream<Class<?>> testCasesWithEngineLevelConfigurationMethodFailures() {
-		return Stream.of(FailingBeforeTestConfigurationMethodTestCase.class,
-			FailingBeforeSuiteConfigurationMethodTestCase.class);
+	@Test
+	void reportsFailureFromAfterMethodConfigurationMethodAsClassLevelFailure() {
+		var testClass = FailingAfterMethodConfigurationMethodTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(container(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
+			event(container(testClass), finishedWithFailure(message("boom"))));
+	}
+
+	@Retention(RUNTIME)
+	@ValueSource(classes = { FailingBeforeTestConfigurationMethodTestCase.class,
+			FailingBeforeSuiteConfigurationMethodTestCase.class })
+	@interface TestCasesWithEngineLevelConfigurationMethodFailures {
 	}
 
 }
