@@ -22,7 +22,7 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.configuration.FailingBeforeClassMethodTestCase;
+import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
 import example.configuration.FailingBeforeTestConfigurationMethodTestCase;
 
@@ -32,11 +32,13 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void reportsFailureFromBeforeClassMethod() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeClassMethodTestCase.class)).execute();
+		var results = testNGEngine().selectors(
+			selectClass(FailingBeforeClassConfigurationMethodTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeClassMethodTestCase.class), started()), //
-			event(container(FailingBeforeClassMethodTestCase.class), finishedWithFailure(message("boom"))));
+			event(container(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
+			event(container(FailingBeforeClassConfigurationMethodTestCase.class),
+				finishedWithFailure(message("boom"))));
 	}
 
 	@Test

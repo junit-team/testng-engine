@@ -24,7 +24,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import example.basics.InheritingSubClassTestCase;
 import example.basics.SimpleTestCase;
-import example.configuration.FailingBeforeClassMethodTestCase;
+import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -94,11 +94,13 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void reportsFailureFromBeforeClassMethod() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeClassMethodTestCase.class)).execute();
+		var results = testNGEngine().selectors(
+			selectClass(FailingBeforeClassConfigurationMethodTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeClassMethodTestCase.class), started()), //
-			event(container(FailingBeforeClassMethodTestCase.class), finishedWithFailure(message("boom"))));
+			event(container(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
+			event(container(FailingBeforeClassConfigurationMethodTestCase.class),
+				finishedWithFailure(message("boom"))));
 	}
 
 }

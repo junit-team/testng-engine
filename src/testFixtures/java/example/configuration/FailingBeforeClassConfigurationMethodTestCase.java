@@ -13,7 +13,7 @@ package example.configuration;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class FailingBeforeClassMethodTestCase {
+public class FailingBeforeClassConfigurationMethodTestCase {
 
 	@BeforeClass
 	public void beforeClass() {
