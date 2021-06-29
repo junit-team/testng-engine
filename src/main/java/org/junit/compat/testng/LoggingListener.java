@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import org.testng.ITestClass;
 import org.testng.ITestContext;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
 class LoggingListener extends DefaultListener {
@@ -72,5 +73,45 @@ class LoggingListener extends DefaultListener {
 	@Override
 	public void onFinish(ITestContext context) {
 		LOGGER.fine(() -> "onFinish: " + context);
+	}
+
+	@Override
+	public void onConfigurationSuccess(ITestResult tr) {
+		LOGGER.fine(() -> "onConfigurationSuccess: " + tr);
+	}
+
+	@Override
+	public void onConfigurationSuccess(ITestResult tr, ITestNGMethod tm) {
+		LOGGER.fine(() -> "onConfigurationSuccess: " + tr + ", " + tm);
+	}
+
+	@Override
+	public void onConfigurationFailure(ITestResult tr) {
+		LOGGER.fine(() -> "onConfigurationFailure: " + tr);
+	}
+
+	@Override
+	public void onConfigurationFailure(ITestResult tr, ITestNGMethod tm) {
+		LOGGER.fine(() -> "onConfigurationFailure: " + tr + ", " + tm);
+	}
+
+	@Override
+	public void onConfigurationSkip(ITestResult tr) {
+		LOGGER.fine(() -> "onConfigurationSkip: " + tr);
+	}
+
+	@Override
+	public void onConfigurationSkip(ITestResult tr, ITestNGMethod tm) {
+		LOGGER.fine(() -> "onConfigurationSkip: " + tr + ", " + tm);
+	}
+
+	@Override
+	public void beforeConfiguration(ITestResult tr) {
+		LOGGER.fine(() -> "beforeConfiguration: " + tr);
+	}
+
+	@Override
+	public void beforeConfiguration(ITestResult tr, ITestNGMethod tm) {
+		LOGGER.fine(() -> "beforeConfiguration: " + tr + ", " + tm);
 	}
 }
