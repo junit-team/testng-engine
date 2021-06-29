@@ -27,6 +27,7 @@ import java.lang.annotation.Retention;
 
 import example.configuration.FailingAfterClassConfigurationMethodTestCase;
 import example.configuration.FailingAfterMethodConfigurationMethodTestCase;
+import example.configuration.FailingAfterSuiteConfigurationMethodTestCase;
 import example.configuration.FailingAfterTestConfigurationMethodTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
@@ -192,7 +193,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 	@Retention(RUNTIME)
 	@ValueSource(classes = { FailingAfterClassConfigurationMethodTestCase.class,
-			FailingAfterTestConfigurationMethodTestCase.class })
+			FailingAfterTestConfigurationMethodTestCase.class, FailingAfterSuiteConfigurationMethodTestCase.class })
 	@interface TestCasesWithLateEngineLevelConfigurationMethodFailures {
 	}
 
