@@ -12,7 +12,6 @@ package org.junit.compat.testng;
 
 import static java.util.Collections.emptyList;
 import static org.junit.platform.engine.TestExecutionResult.failed;
-import static org.junit.platform.engine.TestExecutionResult.successful;
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
 import java.util.List;
@@ -27,7 +26,6 @@ import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.config.PrefixedConfigurationParameters;
 import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
 import org.testng.CommandLineArgs;
-import org.testng.ITestNGListener;
 import org.testng.TestNG;
 
 /**
@@ -87,16 +85,17 @@ public class TestNGTestEngine implements TestEngine {
 			List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
 			TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,
 				methodNames);
-			testNG.addListener(createExecutionListener(listener, engineDescriptor));
+			ExecutionListener executionListener = createExecutionListener(listener, engineDescriptor);
+			testNG.addListener(executionListener);
 			testNG.run();
-			listener.executionFinished(engineDescriptor, successful());
+			listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 		}
 		catch (Exception e) {
 			listener.executionFinished(engineDescriptor, failed(e));
 		}
 	}
 
-	private ITestNGListener createExecutionListener(EngineExecutionListener listener,
+	private ExecutionListener createExecutionListener(EngineExecutionListener listener,
 			TestNGEngineDescriptor engineDescriptor) {
 		return new ExecutionListener(listener, engineDescriptor);
 	}

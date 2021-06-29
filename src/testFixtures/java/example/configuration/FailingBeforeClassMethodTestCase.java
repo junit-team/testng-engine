@@ -8,12 +8,12 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.basics;
+package example.configuration;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class FailingBeforeClassTestCase {
+public class FailingBeforeClassMethodTestCase {
 
 	@BeforeClass
 	public void beforeClass() {

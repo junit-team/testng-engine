@@ -11,6 +11,7 @@
 package org.junit.compat.testng;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,8 +34,9 @@ class TestClassRegistry {
 		entry.inProgress.incrementAndGet();
 	}
 
-	ClassDescriptor get(IClass testClass) {
-		return testClasses.get(testClass).descriptor;
+	Optional<ClassDescriptor> get(IClass testClass) {
+		Entry entry = testClasses.get(testClass);
+		return Optional.ofNullable(entry).map(it -> it.descriptor);
 	}
 
 	void finish(IClass testClass, Consumer<ClassDescriptor> onLast) {

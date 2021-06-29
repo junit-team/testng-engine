@@ -10,14 +10,13 @@
 
 package org.junit.compat.testng;
 
-import static java.util.Collections.synchronizedSet;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
 
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +30,8 @@ class ExecutionListener extends DefaultListener {
 
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final Map<ITestNGMethod, MethodDescriptor> inProgressTestMethods = new ConcurrentHashMap<>();
+
+	private final Set<Throwable> engineFailures = ConcurrentHashMap.newKeySet();
 	private final Map<ClassDescriptor, Set<Throwable>> classFailures = new ConcurrentHashMap<>();
 
 	private final EngineExecutionListener delegate;
@@ -54,31 +55,21 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onConfigurationFailure(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass());
-		classFailures.computeIfAbsent(classDescriptor, __ -> synchronizedSet(new LinkedHashSet<>())) //
-				.add(result.getThrowable());
-	}
-
-	@Override
-	public void onConfigurationFailure(ITestResult result, ITestNGMethod method) {
-		onConfigurationFailure(result);
+		Optional<ClassDescriptor> classDescriptor = testClassRegistry.get(result.getTestClass());
+		if (classDescriptor.isPresent()) {
+			classFailures.computeIfAbsent(classDescriptor.get(), __ -> ConcurrentHashMap.newKeySet()) //
+					.add(result.getThrowable());
+		}
+		else {
+			engineFailures.add(result.getThrowable());
+		}
 	}
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
 		testClassRegistry.finish(testClass, classDescriptor -> {
 			Set<Throwable> failures = classFailures.remove(classDescriptor);
-			TestExecutionResult result;
-			if (failures == null) {
-				result = successful();
-			}
-			else {
-				Iterator<Throwable> iterator = failures.iterator();
-				Throwable throwable = iterator.next();
-				iterator.forEachRemaining(throwable::addSuppressed);
-				result = TestExecutionResult.failed(throwable);
-			}
-			delegate.executionFinished(classDescriptor, result);
+			delegate.executionFinished(classDescriptor, toTestExecutionResult(failures));
 		});
 	}
 
@@ -128,7 +119,23 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	private MethodDescriptor findMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass());
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass()) //
+				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
 		return classDescriptor.findMethodDescriptor(result);
+	}
+
+	public TestExecutionResult toEngineResult() {
+		return toTestExecutionResult(engineFailures);
+	}
+
+	private TestExecutionResult toTestExecutionResult(Set<Throwable> failures) {
+		return failures == null || failures.isEmpty() ? successful() : failed(chain(failures));
+	}
+
+	private Throwable chain(Set<Throwable> failures) {
+		Iterator<Throwable> iterator = failures.iterator();
+		Throwable throwable = iterator.next();
+		iterator.forEachRemaining(throwable::addSuppressed);
+		return throwable;
 	}
 }

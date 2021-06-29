@@ -8,30 +8,20 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.basics;
+package example.configuration;
 
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class FailingBeforeMethodTestCase {
+public class FailingBeforeTestConfigurationMethodTestCase {
 
-	int calls;
-
-	@BeforeMethod
-	public void beforeMethod() {
-		calls++;
-		if (calls > 1) {
-			throw new AssertionError("boom");
-		}
+	@BeforeTest
+	public void beforeTest() {
+		throw new AssertionError("boom");
 	}
 
 	@Test
-	public void a() {
-		// called
-	}
-
-	@Test(dependsOnMethods = "a")
-	public void b() {
+	public void test() {
 		// never called
 	}
 }

@@ -22,10 +22,9 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.basics.FailingBeforeClassTestCase;
-import example.basics.FailingBeforeMethodTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.SimpleTestCase;
+import example.configuration.FailingBeforeClassMethodTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -95,52 +94,11 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void reportsFailureFromBeforeClassMethod() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeClassTestCase.class)).execute();
+		var results = testNGEngine().selectors(selectClass(FailingBeforeClassMethodTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeClassTestCase.class), started()), //
-			event(container(FailingBeforeClassTestCase.class), finishedWithFailure(message("boom"))));
-	}
-
-	@Test
-	@RequiresTestNGVersion(max = "6.10")
-	void reportsFailureFromBeforeMethodMethodAsAbortedWithoutThrowable() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeMethodTestCase.class)).execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodTestCase.class), started()), //
-			event(test("method:a()"), started()), //
-			event(test("method:a()"), finishedSuccessfully()), //
-			event(test("method:b()"), started()), //
-			event(test("method:b()"), abortedWithReason()), //
-			event(container(FailingBeforeMethodTestCase.class), finishedWithFailure(message("boom"))));
-	}
-
-	@Test
-	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromBeforeMethodMethodAsSkipped() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeMethodTestCase.class)).execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodTestCase.class), started()), //
-			event(test("method:a()"), started()), //
-			event(test("method:a()"), finishedSuccessfully()), //
-			event(test("method:b()"), skippedWithReason("boom")), //
-			event(container(FailingBeforeMethodTestCase.class), finishedWithFailure(message("boom"))));
-	}
-
-	@Test
-	@RequiresTestNGVersion(min = "7.0")
-	void reportsFailureFromBeforeMethodMethodAsAbortedWithThrowable() {
-		var results = testNGEngine().selectors(selectClass(FailingBeforeMethodTestCase.class)).execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeMethodTestCase.class), started()), //
-			event(test("method:a()"), started()), //
-			event(test("method:a()"), finishedSuccessfully()), //
-			event(test("method:b()"), started()), //
-			event(test("method:b()"), abortedWithReason(message("boom"))), //
-			event(container(FailingBeforeMethodTestCase.class), finishedWithFailure(message("boom"))));
+			event(container(FailingBeforeClassMethodTestCase.class), started()), //
+			event(container(FailingBeforeClassMethodTestCase.class), finishedWithFailure(message("boom"))));
 	}
 
 }

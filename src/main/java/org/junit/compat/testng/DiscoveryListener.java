@@ -65,7 +65,8 @@ class DiscoveryListener extends DefaultListener {
 	}
 
 	private void addMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass());
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass()) //
+				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
 		classDescriptor.addChild(createMethodDescriptor(classDescriptor, result));
 	}
 
