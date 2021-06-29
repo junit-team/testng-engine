@@ -22,11 +22,16 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import java.util.stream.Stream;
+
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
+import example.configuration.FailingBeforeSuiteConfigurationMethodTestCase;
 import example.configuration.FailingBeforeTestConfigurationMethodTestCase;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
@@ -104,32 +109,51 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromBeforeTestMethodAsSkipped() {
+	@RequiresTestNGVersion(max = "6.10")
+	void reportsFailureFromBeforeSuiteMethodAsSkipped() {
 		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeTestConfigurationMethodTestCase.class)).execute();
+			selectClass(FailingBeforeSuiteConfigurationMethodTestCase.class)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), started()), //
-			event(test("method:test()"), skippedWithReason("boom")), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), finishedSuccessfully()), //
+			event(container(FailingBeforeSuiteConfigurationMethodTestCase.class), started()), //
+			event(test("method:test()"), skippedWithReason(__ -> true)), //
+			event(container(FailingBeforeSuiteConfigurationMethodTestCase.class), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
-	@Test
-	@RequiresTestNGVersion(min = "7.0")
-	void reportsFailureFromBeforeTestMethodAsAbortedWithThrowable() {
-		var results = testNGEngine().selectors(
-			selectClass(FailingBeforeTestConfigurationMethodTestCase.class)).execute();
+	@ParameterizedTest
+	@MethodSource("testCasesWithEngineLevelConfigurationMethodFailures")
+	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
+	void reportsFailureFromEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), started()), //
+			event(container(testClass), started()), //
+			event(test("method:test()"), skippedWithReason("boom")), //
+			event(container(testClass), finishedSuccessfully()), //
+			event(engine(), finishedWithFailure(message("boom"))));
+	}
+
+	@ParameterizedTest
+	@MethodSource("testCasesWithEngineLevelConfigurationMethodFailures")
+	@RequiresTestNGVersion(min = "7.0")
+	void reportsFailureFromEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().debug().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(container(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason(message("boom"))), //
-			event(container(FailingBeforeTestConfigurationMethodTestCase.class), finishedSuccessfully()), //
+			event(container(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
+	}
+
+	static Stream<Class<?>> testCasesWithEngineLevelConfigurationMethodFailures() {
+		return Stream.of(FailingBeforeTestConfigurationMethodTestCase.class,
+			FailingBeforeSuiteConfigurationMethodTestCase.class);
 	}
 
 }
