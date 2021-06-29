@@ -27,6 +27,7 @@ import java.lang.annotation.Retention;
 
 import example.configuration.FailingAfterClassConfigurationMethodTestCase;
 import example.configuration.FailingAfterMethodConfigurationMethodTestCase;
+import example.configuration.FailingAfterTestConfigurationMethodTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
 import example.configuration.FailingBeforeSuiteConfigurationMethodTestCase;
@@ -128,9 +129,9 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@ParameterizedTest
-	@TestCasesWithEngineLevelConfigurationMethodFailures
+	@TestCasesWithEarlyEngineLevelConfigurationMethodFailures
 	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
+	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
@@ -142,9 +143,9 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@ParameterizedTest
-	@TestCasesWithEngineLevelConfigurationMethodFailures
+	@TestCasesWithEarlyEngineLevelConfigurationMethodFailures
 	@RequiresTestNGVersion(min = "7.0")
-	void reportsFailureFromEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
+	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
@@ -169,10 +170,9 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(container(testClass), finishedWithFailure(message("boom"))));
 	}
 
-	@Test
-	void reportsFailureFromAfterClassConfigurationMethodAsEngineLevelFailure() {
-		var testClass = FailingAfterClassConfigurationMethodTestCase.class;
-
+	@ParameterizedTest
+	@TestCasesWithLateEngineLevelConfigurationMethodFailures
+	void reportsFailureFromLateEngineLevelConfigurationMethodAsEngineLevelFailure(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().debug().assertEventsMatchExactly( //
@@ -187,7 +187,13 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	@Retention(RUNTIME)
 	@ValueSource(classes = { FailingBeforeTestConfigurationMethodTestCase.class,
 			FailingBeforeSuiteConfigurationMethodTestCase.class })
-	@interface TestCasesWithEngineLevelConfigurationMethodFailures {
+	@interface TestCasesWithEarlyEngineLevelConfigurationMethodFailures {
+	}
+
+	@Retention(RUNTIME)
+	@ValueSource(classes = { FailingAfterClassConfigurationMethodTestCase.class,
+			FailingAfterTestConfigurationMethodTestCase.class })
+	@interface TestCasesWithLateEngineLevelConfigurationMethodFailures {
 	}
 
 }
