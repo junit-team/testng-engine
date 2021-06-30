@@ -81,13 +81,15 @@ public class TestNGTestEngine implements TestEngine {
 		listener.executionStarted(engineDescriptor);
 		try {
 			engineDescriptor.prepareExecution();
+			ExecutionListener executionListener = createExecutionListener(listener, engineDescriptor);
 			Class<?>[] testClasses = engineDescriptor.getTestClasses();
 			List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
-			TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,
-				methodNames);
-			ExecutionListener executionListener = createExecutionListener(listener, engineDescriptor);
-			testNG.addListener(executionListener);
-			testNG.run();
+			if (testClasses.length > 0 || !methodNames.isEmpty()) {
+				TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,
+					methodNames);
+				testNG.addListener(executionListener);
+				testNG.run();
+			}
 			listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 		}
 		catch (Exception e) {

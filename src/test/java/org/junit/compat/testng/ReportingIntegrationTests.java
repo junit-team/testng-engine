@@ -10,9 +10,11 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.platform.engine.FilterResult.excluded;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.engine;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
@@ -29,6 +31,7 @@ import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.launcher.PostDiscoveryFilter;
 import org.testng.SkipException;
 
 class ReportingIntegrationTests extends AbstractIntegrationTests {
@@ -101,6 +104,19 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(container(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
 			event(container(FailingBeforeClassConfigurationMethodTestCase.class),
 				finishedWithFailure(message("boom"))));
+	}
+
+	@Test
+	void executesNoTestWhenPostDiscoveryFilterExcludesEverything() {
+		var testClass = SimpleTestCase.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)).filters((PostDiscoveryFilter) descriptor -> excluded("not today")) //
+				.execute();
+
+		results.allEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(engine(), finishedSuccessfully()));
 	}
 
 }
