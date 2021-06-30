@@ -55,13 +55,23 @@ class ClassDescriptor extends AbstractTestDescriptor {
 
 	@Override
 	public void addChild(TestDescriptor child) {
-		MethodDescriptor methodDescriptor = (MethodDescriptor) child;
-		methodsById.put(child.getUniqueId().getLastSegment().getValue(), methodDescriptor);
-		super.addChild(methodDescriptor);
+		methodsById.put(toChildKey(child), (MethodDescriptor) child);
+		super.addChild(child);
 	}
 
-	public MethodDescriptor findMethodDescriptor(ITestResult result) {
-		return methodsById.get(MethodDescriptor.toMethodId(result, MethodSignature.from(result.getMethod())));
+	@Override
+	public void removeChild(TestDescriptor child) {
+		methodsById.remove(toChildKey(child));
+		super.removeChild(child);
+	}
+
+	private String toChildKey(TestDescriptor child) {
+		return child.getUniqueId().getLastSegment().getValue();
+	}
+
+	public Optional<MethodDescriptor> findMethodDescriptor(ITestResult result) {
+		return Optional.ofNullable(
+			methodsById.get(MethodDescriptor.toMethodId(result, MethodSignature.from(result.getMethod()))));
 	}
 
 	public void includeTestMethod(String methodName) {

@@ -75,7 +75,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		MethodDescriptor methodDescriptor = findMethodDescriptor(result);
+		MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
 		inProgressTestMethods.put(result.getMethod(), methodDescriptor);
 		delegate.executionStarted(methodDescriptor);
 	}
@@ -90,7 +90,7 @@ class ExecutionListener extends DefaultListener {
 	public void onTestSkipped(ITestResult result) {
 		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
 		if (methodDescriptor == null) {
-			methodDescriptor = findMethodDescriptor(result);
+			methodDescriptor = findOrCreateMethodDescriptor(result);
 			String reason = "<unknown>";
 			if (result.getThrowable() != null) {
 				reason = result.getThrowable().getMessage();
@@ -118,10 +118,18 @@ class ExecutionListener extends DefaultListener {
 		// TODO
 	}
 
-	private MethodDescriptor findMethodDescriptor(ITestResult result) {
+	private MethodDescriptor findOrCreateMethodDescriptor(ITestResult result) {
 		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass()) //
 				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
-		return classDescriptor.findMethodDescriptor(result);
+		Optional<MethodDescriptor> methodDescriptor = classDescriptor.findMethodDescriptor(result);
+		if (methodDescriptor.isPresent()) {
+			return methodDescriptor.get();
+		}
+		MethodDescriptor dynamicMethodDescriptor = engineDescriptor.getTestDescriptorFactory().createMethodDescriptor(
+			classDescriptor, result);
+		classDescriptor.addChild(dynamicMethodDescriptor);
+		delegate.dynamicTestRegistered(dynamicMethodDescriptor);
+		return dynamicMethodDescriptor;
 	}
 
 	public TestExecutionResult toEngineResult() {

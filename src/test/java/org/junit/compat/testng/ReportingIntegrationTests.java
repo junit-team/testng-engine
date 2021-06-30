@@ -10,7 +10,9 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.platform.commons.util.StringUtils.isBlank;
 import static org.junit.platform.engine.FilterResult.excluded;
+import static org.junit.platform.engine.FilterResult.includedIf;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -27,10 +29,12 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 import example.basics.InheritingSubClassTestCase;
 import example.basics.SimpleTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
+import example.dataproviders.DataProviderMethodTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.PostDiscoveryFilter;
 import org.testng.SkipException;
 
@@ -117,6 +121,23 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
 			event(engine(), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsPreviouslyExcludedTestsThatAreExecutedDueToHavingTheSameMethodNameAsDynamicTests() {
+		PostDiscoveryFilter onlyParameterlessMethods = descriptor -> {
+			var source = descriptor.getSource().orElse(null);
+			return includedIf(
+				!(source instanceof MethodSource) || isBlank(((MethodSource) source).getMethodParameterTypes()));
+		};
+
+		var results = testNGEngine() //
+				.selectors(selectClass(DataProviderMethodTestCase.class)) //
+				.filters(onlyParameterlessMethods) //
+				.execute();
+
+		results.testEvents().assertStatistics(
+			stats -> stats.dynamicallyRegistered(2 + 2).started(1 + 2 + 2).finished(1 + 2 + 2));
 	}
 
 }

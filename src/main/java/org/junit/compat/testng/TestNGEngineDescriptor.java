@@ -26,10 +26,15 @@ import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 
 class TestNGEngineDescriptor extends EngineDescriptor {
 
+	private final TestDescriptorFactory testDescriptorFactory = new TestDescriptorFactory();
 	private final Map<Class<?>, ClassDescriptor> classDescriptorsByTestClass = new HashMap<>();
 
 	public TestNGEngineDescriptor(UniqueId uniqueId) {
 		super(uniqueId, "TestNG");
+	}
+
+	public TestDescriptorFactory getTestDescriptorFactory() {
+		return testDescriptorFactory;
 	}
 
 	@Override
@@ -37,6 +42,12 @@ class TestNGEngineDescriptor extends EngineDescriptor {
 		ClassDescriptor classDescriptor = (ClassDescriptor) child;
 		classDescriptorsByTestClass.put(classDescriptor.getTestClass(), classDescriptor);
 		super.addChild(child);
+	}
+
+	@Override
+	public void removeChild(TestDescriptor child) {
+		classDescriptorsByTestClass.remove(((ClassDescriptor) child).getTestClass());
+		super.removeChild(child);
 	}
 
 	public ClassDescriptor findClassDescriptor(Class<?> testClass) {

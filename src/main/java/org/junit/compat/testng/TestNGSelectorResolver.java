@@ -18,7 +18,6 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMetho
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.UniqueId.Segment;
 import org.junit.platform.engine.discovery.ClassSelector;
@@ -29,9 +28,11 @@ import org.junit.platform.engine.support.discovery.SelectorResolver;
 class TestNGSelectorResolver implements SelectorResolver {
 
 	private final Predicate<String> classNameFilter;
+	private final TestDescriptorFactory testDescriptorFactory;
 
-	TestNGSelectorResolver(Predicate<String> classNameFilter) {
+	TestNGSelectorResolver(Predicate<String> classNameFilter, TestDescriptorFactory testDescriptorFactory) {
 		this.classNameFilter = classNameFilter;
+		this.testDescriptorFactory = testDescriptorFactory;
 	}
 
 	@Override
@@ -39,7 +40,8 @@ class TestNGSelectorResolver implements SelectorResolver {
 		if (!classNameFilter.test(selector.getClassName())) {
 			return Resolution.unresolved();
 		}
-		return context.addToParent(parent -> Optional.of(createClassDescriptor(selector, parent))) //
+		return context.addToParent(
+			parent -> Optional.of(testDescriptorFactory.createClassDescriptor(parent, selector.getJavaClass()))) //
 				.map(classDescriptor -> Match.exact(classDescriptor, () -> {
 					classDescriptor.selectEntireClass();
 					return emptySet();
@@ -80,10 +82,5 @@ class TestNGSelectorResolver implements SelectorResolver {
 			}
 		}
 		return Resolution.unresolved();
-	}
-
-	private ClassDescriptor createClassDescriptor(ClassSelector selector, TestDescriptor parent) {
-		UniqueId uniqueId = parent.getUniqueId().append(ClassDescriptor.SEGMENT_TYPE, selector.getClassName());
-		return new ClassDescriptor(uniqueId, selector.getJavaClass());
 	}
 }
