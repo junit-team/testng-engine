@@ -10,6 +10,7 @@
 
 package org.junit.compat.testng;
 
+import static java.util.Collections.unmodifiableSet;
 import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
 
 import java.util.Set;
@@ -36,7 +37,7 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	@Override
 	public Set<TestTag> getTags() {
-		return tags;
+		return unmodifiableSet(tags);
 	}
 
 	private static MethodSource toMethodSource(Class<?> sourceClass, MethodSignature methodSignature) {

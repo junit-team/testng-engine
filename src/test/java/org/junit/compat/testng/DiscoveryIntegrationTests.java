@@ -64,6 +64,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(classDescriptor.getDisplayName()).isEqualTo(testClass.getSimpleName());
 		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(testClass.getName());
 		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getTags()).contains(TestTag.create("foo"));
 		assertThat(classDescriptor.getSource()).contains(ClassSource.from(testClass));
 		assertThat(classDescriptor.getChildren()).hasSize(4);
 

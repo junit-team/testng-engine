@@ -11,6 +11,7 @@
 package org.junit.compat.testng;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.ClassSource;
@@ -32,11 +34,13 @@ class ClassDescriptor extends AbstractTestDescriptor {
 
 	private final ConcurrentMap<String, MethodDescriptor> methodsById = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
+	private final Set<TestTag> tags;
 	ExecutionStrategy executionStrategy = new IncludeMethodsExecutionStrategy();
 
-	ClassDescriptor(UniqueId uniqueId, Class<?> testClass) {
+	ClassDescriptor(UniqueId uniqueId, Class<?> testClass, Set<TestTag> tags) {
 		super(uniqueId, testClass.getSimpleName(), ClassSource.from(testClass));
 		this.testClass = testClass;
+		this.tags = tags;
 	}
 
 	@Override
@@ -51,6 +55,11 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	@Override
 	public Type getType() {
 		return Type.CONTAINER;
+	}
+
+	@Override
+	public Set<TestTag> getTags() {
+		return unmodifiableSet(tags);
 	}
 
 	@Override
