@@ -28,12 +28,14 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	final MethodSignature methodSignature;
 	private final Set<TestTag> tags;
+	private final Type type;
 
 	protected MethodDescriptor(UniqueId uniqueId, String displayName, Class<?> sourceClass,
-			MethodSignature methodSignature, Set<TestTag> tags) {
+			MethodSignature methodSignature, Set<TestTag> tags, Type type) {
 		super(uniqueId, displayName, toMethodSource(sourceClass, methodSignature));
 		this.methodSignature = methodSignature;
 		this.tags = tags;
+		this.type = type;
 	}
 
 	@Override
@@ -74,12 +76,12 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	@Override
 	public Type getType() {
-		return Type.CONTAINER_AND_TEST;
+		return type;
 	}
 
 	@Override
 	public boolean mayRegisterTests() {
-		return true;
+		return type == Type.CONTAINER;
 	}
 
 	@SuppressWarnings("OptionalGetWithoutIsPresent")

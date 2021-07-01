@@ -13,6 +13,8 @@ package org.junit.compat.testng;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.compat.testng.MethodDescriptor.toMethodId;
+import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
+import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestDescriptor.Type;
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.testng.ITestNGMethod;
@@ -50,7 +53,19 @@ class TestDescriptorFactory {
 			toMethodId(result, methodSignature));
 		Class<?> sourceClass = method.getTestClass().getRealClass();
 		Set<TestTag> tags = Arrays.stream(method.getGroups()).map(this::createTag).collect(toSet());
-		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags);
+		Type type = isDataDriven(method) || method.getInvocationCount() > 1 ? CONTAINER : TEST;
+		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags, type);
+	}
+
+	private boolean isDataDriven(ITestNGMethod method) {
+		try {
+			return method.isDataDriven();
+		}
+		catch (NoSuchMethodError ignore) {
+			Test annotation = method.getConstructorOrMethod().getMethod().getAnnotation(Test.class);
+			return annotation != null
+					&& (!annotation.dataProvider().trim().isEmpty() || annotation.dataProviderClass() != Object.class);
+		}
 	}
 
 	InvocationDescriptor createInvocationDescriptor(MethodDescriptor parent, ITestResult result, int invocationIndex) {

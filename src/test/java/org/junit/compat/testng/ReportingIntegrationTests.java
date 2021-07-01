@@ -142,12 +142,18 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 				.filters(onlyParameterlessMethods) //
 				.execute();
 
+		results.containerEvents().assertStatistics(stats -> stats //
+				.dynamicallyRegistered(2) //
+				.started(1 + 1 + 2) //
+				.succeeded(1 + 1 + 2) //
+				.finished(1 + 1 + 2));
+
 		results.testEvents().assertStatistics(stats -> stats //
-				.dynamicallyRegistered((1 + 2) + (1 + 2)) //
-				.started(1 + (1 + 2) + (1 + 2)) //
+				.dynamicallyRegistered(2 + 2) //
+				.started(1 + 2 + 2) //
 				.failed(1 + 2 + 2) //
-				.succeeded(1 + 1) //
-				.finished(1 + (1 + 2) + (1 + 2)));
+				.succeeded(0) //
+				.finished(1 + 2 + 2));
 	}
 
 	@Test
@@ -184,7 +190,7 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine().selectors(selectUniqueId(uniqueId)).execute();
 
-		results.testEvents().assertStatistics(stats -> stats.finished(1 + 4));
+		results.testEvents().assertStatistics(stats -> stats.finished(4));
 	}
 
 }

@@ -14,9 +14,11 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
-import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER_AND_TEST;
+import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
+import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
+import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.dynamicTestRegistered;
 import static org.junit.platform.testkit.engine.EventConditions.engine;
@@ -52,19 +54,26 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptors.keySet()).containsExactlyInAnyOrder("test", "test(java.lang.String)", "test(int)");
 		methodDescriptors.forEach((displayName, methodDescriptor) -> {
 			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(displayName);
-			assertThat(methodDescriptor.getType()).isEqualTo(CONTAINER_AND_TEST);
 			assertThat(methodDescriptor.getChildren()).isEmpty();
 		});
 
+		assertThat(methodDescriptors.get("test").getType()) //
+				.isEqualTo(TEST);
 		assertThat(methodDescriptors.get("test").getSource()) //
 				.contains(MethodSource.from(DataProviderMethodTestCase.class.getName(), "test", ""));
 		assertThat(methodDescriptors.get("test").getUniqueId().getLastSegment().getValue()) //
 				.isEqualTo("test()");
+
+		assertThat(methodDescriptors.get("test(java.lang.String)").getType()) //
+				.isEqualTo(CONTAINER);
 		assertThat(methodDescriptors.get("test(java.lang.String)").getSource()) //
 				.contains(
 					MethodSource.from(DataProviderMethodTestCase.class.getName(), "test", String.class.getName()));
 		assertThat(methodDescriptors.get("test(java.lang.String)").getUniqueId().getLastSegment().getValue()) //
 				.isEqualTo("test(java.lang.String)");
+
+		assertThat(methodDescriptors.get("test(int)").getType()) //
+				.isEqualTo(CONTAINER);
 		assertThat(methodDescriptors.get("test(int)").getSource()) //
 				.contains(MethodSource.from(DataProviderMethodTestCase.class.getName(), "test", int.class.getName()));
 		assertThat(methodDescriptors.get("test(int)").getUniqueId().getLastSegment().getValue()) //
@@ -82,7 +91,7 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(DataProviderMethodTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(DataProviderMethodTestCase.class), started()), //
-			event(test("method:test(java.lang.String)"), started()), //
+			event(container("method:test(java.lang.String)"), started()), //
 			event(uniqueIdSubstring("method:test(java.lang.String)"), dynamicTestRegistered("invoc:0"),
 				displayName("[0] a"), legacyReportingName("test(java.lang.String)[0]")), //
 			event(uniqueIdSubstring("method:test(java.lang.String)"), test("invoc:0"), started()), //
@@ -93,11 +102,11 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(uniqueIdSubstring("method:test(java.lang.String)"), test("invoc:1"), started()), //
 			event(uniqueIdSubstring("method:test(java.lang.String)"), test("invoc:1"),
 				finishedWithFailure(message("b"))), //
-			event(test("method:test(java.lang.String)"), finishedSuccessfully()), //
+			event(container("method:test(java.lang.String)"), finishedSuccessfully()), //
 			event(testClass(DataProviderMethodTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(DataProviderMethodTestCase.class), started()), //
-			event(test("method:test(int)"), started()), //
+			event(container("method:test(int)"), started()), //
 			event(uniqueIdSubstring("method:test(int)"), dynamicTestRegistered("invoc:0"), displayName("[0] 1"),
 				legacyReportingName("test(int)[0]")), //
 			event(uniqueIdSubstring("method:test(int)"), test("invoc:0"), started()), //
@@ -106,7 +115,7 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 				legacyReportingName("test(int)[1]")), //
 			event(uniqueIdSubstring("method:test(int)"), test("invoc:1"), started()), //
 			event(uniqueIdSubstring("method:test(int)"), test("invoc:1"), finishedWithFailure(message("2"))), //
-			event(test("method:test(int)"), finishedSuccessfully()), //
+			event(container("method:test(int)"), finishedSuccessfully()), //
 			event(testClass(DataProviderMethodTestCase.class), finishedSuccessfully()));
 	}
 

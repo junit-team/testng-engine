@@ -84,7 +84,7 @@ class ExecutionListener extends DefaultListener {
 		if (invocationIndex == 0) {
 			delegate.executionStarted(methodDescriptor);
 		}
-		else {
+		if (methodDescriptor.getType().isContainer()) {
 			createInvocationAndReportStarted(progress, invocationIndex, result);
 		}
 	}
@@ -126,16 +126,13 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	private void reportFinished(ITestResult result, TestExecutionResult executionResult) {
-		int invocationIndex = result.getMethod().getCurrentInvocationCount() - 1;
 		boolean moreInvocationsToCome = executionResult.getStatus() != ABORTED
 				&& result.getMethod().hasMoreInvocation();
 		MethodProgress progress = moreInvocationsToCome //
 				? inProgressTestMethods.get(result.getMethod()) //
 				: inProgressTestMethods.remove(result.getMethod());
-		if (invocationIndex > 0 || moreInvocationsToCome) {
-			if (invocationIndex == 0) {
-				createInvocationAndReportStarted(progress, invocationIndex, result);
-			}
+		if (progress.descriptor.getType().isContainer()) {
+			int invocationIndex = result.getMethod().getCurrentInvocationCount() - 1;
 			InvocationDescriptor invocationDescriptor = progress.invocations.remove(invocationIndex);
 			delegate.executionFinished(invocationDescriptor, executionResult);
 			if (!moreInvocationsToCome) {
@@ -154,8 +151,8 @@ class ExecutionListener extends DefaultListener {
 		if (methodDescriptor.isPresent()) {
 			return methodDescriptor.get();
 		}
-		MethodDescriptor dynamicMethodDescriptor = getTestDescriptorFactory().createMethodDescriptor(classDescriptor,
-			result);
+		MethodDescriptor dynamicMethodDescriptor = getTestDescriptorFactory() //
+				.createMethodDescriptor(classDescriptor, result);
 		classDescriptor.addChild(dynamicMethodDescriptor);
 		delegate.dynamicTestRegistered(dynamicMethodDescriptor);
 		return dynamicMethodDescriptor;
