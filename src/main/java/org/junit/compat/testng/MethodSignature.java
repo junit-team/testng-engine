@@ -10,12 +10,15 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
+
 import org.testng.ITestNGMethod;
 
 class MethodSignature {
 
 	final String methodName;
 	final Class<?>[] parameterTypes;
+	final String stringRepresentation;
 
 	static MethodSignature from(ITestNGMethod method) {
 		return new MethodSignature(method.getMethodName(), getParameterTypes(method));
@@ -33,6 +36,11 @@ class MethodSignature {
 	private MethodSignature(String methodName, Class<?>[] parameterTypes) {
 		this.methodName = methodName;
 		this.parameterTypes = parameterTypes;
+		this.stringRepresentation = String.format("%s(%s)", methodName, nullSafeToString(parameterTypes));
 	}
 
+	@Override
+	public String toString() {
+		return stringRepresentation;
+	}
 }

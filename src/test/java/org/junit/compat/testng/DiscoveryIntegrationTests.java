@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.CollectionUtils.getOnlyElement;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
-import static org.junit.platform.engine.TestDescriptor.Type.TEST;
+import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER_AND_TEST;
 import static org.junit.platform.engine.discovery.ClassNameFilter.includeClassNamePatterns;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.JUnitTestCase;
 import example.basics.SimpleTestCase;
+import example.basics.SuccessPercentageTestCase;
 import example.basics.TwoMethodsTestCase;
 
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 			"skippedDueToFailingDependency");
 		methodDescriptors.forEach((methodName, methodDescriptor) -> {
 			assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo(methodName);
-			assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+			assertThat(methodDescriptor.getType()).isEqualTo(CONTAINER_AND_TEST);
 			assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
 			assertThat(methodDescriptor.getSource()).contains(MethodSource.from(testClass.getName(), methodName, ""));
 			assertThat(methodDescriptor.getChildren()).isEmpty();
@@ -101,7 +102,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
 		assertThat(methodDescriptor.getLegacyReportingName()).isEqualTo("successful");
-		assertThat(methodDescriptor.getType()).isEqualTo(TEST);
+		assertThat(methodDescriptor.getType()).isEqualTo(CONTAINER_AND_TEST);
 		assertThat(methodDescriptor.getTags()).contains(TestTag.create("foo"));
 		assertThat(methodDescriptor.getSource()).contains(
 			MethodSource.from(SimpleTestCase.class.getName(), "successful", ""));
@@ -230,5 +231,19 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		var rootDescriptor = testEngine.discover(request, engineId);
 
 		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
+
+	@Test
+	void discoversTestMethodsWithMultipleInvocationsAsContainers() {
+		var testClass = SuccessPercentageTestCase.class;
+		var request = request().selectors(selectClass(testClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getType()).isEqualTo(CONTAINER_AND_TEST);
+		assertThat(methodDescriptor.getChildren()).isEmpty();
+		assertThat(methodDescriptor.mayRegisterTests()).isTrue();
 	}
 }

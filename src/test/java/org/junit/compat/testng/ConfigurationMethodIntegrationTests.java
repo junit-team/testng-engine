@@ -13,7 +13,6 @@ package org.junit.compat.testng;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
-import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.engine;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
@@ -46,8 +45,8 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			selectClass(FailingBeforeClassConfigurationMethodTestCase.class)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
-			event(container(FailingBeforeClassConfigurationMethodTestCase.class),
+			event(testClass(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
+			event(testClass(FailingBeforeClassConfigurationMethodTestCase.class),
 				finishedWithFailure(message("boom"))));
 	}
 
@@ -59,12 +58,12 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), started()), //
 			event(test("method:b()"), abortedWithReason()), //
-			event(container(testClass), finishedWithFailure(message("boom"))));
+			event(testClass(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
@@ -75,11 +74,11 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), skippedWithReason("boom")), //
-			event(container(testClass), finishedWithFailure(message("boom"))));
+			event(testClass(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
@@ -90,12 +89,12 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:a()"), started()), //
 			event(test("method:a()"), finishedSuccessfully()), //
 			event(test("method:b()"), started()), //
 			event(test("method:b()"), abortedWithReason(message("boom"))), //
-			event(container(testClass), finishedWithFailure(message("boom"))));
+			event(testClass(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@Test
@@ -105,12 +104,12 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().debug().assertEventsMatchExactly( //
+		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason()), //
-			event(container(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
@@ -121,11 +120,11 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().debug().assertEventsMatchExactly( //
+		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), skippedWithReason(__ -> true)), //
-			event(container(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
@@ -135,11 +134,11 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().debug().assertEventsMatchExactly( //
+		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), skippedWithReason("boom")), //
-			event(container(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
@@ -149,12 +148,12 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().debug().assertEventsMatchExactly( //
+		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason(message("boom"))), //
-			event(container(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
@@ -165,10 +164,10 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), finishedSuccessfully()), //
-			event(container(testClass), finishedWithFailure(message("boom"))));
+			event(testClass(testClass), finishedWithFailure(message("boom"))));
 	}
 
 	@ParameterizedTest
@@ -176,12 +175,12 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	void reportsFailureFromLateEngineLevelConfigurationMethodAsEngineLevelFailure(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().debug().assertEventsMatchExactly( //
+		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
-			event(container(testClass), started()), //
+			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), finishedSuccessfully()), //
-			event(container(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 

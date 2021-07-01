@@ -19,7 +19,6 @@ import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.MethodSource;
-import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.internal.IParameterInfo;
 
@@ -27,11 +26,13 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	static final String SEGMENT_TYPE = "method";
 
+	final MethodSignature methodSignature;
 	private final Set<TestTag> tags;
 
 	protected MethodDescriptor(UniqueId uniqueId, String displayName, Class<?> sourceClass,
 			MethodSignature methodSignature, Set<TestTag> tags) {
 		super(uniqueId, displayName, toMethodSource(sourceClass, methodSignature));
+		this.methodSignature = methodSignature;
 		this.tags = tags;
 	}
 
@@ -46,16 +47,7 @@ class MethodDescriptor extends AbstractTestDescriptor {
 	}
 
 	static String toMethodId(ITestResult result, MethodSignature methodSignature) {
-		ITestNGMethod method = result.getMethod();
-		String id;
-		if (result.getParameters().length > 0) {
-			String paramTypeList = nullSafeToString(methodSignature.parameterTypes);
-			int invocationCount = method.getCurrentInvocationCount();
-			id = String.format("%s(%s)_%d", method.getMethodName(), paramTypeList, invocationCount);
-		}
-		else {
-			id = method.getMethodName() + "()";
-		}
+		String id = methodSignature.stringRepresentation;
 		Object[] instances = result.getTestClass().getInstances(true);
 		if (instances.length > 1) {
 			Object instance = result.getInstance();
@@ -82,7 +74,12 @@ class MethodDescriptor extends AbstractTestDescriptor {
 
 	@Override
 	public Type getType() {
-		return Type.TEST;
+		return Type.CONTAINER_AND_TEST;
+	}
+
+	@Override
+	public boolean mayRegisterTests() {
+		return true;
 	}
 
 	@SuppressWarnings("OptionalGetWithoutIsPresent")

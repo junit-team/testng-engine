@@ -10,6 +10,7 @@
 
 package org.junit.compat.testng;
 
+import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.TestExecutionResult;
@@ -29,7 +31,7 @@ import org.testng.ITestResult;
 class ExecutionListener extends DefaultListener {
 
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
-	private final Map<ITestNGMethod, MethodDescriptor> inProgressTestMethods = new ConcurrentHashMap<>();
+	private final Map<ITestNGMethod, MethodProgress> inProgressTestMethods = new ConcurrentHashMap<>();
 
 	private final Set<Throwable> engineFailures = ConcurrentHashMap.newKeySet();
 	private final Map<ClassDescriptor, Set<Throwable>> classFailures = new ConcurrentHashMap<>();
@@ -76,46 +78,73 @@ class ExecutionListener extends DefaultListener {
 	@Override
 	public void onTestStart(ITestResult result) {
 		MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
-		inProgressTestMethods.put(result.getMethod(), methodDescriptor);
-		delegate.executionStarted(methodDescriptor);
+		MethodProgress progress = inProgressTestMethods.computeIfAbsent(result.getMethod(),
+			__ -> new MethodProgress(result.getMethod(), methodDescriptor));
+		int invocationIndex = result.getMethod().getCurrentInvocationCount();
+		if (invocationIndex == 0) {
+			delegate.executionStarted(methodDescriptor);
+		}
+		else {
+			createInvocationAndReportStarted(progress, invocationIndex, result);
+		}
 	}
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
-		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
-		delegate.executionFinished(methodDescriptor, successful());
+		// TODO handle retried tests
+		reportFinished(result, successful());
 	}
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
-		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
-		if (methodDescriptor == null) {
-			methodDescriptor = findOrCreateMethodDescriptor(result);
+		if (inProgressTestMethods.containsKey(result.getMethod())) {
+			reportFinished(result, aborted(result.getThrowable()));
+		}
+		else {
+			MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
 			String reason = "<unknown>";
 			if (result.getThrowable() != null) {
 				reason = result.getThrowable().getMessage();
 			}
 			delegate.executionSkipped(methodDescriptor, reason);
 		}
-		else {
-			delegate.executionFinished(methodDescriptor, aborted(result.getThrowable()));
-		}
 	}
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		MethodDescriptor methodDescriptor = inProgressTestMethods.remove(result.getMethod());
-		delegate.executionFinished(methodDescriptor, failed(result.getThrowable()));
+		reportFinished(result, failed(result.getThrowable()));
 	}
 
 	@Override
 	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-		// TODO
+		onTestSuccess(result);
 	}
 
 	@Override
 	public void onTestFailedWithTimeout(ITestResult result) {
 		// TODO
+	}
+
+	private void reportFinished(ITestResult result, TestExecutionResult executionResult) {
+		int invocationIndex = result.getMethod().getCurrentInvocationCount() - 1;
+		boolean moreInvocationsToCome = executionResult.getStatus() != ABORTED
+				&& result.getMethod().hasMoreInvocation();
+		MethodProgress progress = moreInvocationsToCome //
+				? inProgressTestMethods.get(result.getMethod()) //
+				: inProgressTestMethods.remove(result.getMethod());
+		if (invocationIndex > 0 || moreInvocationsToCome) {
+			if (invocationIndex == 0) {
+				createInvocationAndReportStarted(progress, invocationIndex, result);
+			}
+			InvocationDescriptor invocationDescriptor = progress.invocations.remove(invocationIndex);
+			delegate.executionFinished(invocationDescriptor, executionResult);
+			if (!moreInvocationsToCome) {
+				delegate.executionFinished(progress.descriptor, successful());
+			}
+		}
+		else {
+			delegate.executionFinished(progress.descriptor, executionResult);
+		}
 	}
 
 	private MethodDescriptor findOrCreateMethodDescriptor(ITestResult result) {
@@ -125,11 +154,24 @@ class ExecutionListener extends DefaultListener {
 		if (methodDescriptor.isPresent()) {
 			return methodDescriptor.get();
 		}
-		MethodDescriptor dynamicMethodDescriptor = engineDescriptor.getTestDescriptorFactory().createMethodDescriptor(
-			classDescriptor, result);
+		MethodDescriptor dynamicMethodDescriptor = getTestDescriptorFactory().createMethodDescriptor(classDescriptor,
+			result);
 		classDescriptor.addChild(dynamicMethodDescriptor);
 		delegate.dynamicTestRegistered(dynamicMethodDescriptor);
 		return dynamicMethodDescriptor;
+	}
+
+	private void createInvocationAndReportStarted(MethodProgress progress, int invocationIndex, ITestResult result) {
+		InvocationDescriptor invocationDescriptor = getTestDescriptorFactory().createInvocationDescriptor(
+			progress.descriptor, result, invocationIndex);
+		progress.invocations.put(invocationIndex, invocationDescriptor);
+		progress.descriptor.addChild(invocationDescriptor);
+		delegate.dynamicTestRegistered(invocationDescriptor);
+		delegate.executionStarted(invocationDescriptor);
+	}
+
+	private TestDescriptorFactory getTestDescriptorFactory() {
+		return engineDescriptor.getTestDescriptorFactory();
 	}
 
 	public TestExecutionResult toEngineResult() {
@@ -145,5 +187,16 @@ class ExecutionListener extends DefaultListener {
 		Throwable throwable = iterator.next();
 		iterator.forEachRemaining(throwable::addSuppressed);
 		return throwable;
+	}
+
+	static class MethodProgress {
+		final ITestNGMethod method;
+		final MethodDescriptor descriptor;
+		final ConcurrentMap<Integer, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
+
+		public MethodProgress(ITestNGMethod method, MethodDescriptor descriptor) {
+			this.method = method;
+			this.descriptor = descriptor;
+		}
 	}
 }

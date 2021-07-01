@@ -10,20 +10,42 @@
 
 package org.junit.compat.testng;
 
+import static java.util.function.Predicate.isEqual;
+import static org.junit.platform.commons.util.FunctionUtils.where;
+import static org.junit.platform.testkit.engine.Event.byTestDescriptor;
+import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.displayName;
+import static org.junit.platform.testkit.engine.EventConditions.event;
+import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstring;
+
 import java.nio.file.Path;
 
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.testkit.engine.EngineTestKit;
+import org.junit.platform.testkit.engine.Event;
 
 abstract class AbstractIntegrationTests {
 
 	@TempDir
 	Path tempDir;
 
-	protected EngineTestKit.Builder testNGEngine() {
+	EngineTestKit.Builder testNGEngine() {
 		return EngineTestKit.engine("testng") //
 				.configurationParameter("testng.verbose", "10") //
 				.configurationParameter("testng.useDefaultListeners", "false") //
 				.configurationParameter("testng.outputDirectory", tempDir.toString());
+	}
+
+	static Condition<Event> testClass(Class<?> testClass) {
+		return container(event(displayName(testClass.getSimpleName()), uniqueIdSubstring(testClass.getName()),
+			legacyReportingName(testClass.getName())));
+	}
+
+	static Condition<Event> legacyReportingName(String legacyReportingName) {
+		return new Condition<>(
+			byTestDescriptor(where(TestDescriptor::getLegacyReportingName, isEqual(legacyReportingName))),
+			"descriptor with legacy reporting name '%s'", legacyReportingName);
 	}
 }

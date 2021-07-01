@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
 
@@ -39,18 +40,32 @@ class TestDescriptorFactory {
 	}
 
 	MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
-		MethodSignature methodSignature = MethodSignature.from(result.getMethod());
+		ITestNGMethod method = result.getMethod();
+		MethodSignature methodSignature = MethodSignature.from(method);
 		String name = result.getName();
-		if (result.getParameters().length > 0) {
-			int invocationCount = result.getMethod().getCurrentInvocationCount();
-			String paramList = Arrays.stream(result.getParameters()).map(String::valueOf).collect(joining(", "));
-			name = String.format("%s[%d](%s)", name, invocationCount, paramList);
+		if (methodSignature.parameterTypes.length > 0) {
+			name = methodSignature.stringRepresentation;
 		}
 		UniqueId uniqueId = parent.getUniqueId().append(MethodDescriptor.SEGMENT_TYPE,
 			toMethodId(result, methodSignature));
-		Class<?> sourceClass = result.getMethod().getTestClass().getRealClass();
-		Set<TestTag> tags = Arrays.stream(result.getMethod().getGroups()).map(this::createTag).collect(toSet());
+		Class<?> sourceClass = method.getTestClass().getRealClass();
+		Set<TestTag> tags = Arrays.stream(method.getGroups()).map(this::createTag).collect(toSet());
 		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags);
+	}
+
+	InvocationDescriptor createInvocationDescriptor(MethodDescriptor parent, ITestResult result, int invocationIndex) {
+		UniqueId uniqueId = parent.getUniqueId().append(InvocationDescriptor.SEGMENT_TYPE,
+			String.valueOf(invocationIndex));
+		Object[] parameters = result.getParameters();
+		String displayName;
+		if (parameters.length > 0) {
+			String paramList = Arrays.stream(parameters).map(String::valueOf).collect(joining(", "));
+			displayName = String.format("[%d] %s", invocationIndex, paramList);
+		}
+		else {
+			displayName = String.format("[%d]", invocationIndex);
+		}
+		return new InvocationDescriptor(uniqueId, displayName, parent.getMethodSource(), invocationIndex);
 	}
 
 	private Set<TestTag> collectClassLevelTags(Class<?> testClass) {

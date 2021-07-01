@@ -14,6 +14,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -80,6 +81,9 @@ class TestNGSelectorResolver implements SelectorResolver {
 				String className = previousSegment.getValue();
 				return Resolution.selectors(singleton(selectMethod(className, methodName)));
 			}
+		}
+		if (InvocationDescriptor.SEGMENT_TYPE.equals(lastSegment.getType())) {
+			return Resolution.selectors(singleton(selectUniqueId(uniqueId.removeLastSegment())));
 		}
 		return Resolution.unresolved();
 	}
