@@ -45,10 +45,9 @@ class TestDescriptorFactory {
 	MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
 		ITestNGMethod method = result.getMethod();
 		MethodSignature methodSignature = MethodSignature.from(method);
-		String name = result.getName();
-		if (methodSignature.parameterTypes.length > 0) {
-			name = methodSignature.stringRepresentation;
-		}
+		String name = methodSignature.parameterTypes.length > 0 //
+				? methodSignature.stringRepresentation //
+				: result.getName();
 		UniqueId uniqueId = parent.getUniqueId().append(MethodDescriptor.SEGMENT_TYPE,
 			toMethodId(result, methodSignature));
 		Class<?> sourceClass = method.getTestClass().getRealClass();
