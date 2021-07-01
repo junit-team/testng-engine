@@ -10,6 +10,8 @@
 
 package example.dataproviders;
 
+import static java.util.Collections.singletonList;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -20,11 +22,11 @@ public class DataProviders {
 
 	@DataProvider
 	public static Iterator<Object[]> strings() {
-		return Stream.of(List.of("a"), List.of("b")).map(List::toArray).iterator();
+		return Stream.of(singletonList("a"), singletonList("b")).map(List::toArray).iterator();
 	}
 
 	@DataProvider
 	public static Iterator<Object[]> ints() {
-		return Stream.of(List.of(1), List.of(2)).map(List::toArray).iterator();
+		return Stream.of(singletonList(1), singletonList(2)).map(List::toArray).iterator();
 	}
 }

@@ -1,4 +1,6 @@
+import java.util.EnumSet
 import org.gradle.api.tasks.PathSensitivity.RELATIVE
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     `java-library`
@@ -53,6 +55,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
     testImplementation("org.apache.maven:maven-artifact:3.8.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-console")
     testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.14.1"))
     testRuntimeOnly("org.apache.logging.log4j:log4j-core")
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
@@ -76,6 +79,9 @@ dependencies {
 
 tasks {
     compileJava {
+        options.release.set(8)
+    }
+    compileTestFixturesJava {
         options.release.set(8)
     }
     compileTestJava {
@@ -105,10 +111,39 @@ tasks {
         }
     }
     supportedTestNGConfigurationsByVersion.forEach { (version, configuration) ->
-        register<Test>("testFixtures_${version.replace('.', '_')}") {
+        val java8Launcher = project.the<JavaToolchainService>().launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(8))
+        }
+        register<Test>("testFixturesTestNG_${version.replace('.', '_')}") {
+            javaLauncher.set(java8Launcher)
             classpath = configurations.testFixturesRuntimeClasspath + configuration
             testClassesDirs = sourceSets.testFixtures.get().output
             useTestNG()
+        }
+        register<Test>("testFixturesJUnitPlatform_${version.replace('.', '_')}") {
+            javaLauncher.set(java8Launcher)
+            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            testClassesDirs = sourceSets.testFixtures.get().output
+            useJUnitPlatform {
+                includeEngines("testng")
+            }
+            testLogging {
+                events = EnumSet.allOf(TestLogEvent::class.java)
+            }
+        }
+        register<JavaExec>("testFixturesConsoleLauncher_${version.replace('.', '_')}") {
+            javaLauncher.set(java8Launcher)
+            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            mainClass.set("org.junit.platform.console.ConsoleLauncher")
+            args(
+                "--scan-classpath", sourceSets.testFixtures.get().output.asPath,
+                "--fail-if-no-tests",
+                "--disable-banner",
+                "--include-classname", ".*TestCase",
+                "--exclude-package", "example.configuration",
+                "--include-engine", "testng"
+            )
+            isIgnoreExitValue = true
         }
     }
     val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
