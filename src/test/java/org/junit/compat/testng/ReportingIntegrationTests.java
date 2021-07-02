@@ -33,6 +33,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import java.util.Map;
 
+import example.basics.CustomAttributeTestCase;
 import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.RetriedTestCase;
@@ -263,11 +264,26 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 	void reportsTestThrowingExpectedExceptionAsSuccessful() {
 		var testClass = ExpectedExceptionsTestCase.class;
 
-		var results = testNGEngine().selectors(selectClass(ExpectedExceptionsTestCase.class)).execute();
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	@RequiresTestNGVersion(min = "7.0") // introduced in 7.0
+	void reportsCustomAttributesAsReportEntries() {
+		var testClass = CustomAttributeTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), reportEntry(Map.of("foo", "bar, baz"))), //
 			event(test("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}

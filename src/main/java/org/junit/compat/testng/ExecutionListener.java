@@ -10,11 +10,14 @@
 
 package org.junit.compat.testng;
 
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
 import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +31,7 @@ import org.junit.platform.engine.reporting.ReportEntry;
 import org.testng.ITestClass;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.annotations.CustomAttribute;
 
 class ExecutionListener extends DefaultListener {
 
@@ -88,6 +92,10 @@ class ExecutionListener extends DefaultListener {
 			String description = result.getMethod().getDescription();
 			if (description != null && !description.trim().isEmpty()) {
 				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from("description", description.trim()));
+			}
+			Map<String, String> attributes = getAttributes(result);
+			if (!attributes.isEmpty()) {
+				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from(attributes));
 			}
 		}
 		if (methodDescriptor.getType().isContainer()) {
@@ -209,6 +217,19 @@ class ExecutionListener extends DefaultListener {
 			this.method = method;
 			this.descriptor = descriptor;
 		}
+	}
+
+	private Map<String, String> getAttributes(ITestResult result) {
+		try {
+			CustomAttribute[] attributes = result.getMethod().getAttributes();
+			if (attributes.length > 0) {
+				return Arrays.stream(attributes) //
+						.collect(toMap(CustomAttribute::name, attr -> String.join(", ", attr.values())));
+			}
+		}
+		catch (NoSuchMethodError ignore) {
+		}
+		return emptyMap();
 	}
 
 	private boolean willRetry(ITestResult result) {
