@@ -34,6 +34,7 @@ import example.basics.InheritingSubClassTestCase;
 import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
+import example.basics.TimeoutTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 
@@ -44,6 +45,7 @@ import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.PostDiscoveryFilter;
 import org.testng.SkipException;
+import org.testng.internal.thread.ThreadTimeoutException;
 
 class ReportingIntegrationTests extends AbstractIntegrationTests {
 
@@ -233,6 +235,22 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("invoc:2"), started()), //
 			event(test("invoc:2"), finishedSuccessfully()), //
 			event(container("method:dataProviderTest(int)"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "timeOut", "invocationTimeOut" })
+	@RequiresTestNGVersion(except = "6.11") // https://github.com/cbeust/testng/issues/1493
+	void reportsTimedOutTestsAsFailures(String methodName) {
+		var testClass = TimeoutTestCase.class;
+
+		var results = testNGEngine().selectors(selectMethod(testClass, methodName)).execute();
+
+		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(test("method:%s()".formatted(methodName)), started()), //
+			event(test("method:%s()".formatted(methodName)),
+				finishedWithFailure(instanceOf(ThreadTimeoutException.class))), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 }

@@ -12,13 +12,14 @@ package org.junit.compat.testng;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static java.text.MessageFormat.format;
+import static java.util.function.Predicate.isEqual;
 import static org.junit.compat.testng.TestContext.testNGVersion;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
@@ -31,9 +32,12 @@ import org.junit.platform.commons.support.AnnotationSupport;
 @Target(METHOD)
 @ExtendWith(RequiresTestNGVersion.Extension.class)
 @interface RequiresTestNGVersion {
+
 	String min() default "";
 
 	String max() default "";
+
+	String[] except() default {};
 
 	class Extension implements ExecutionCondition {
 		@Override
@@ -46,11 +50,15 @@ import org.junit.platform.commons.support.AnnotationSupport;
 			var actualVersion = testNGVersion();
 			if (!requirements.max().isBlank()
 					&& actualVersion.compareTo(new ComparableVersion(requirements.max())) > 0) {
-				return disabled(format("max constraint not met: {0} > {1}", actualVersion, requirements.max()));
+				return disabled("max constraint not met: %s > %s".formatted(actualVersion, requirements.max()));
 			}
 			if (!requirements.min().isBlank()
 					&& actualVersion.compareTo(new ComparableVersion(requirements.min())) < 0) {
-				return disabled(format("min constraint not met: {0} < {1}", actualVersion, requirements.min()));
+				return disabled("min constraint not met: %s < %s".formatted(actualVersion, requirements.min()));
+			}
+			if (Arrays.stream(requirements.except()).map(ComparableVersion::new).anyMatch(isEqual(actualVersion))) {
+				return disabled("except constraint not met: %s is contained in %s".formatted(actualVersion,
+					Arrays.toString(requirements.except())));
 			}
 			return enabled("satisfies all TestNG version requirements");
 		}

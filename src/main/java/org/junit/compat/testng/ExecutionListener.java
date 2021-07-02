@@ -122,7 +122,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestFailedWithTimeout(ITestResult result) {
-		// TODO
+		onTestFailure(result);
 	}
 
 	private void finishMethodsNotYetReportedAsFinished(ITestClass testClass) {
