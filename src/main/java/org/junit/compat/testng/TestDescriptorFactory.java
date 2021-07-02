@@ -16,11 +16,8 @@ import static org.junit.compat.testng.MethodDescriptor.toMethodId;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,7 +27,6 @@ import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
-import org.testng.annotations.Test;
 import org.testng.internal.annotations.DisabledRetryAnalyzer;
 
 class TestDescriptorFactory {
@@ -39,7 +35,9 @@ class TestDescriptorFactory {
 
 	ClassDescriptor createClassDescriptor(TestDescriptor parent, Class<?> testClass) {
 		UniqueId uniqueId = parent.getUniqueId().append(ClassDescriptor.SEGMENT_TYPE, testClass.getName());
-		Set<TestTag> tags = collectClassLevelTags(testClass);
+		Set<TestTag> tags = TestAnnotationUtils.collectGroups(testClass) //
+				.map(this::createTag) //
+				.collect(toSet());
 		return new ClassDescriptor(uniqueId, testClass, tags);
 	}
 
@@ -68,8 +66,7 @@ class TestDescriptorFactory {
 			return method.getRetryAnalyzerClass();
 		}
 		catch (NoSuchMethodError ignore) {
-			Test annotation = getTestAnnotation(method);
-			return annotation == null ? getDefaultRetryAnalyzer() : annotation.retryAnalyzer();
+			return TestAnnotationUtils.getRetryAnalyzer(method);
 		}
 	}
 
@@ -87,14 +84,9 @@ class TestDescriptorFactory {
 			return method.isDataDriven();
 		}
 		catch (NoSuchMethodError ignore) {
-			Test annotation = getTestAnnotation(method);
-			return annotation != null
-					&& (!annotation.dataProvider().trim().isEmpty() || annotation.dataProviderClass() != Object.class);
+			return TestAnnotationUtils.getDataProvider(method).isPresent() //
+					|| TestAnnotationUtils.getDataProviderClass(method).isPresent();
 		}
-	}
-
-	private Test getTestAnnotation(ITestNGMethod method) {
-		return method.getConstructorOrMethod().getMethod().getAnnotation(Test.class);
 	}
 
 	InvocationDescriptor createInvocationDescriptor(MethodDescriptor parent, ITestResult result, int invocationIndex) {
@@ -110,23 +102,6 @@ class TestDescriptorFactory {
 			displayName = String.format("[%d]", invocationIndex);
 		}
 		return new InvocationDescriptor(uniqueId, displayName, parent.getMethodSource(), invocationIndex);
-	}
-
-	private Set<TestTag> collectClassLevelTags(Class<?> testClass) {
-		return getClassHierarchy(testClass).stream() //
-				.map(clazz -> clazz.getAnnotation(Test.class)) //
-				.filter(Objects::nonNull) //
-				.flatMap(annotation -> Arrays.stream(annotation.groups())) //
-				.map(this::createTag) //
-				.collect(toSet());
-	}
-
-	private static List<Class<?>> getClassHierarchy(Class<?> testClass) {
-		List<Class<?>> result = new ArrayList<>();
-		for (Class<?> clazz = testClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
-			result.add(clazz);
-		}
-		return result;
 	}
 
 	private TestTag createTag(String value) {

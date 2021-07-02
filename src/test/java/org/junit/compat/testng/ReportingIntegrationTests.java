@@ -246,7 +246,7 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine().selectors(selectMethod(testClass, methodName)).execute();
 
-		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:%s()".formatted(methodName)), started()), //
 			event(test("method:%s()".formatted(methodName)),

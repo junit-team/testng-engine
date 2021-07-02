@@ -18,11 +18,11 @@ import org.testng.IRetryAnalyzer;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
 
+@Test(retryAnalyzer = RetriedTestCase.MyRetryAnalyzer.class)
 public class RetriedTestCase {
 
 	int runs;
 
-	@Test(retryAnalyzer = MyRetryAnalyzer.class)
 	public void test() {
 		if (runs++ == 0) {
 			fail("retry");

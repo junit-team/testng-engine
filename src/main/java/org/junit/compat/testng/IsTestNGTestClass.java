@@ -10,22 +10,18 @@
 
 package org.junit.compat.testng;
 
-import static org.junit.platform.commons.support.AnnotationSupport.isAnnotated;
-
 import java.util.Arrays;
 import java.util.function.Predicate;
-
-import org.testng.annotations.Test;
 
 class IsTestNGTestClass implements Predicate<Class<?>> {
 
 	@Override
 	public boolean test(Class<?> candidateClass) {
-		return isAnnotated(candidateClass, Test.class) || hasMethodWithTestAnnotation(candidateClass);
+		return TestAnnotationUtils.isAnnotatedInHierarchy(candidateClass)
+				|| hasMethodWithTestAnnotation(candidateClass);
 	}
 
 	private boolean hasMethodWithTestAnnotation(Class<?> candidateClass) {
-		return Arrays.stream(candidateClass.getMethods()) //
-				.anyMatch(method -> isAnnotated(method, Test.class));
+		return Arrays.stream(candidateClass.getMethods()).anyMatch(TestAnnotationUtils::isAnnotatedDirectly);
 	}
 }

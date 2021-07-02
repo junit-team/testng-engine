@@ -27,6 +27,7 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.JUnitTestCase;
 import example.basics.SimpleTestCase;
@@ -180,7 +181,8 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(TestDescriptor::getDisplayName) //
-				.contains(SimpleTestCase.class.getSimpleName(), TwoMethodsTestCase.class.getSimpleName());
+				.contains(SimpleTestCase.class.getSimpleName(),
+					InheritedClassLevelOnlyAnnotationTestCase.class.getSimpleName());
 		assertThat(rootDescriptor.getChildren()) //
 				.extracting(
 					descriptor -> ((ClassSource) descriptor.getSource().orElseThrow()).getJavaClass().getPackageName()) //
