@@ -27,6 +27,7 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import example.basics.IgnoredTestCase;
 import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.JUnitTestCase;
@@ -247,5 +248,17 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptor.getType()).isEqualTo(CONTAINER);
 		assertThat(methodDescriptor.getChildren()).isEmpty();
 		assertThat(methodDescriptor.mayRegisterTests()).isTrue();
+	}
+
+	@Test
+	@RequiresTestNGVersion(min = "6.13") // introduced in 6.13
+	void ignoresIgnoredTests() {
+		var request = request().selectors(selectClass(IgnoredTestCase.class)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getDisplayName()).isEqualTo("test");
 	}
 }
