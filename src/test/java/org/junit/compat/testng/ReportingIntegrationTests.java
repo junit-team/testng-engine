@@ -30,6 +30,7 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
@@ -251,6 +252,19 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:%s()".formatted(methodName)), started()), //
 			event(test("method:%s()".formatted(methodName)),
 				finishedWithFailure(instanceOf(ThreadTimeoutException.class))), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsTestThrowingExpectedExceptionAsSuccessful() {
+		var testClass = ExpectedExceptionsTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(ExpectedExceptionsTestCase.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 }
