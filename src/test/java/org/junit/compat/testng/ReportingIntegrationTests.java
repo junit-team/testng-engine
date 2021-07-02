@@ -14,6 +14,7 @@ import static org.junit.platform.commons.util.StringUtils.isBlank;
 import static org.junit.platform.engine.FilterResult.excluded;
 import static org.junit.platform.engine.FilterResult.includedIf;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -30,6 +31,7 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.in
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
 import example.basics.InheritingSubClassTestCase;
+import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
@@ -193,4 +195,44 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 		results.testEvents().assertStatistics(stats -> stats.finished(4));
 	}
 
+	@Test
+	void reportsRetriedTestsCorrectly() {
+		var testClass = RetriedTestCase.class;
+
+		var results = testNGEngine().selectors(selectMethod(testClass, "test")).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:test()"), started()), //
+			event(dynamicTestRegistered("invoc:0"), displayName("[0]")), //
+			event(test("invoc:0"), started()), //
+			event(test("invoc:0"), abortedWithReason(message("retry"))), //
+			event(dynamicTestRegistered("invoc:1"), displayName("[1]")), //
+			event(test("invoc:1"), started()), //
+			event(test("invoc:1"), finishedSuccessfully()), //
+			event(container("method:test()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsRetriedTestsWithDataProvidersCorrectly() {
+		var testClass = RetriedTestCase.class;
+
+		var results = testNGEngine().selectors(selectMethod(testClass, "dataProviderTest")).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:dataProviderTest(int)"), started()), //
+			event(dynamicTestRegistered("invoc:0"), displayName("[0] 1")), //
+			event(test("invoc:0"), started()), //
+			event(test("invoc:0"), abortedWithReason(message("retry @ 1"))), //
+			event(dynamicTestRegistered("invoc:1"), displayName("[1] 1")), //
+			event(test("invoc:1"), started()), //
+			event(test("invoc:1"), finishedSuccessfully()), //
+			event(dynamicTestRegistered("invoc:2"), displayName("[2] 2")), //
+			event(test("invoc:2"), started()), //
+			event(test("invoc:2"), finishedSuccessfully()), //
+			event(container("method:dataProviderTest(int)"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
 }

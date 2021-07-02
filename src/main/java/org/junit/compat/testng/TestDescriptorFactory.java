@@ -31,6 +31,7 @@ import org.junit.platform.engine.UniqueId;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
+import org.testng.internal.annotations.DisabledRetryAnalyzer;
 
 class TestDescriptorFactory {
 
@@ -52,8 +53,33 @@ class TestDescriptorFactory {
 			toMethodId(result, methodSignature));
 		Class<?> sourceClass = method.getTestClass().getRealClass();
 		Set<TestTag> tags = Arrays.stream(method.getGroups()).map(this::createTag).collect(toSet());
-		Type type = isDataDriven(method) || method.getInvocationCount() > 1 ? CONTAINER : TEST;
+		Type type = reportsInvocations(method) ? CONTAINER : TEST;
 		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags, type);
+	}
+
+	private boolean reportsInvocations(ITestNGMethod method) {
+		return isDataDriven(method) //
+				|| method.getInvocationCount() > 1 //
+				|| getRetryAnalyzerClass(method) != getDefaultRetryAnalyzer();
+	}
+
+	private Class<?> getRetryAnalyzerClass(ITestNGMethod method) {
+		try {
+			return method.getRetryAnalyzerClass();
+		}
+		catch (NoSuchMethodError ignore) {
+			Test annotation = getTestAnnotation(method);
+			return annotation == null ? getDefaultRetryAnalyzer() : annotation.retryAnalyzer();
+		}
+	}
+
+	private Class<?> getDefaultRetryAnalyzer() {
+		try {
+			return DisabledRetryAnalyzer.class;
+		}
+		catch (NoClassDefFoundError ignore) {
+			return Class.class;
+		}
 	}
 
 	private boolean isDataDriven(ITestNGMethod method) {
@@ -61,10 +87,14 @@ class TestDescriptorFactory {
 			return method.isDataDriven();
 		}
 		catch (NoSuchMethodError ignore) {
-			Test annotation = method.getConstructorOrMethod().getMethod().getAnnotation(Test.class);
+			Test annotation = getTestAnnotation(method);
 			return annotation != null
 					&& (!annotation.dataProvider().trim().isEmpty() || annotation.dataProviderClass() != Object.class);
 		}
+	}
+
+	private Test getTestAnnotation(ITestNGMethod method) {
+		return method.getConstructorOrMethod().getMethod().getAnnotation(Test.class);
 	}
 
 	InvocationDescriptor createInvocationDescriptor(MethodDescriptor parent, ITestResult result, int invocationIndex) {

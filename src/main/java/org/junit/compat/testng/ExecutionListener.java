@@ -70,6 +70,7 @@ class ExecutionListener extends DefaultListener {
 	@Override
 	public void onAfterClass(ITestClass testClass) {
 		testClassRegistry.finish(testClass, classDescriptor -> {
+			finishMethodsNotYetReportedAsFinished(testClass);
 			Set<Throwable> failures = classFailures.remove(classDescriptor);
 			delegate.executionFinished(classDescriptor, toTestExecutionResult(failures));
 		});
@@ -91,14 +92,13 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
-		// TODO handle retried tests
-		reportFinished(result, successful());
+		reportFinished(result, successful(), false);
 	}
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
 		if (inProgressTestMethods.containsKey(result.getMethod())) {
-			reportFinished(result, aborted(result.getThrowable()));
+			reportFinished(result, aborted(result.getThrowable()), willRetry(result));
 		}
 		else {
 			MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
@@ -112,7 +112,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		reportFinished(result, failed(result.getThrowable()));
+		reportFinished(result, failed(result.getThrowable()), false);
 	}
 
 	@Override
@@ -125,21 +125,30 @@ class ExecutionListener extends DefaultListener {
 		// TODO
 	}
 
-	private void reportFinished(ITestResult result, TestExecutionResult executionResult) {
-		boolean moreInvocationsToCome = executionResult.getStatus() != ABORTED
-				&& result.getMethod().hasMoreInvocation();
-		MethodProgress progress = moreInvocationsToCome //
-				? inProgressTestMethods.get(result.getMethod()) //
-				: inProgressTestMethods.remove(result.getMethod());
+	private void finishMethodsNotYetReportedAsFinished(ITestClass testClass) {
+		for (ITestNGMethod testMethod : testClass.getTestMethods()) {
+			MethodProgress progress = inProgressTestMethods.remove(testMethod);
+			if (progress != null) {
+				delegate.executionFinished(progress.descriptor, successful());
+			}
+		}
+	}
+
+	private void reportFinished(ITestResult result, TestExecutionResult executionResult, boolean willRetry) {
+		MethodProgress progress = inProgressTestMethods.get(result.getMethod());
 		if (progress.descriptor.getType().isContainer()) {
 			int invocationIndex = result.getMethod().getCurrentInvocationCount() - 1;
 			InvocationDescriptor invocationDescriptor = progress.invocations.remove(invocationIndex);
 			delegate.executionFinished(invocationDescriptor, executionResult);
-			if (!moreInvocationsToCome) {
+			boolean lastInvocation = !willRetry //
+					&& (executionResult.getStatus() == ABORTED || !result.getMethod().hasMoreInvocation());
+			if (lastInvocation) {
+				inProgressTestMethods.remove(result.getMethod());
 				delegate.executionFinished(progress.descriptor, successful());
 			}
 		}
 		else {
+			inProgressTestMethods.remove(result.getMethod());
 			delegate.executionFinished(progress.descriptor, executionResult);
 		}
 	}
@@ -194,6 +203,15 @@ class ExecutionListener extends DefaultListener {
 		public MethodProgress(ITestNGMethod method, MethodDescriptor descriptor) {
 			this.method = method;
 			this.descriptor = descriptor;
+		}
+	}
+
+	private boolean willRetry(ITestResult result) {
+		try {
+			return result.wasRetried();
+		}
+		catch (NoSuchMethodError ignore) {
+			return true;
 		}
 	}
 }
