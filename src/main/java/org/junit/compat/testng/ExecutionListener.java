@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.TestExecutionResult;
+import org.junit.platform.engine.reporting.ReportEntry;
 import org.testng.ITestClass;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
@@ -84,6 +85,10 @@ class ExecutionListener extends DefaultListener {
 		int invocationIndex = result.getMethod().getCurrentInvocationCount();
 		if (invocationIndex == 0) {
 			delegate.executionStarted(methodDescriptor);
+			String description = result.getMethod().getDescription();
+			if (description != null && !description.trim().isEmpty()) {
+				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from("description", description.trim()));
+			}
 		}
 		if (methodDescriptor.getType().isContainer()) {
 			createInvocationAndReportStarted(progress, invocationIndex, result);

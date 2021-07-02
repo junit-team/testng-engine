@@ -24,11 +24,14 @@ import static org.junit.platform.testkit.engine.EventConditions.engine;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
+import static org.junit.platform.testkit.engine.EventConditions.reportEntry;
 import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
+
+import java.util.Map;
 
 import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
@@ -58,6 +61,7 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:successful()"), started()), //
+			event(test("method:successful()"), reportEntry(Map.of("description", "a test that passes"))), //
 			event(test("method:successful()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}

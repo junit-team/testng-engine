@@ -18,7 +18,7 @@ import org.testng.annotations.Test;
 @Test(groups = "foo")
 public class SimpleTestCase {
 
-	@Test(groups = "bar")
+	@Test(groups = "bar", description = "a test that passes")
 	public void successful() {
 	}
 
