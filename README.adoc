@@ -1,0 +1,277 @@
+= TestNG Engine for the JUnit Platform
+:jcommander-version: 1.72
+:jquery-version: 3.5.1
+:junit-platform-version: 1.7.2
+:surefire-version: 3.0.0-M5
+:testng-min-version: 6.9.13.6
+:testng-max-version: 7.4.0
+:testng-engine-version: 1.0.0-SNAPSHOT
+
+Allows executing https://testng.org[TestNG] tests on the JUnit Platform
+
+== Usage
+
+.Console Launcher
+[%collapsible]
+====
+When running without a build tool, you need to download the following jars from Maven Central:
+
+* https://search.maven.org/remotecontent?filepath=org/junit/platform/junit-platform-console-standalone/{junit-platform-version}/junit-platform-console-standalone-{junit-platform-version}.jar[junit-platform-console-standalone-{junit-platform-version}.jar]
+* https://search.maven.org/remotecontent?filepath=org/junit/compat/testng-engine/{testng-engine-version}/testng-engine-{testng-engine-version}.jar[testng-engine-{testng-engine-version}.jar]
+* https://search.maven.org/remotecontent?filepath=org/testng/testng/{testng-max-version}/testng-{testng-max-version}.jar[testng-{testng-max-version}.jar]
+* https://search.maven.org/remotecontent?filepath=com/beust/jcommander/{jcommander-version}/jcommander-{jcommander-version}.jar[jcommander-{jcommander-version}.jar]
+* https://search.maven.org/remotecontent?filepath=org/webjars/jquery/{jquery-version}/jquery-{jquery-version}.jar[jquery-{jquery-version}.jar]
+
+The following samples assume the above jars have been downloaded to the local `lib` folder and production and test classes to `bin/main` and `bin/test`, respectively.
+
+[source,subs="attributes+"]
+----
+$ java -cp 'lib/*' org.junit.platform.console.ConsoleLauncher \
+       -cp bin/main -cp bin/test \
+       --include-engine=testng --scan-classpath=bin/test
+
+Thanks for using JUnit! Support its development at https://junit.org/sponsoring
+
+╷
+└─ TestNG ✔
+   └─ CalculatorTests ✔
+      ├─ add(int, int, int) ✔
+      │  ├─ [0] 0, 1, 1 ✔
+      │  ├─ [1] 1, 2, 3 ✔
+      │  ├─ [2] 49, 51, 100 ✔
+      │  └─ [3] 1, 100, 101 ✔
+      └─ addsTwoNumbers ✔
+            2021-07-04T17:43:52.223145 description = `1 + 1 = 2`
+
+Test run finished after 38 ms
+[         3 containers found      ]
+[         0 containers skipped    ]
+[         3 containers started    ]
+[         0 containers aborted    ]
+[         3 containers successful ]
+[         0 containers failed     ]
+[         5 tests found           ]
+[         0 tests skipped         ]
+[         5 tests started         ]
+[         0 tests aborted         ]
+[         5 tests successful      ]
+[         0 tests failed          ]
+----
+
+====
+
+.Gradle
+[%collapsible]
+====
+[source,kotlin,subs="attributes+"]
+.build.gradle[.kts]
+----
+dependencies {
+    testImplementation("org.testng:testng:{testng-max-version}")
+    testRuntimeOnly("org.junit.compat:testng-engine:{testng-engine-version}") // <.>
+}
+tasks.test {
+    useJUnitPlatform() // <.>
+}
+----
+<.> Add the engine as an extra dependency for running tests
+<.> Configure the test task to use the JUnit Platform
+====
+
+.Maven
+[%collapsible]
+====
+[source,xml,subs="attributes+"]
+.pom.xml
+----
+<project>
+    <!-- ... -->
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>{testng-max-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.compat</groupId>
+            <artifactId>testng-engine</artifactId>
+            <version>{testng-engine-version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>{surefire-version}</version>
+            </plugin>
+        </plugins>
+    </build>
+    <!-- ... -->
+</project>
+----
+====
+
+=== Supported TestNG versions
+
+The engine supports TestNG version {testng-min-version} and above.
+
+=== Configuration Parameters
+
+The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#running-tests-config-params[configuration parameters] are supported:
+
+`testng.outputDirectory` (file path)::
+the output directory for reports (default: "test-output")
++
+`testng.useDefaultListeners` (boolean)::
+whether TestNG's default report generating listeners should be used (default: `false`)
++
+`testng.verbose` (boolean)::
+TestNG's level of verbosity (default: 0)
+
+=== Generating TestNG reports
+
+.Console Launcher
+[%collapsible]
+====
+[source]
+----
+$ java -cp 'lib/*' org.junit.platform.console.ConsoleLauncher \
+       -cp bin/main -cp bin/test \
+       --include-engine=testng --scan-classpath=bin/test \
+       --config=testng.useDefaultListeners=true \
+       --config=testng.outputDirectory=test-reports
+----
+====
+
+.Gradle
+[%collapsible]
+====
+[source,kotlin,subs="attributes+"]
+.build.gradle[.kts]
+----
+tasks.test {
+    useJUnitPlatform()
+    systemProperty("testng.useDefaultListeners", "true")
+
+    val testNGReportsDir = layout.buildDirectory.dir("reports/testng")
+    outputs.dir(testNGReportsDir).withPropertyName("testng-reports")
+    jvmArgumentProviders += CommandLineArgumentProvider {
+        listOf("-Dtestng.outputDirectory=${testNGReportsDir.get().asFile.absolutePath}")
+    }
+}
+----
+====
+
+.Maven
+[%collapsible]
+====
+[source,xml,subs="attributes+"]
+----
+<project>
+    <!-- ... -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>{surefire-version}</version>
+                <configuration>
+                    <properties>
+                        <configurationParameters>
+                            testng.useDefaultListeners = true
+                            testng.outputDirectory = ${project.build.directory}/testng-reports
+                        </configurationParameters>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <!-- ... -->
+</project>
+----
+====
+
+
+== Limitations
+
+=== Groups
+
+Groups declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
+Hence, you can use https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag filter expressions] to include or exclude certain groups.
+However, since tags and therefore groups are filtered rather than selected, `@BeforeGroup` and `@AfterGroup` configuration methods are not executed.
+
+
+For example, given the following test class, including the tag `included` and excluding `excluded` will run test `a` and `c` but not `b` and `d`.
+
+[source,java]
+----
+import org.testng.annotations.Test;
+
+public class TestWithGroups {
+    @Test(groups = "included")
+    public void a() {}
+    @Test(groups = {"included", "excluded"})
+    public void b() {}
+    @Test(groups = "included")
+    public void c() {}
+    @Test
+    public void d() {}
+}
+----
+
+.Console Launcher
+[%collapsible]
+====
+[source]
+----
+$ java -cp 'lib/*' org.junit.platform.console.ConsoleLauncher \
+       -cp bin/main -cp bin/test \
+       --include-engine=testng --scan-classpath=bin/test \
+       --include-tag=included --exclude-tag=excluded
+----
+====
+
+.Gradle
+[%collapsible]
+====
+[source,kotlin,subs="attributes+"]
+.build.gradle[.kts]
+----
+tasks.test {
+    useJUnitPlatform {
+        includeTags("included")
+        excludeTags("excluded")
+    }
+}
+----
+====
+
+.Maven
+[%collapsible]
+====
+[source,xml,subs="attributes+"]
+----
+<project>
+    <!-- ... -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>{surefire-version}</version>
+                <configuration>
+                    <groups>included</groups>
+                    <excludedGroups>excluded</excludedGroups>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <!-- ... -->
+</project>
+----
+====
+
+=== XML Suites
+
+The engine's main intention is integration with build tools like Gradle and Maven.
+Hence, custom suites specified via testng.xml files are not supported.
