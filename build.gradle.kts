@@ -222,7 +222,8 @@ publishing {
                 withVariantsFromConfiguration(configurations.testFixturesRuntimeElements.get()) { skip() }
             })
             pom {
-                name.set(project.description)
+                name.set("TestNG Engine for the JUnit Platform")
+                description.set(project.description)
                 url.set("https://junit.org/junit5/")
                 scm {
                     connection.set("scm:git:git://github.com/junit-team/testng-engine.git")
