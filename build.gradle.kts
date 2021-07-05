@@ -43,9 +43,15 @@ val supportedTestNGVersions = listOf(
 )
 
 val testRuntimeClasspath: Configuration by configurations.getting
-val supportedTestNGConfigurationsByVersion = supportedTestNGVersions.associateWith { version ->
-    configurations.create("testng_${version.replace('.', '_')}") {
+val supportedTestNGTestConfigurationsByVersion = supportedTestNGVersions.associateWith { version ->
+    configurations.create("testRuntimeClasspath_${version.replace('.', '_')}") {
         extendsFrom(testRuntimeClasspath)
+    }
+}
+val testFixturesRuntimeClasspath: Configuration by configurations.getting
+val supportedTestNGTestFixturesConfigurationsByVersion = supportedTestNGVersions.associateWith { version ->
+    configurations.create("testFixturesRuntimeClasspath_${version.replace('.', '_')}") {
+        extendsFrom(testFixturesRuntimeClasspath)
     }
 }
 
@@ -61,13 +67,23 @@ dependencies {
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
     testFixturesImplementation("junit:junit:4.13.2")
     testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+    compileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+    testCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
     implementation("org.testng:testng") {
         version {
+            require(supportedTestNGVersions.first())
             prefer(supportedTestNGVersions.last())
         }
     }
     constraints {
-        supportedTestNGConfigurationsByVersion.forEach { (version, configuration) ->
+        supportedTestNGTestConfigurationsByVersion.forEach { (version, configuration) ->
+            configuration("org.testng:testng") {
+                version {
+                    strictly(version)
+                }
+            }
+        }
+        supportedTestNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
             configuration("org.testng:testng") {
                 version {
                     strictly(version)
@@ -110,19 +126,19 @@ tasks {
             into("META-INF")
         }
     }
-    supportedTestNGConfigurationsByVersion.forEach { (version, configuration) ->
+    supportedTestNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
         val java8Launcher = project.the<JavaToolchainService>().launcherFor {
             languageVersion.set(JavaLanguageVersion.of(8))
         }
         register<Test>("testFixturesTestNG_${version.replace('.', '_')}") {
             javaLauncher.set(java8Launcher)
-            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useTestNG()
         }
         register<Test>("testFixturesJUnitPlatform_${version.replace('.', '_')}") {
             javaLauncher.set(java8Launcher)
-            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useJUnitPlatform {
                 includeEngines("testng")
@@ -133,7 +149,7 @@ tasks {
         }
         register<JavaExec>("testFixturesConsoleLauncher_${version.replace('.', '_')}") {
             javaLauncher.set(java8Launcher)
-            classpath = configurations.testFixturesRuntimeClasspath + configuration
+            classpath = configuration + sourceSets.testFixtures.get().output
             mainClass.set("org.junit.platform.console.ConsoleLauncher")
             args(
                 "--scan-classpath", sourceSets.testFixtures.get().output.asPath,
@@ -146,10 +162,9 @@ tasks {
             isIgnoreExitValue = true
         }
     }
-    val testTasks = supportedTestNGConfigurationsByVersion.map { (version, configuration) ->
+    val testTasks = supportedTestNGTestConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.replace('.', '_')}") {
-            classpath -= testRuntimeClasspath
-            classpath += configuration
+            classpath = configuration + sourceSets.test.get().output
             useJUnitPlatform {
                 includeEngines("junit-jupiter")
             }
