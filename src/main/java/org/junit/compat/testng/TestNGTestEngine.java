@@ -28,7 +28,7 @@ import org.testng.CommandLineArgs;
 import org.testng.TestNG;
 
 /**
- * The TestNG {@link TestEngine}.
+ * The TestNG {@link TestEngine} for running TestNG tests on the JUnit Platform.
  *
  * @since 1.0
  */
@@ -45,6 +45,33 @@ public class TestNGTestEngine implements TestEngine {
 		return "testng";
 	}
 
+	/**
+	 * Discover TestNG tests based on the supplied {@linkplain EngineDiscoveryRequest request}.
+	 * <p>
+	 * Supports the following {@linkplain org.junit.platform.engine.DiscoverySelector selectors}:
+	 * <ul>
+	 *     <li>{@link org.junit.platform.engine.discovery.ClasspathRootSelector}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.ClassSelector}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.MethodSelector}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.ModuleSelector}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.PackageSelector}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.UniqueIdSelector}</li>
+	 * </ul>
+	 * <p>
+	 * Custom test suites specified via {@code testng.xml} files are not supported.
+	 * <p>
+	 * Supports the following {@linkplain org.junit.platform.engine.Filter filters}:
+	 * <ul>
+	 *     <li>{@link org.junit.platform.engine.discovery.ClassNameFilter}</li>
+	 *     <li>{@link org.junit.platform.engine.discovery.PackageNameFilter}</li>
+	 *     <li>Any post-discovery filter, e.g. for included/excluded tags</li>
+	 * </ul>
+	 * <p>
+	 * The implementation collects a list of potential test classes and method names and uses
+	 * TestNG's dry-run mode to determine which of them are TestNG test classes and methods. Since
+	 * TestNG can only run either classes or methods, it will be executed twice in the edge case
+	 * that class and method selectors are part of the discovery request.
+	 */
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
 		TestNGEngineDescriptor engineDescriptor = new TestNGEngineDescriptor(uniqueId);
@@ -74,6 +101,32 @@ public class TestNGTestEngine implements TestEngine {
 		return engineDescriptor;
 	}
 
+	/**
+	 * Execute the previously discovered TestNG tests in the supplied {@linkplain ExecutionRequest request}.
+	 * <p>
+	 * Supports the following configuration parameters:
+	 * <dl>
+	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
+	 *     <dd>the output directory for reports (default: "test-output")</dd>
+	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
+	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
+	 *     <dt>{@code testng.verbose} (boolean)</dt>
+	 *     <dd>TestNG's level of verbosity (default: 0)</dd>
+	 * </dl>
+	 * <p>
+	 * The implementation configures TestNG as if the discovered methods were specified on the
+	 * command line.
+	 * <p>
+	 * Data providers test methods are reported as a nested structure, i.e. individual invocations
+	 * are reported underneath the test methods along with their parameters:
+	 * <pre><code>
+	 * └─ TestNG ✔
+	 *    └─ DataProviderMethodTestCase ✔
+	 *       └─ test(java.lang.String) ✔
+	 *          ├─ [0] a ✔
+	 *          └─ [1] b ✔
+	 * </code></pre>
+	 */
 	@Override
 	public void execute(ExecutionRequest request) {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
