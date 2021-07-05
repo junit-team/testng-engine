@@ -6,6 +6,7 @@ plugins {
     `java-library`
     `java-test-fixtures`
     `maven-publish`
+    signing
     id("com.diffplug.spotless") version "5.12.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
@@ -246,4 +247,9 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    sign(publishing.publications)
+    isRequired = !project.version.toString().contains("SNAPSHOT")
 }
