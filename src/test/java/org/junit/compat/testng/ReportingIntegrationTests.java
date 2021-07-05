@@ -57,14 +57,16 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 	@ParameterizedTest
 	@ValueSource(classes = { SimpleTestCase.class, InheritingSubClassTestCase.class })
 	void executesSuccessfulTests(Class<?> testClass) {
-		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+		var results = testNGEngine().selectors(selectMethod(testClass, "successful")).execute();
 
-		results.allEvents().assertEventsMatchLooselyInOrder( //
+		results.allEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
 			event(testClass(testClass), started()), //
 			event(test("method:successful()"), started()), //
 			event(test("method:successful()"), reportEntry(Map.of("description", "a test that passes"))), //
 			event(test("method:successful()"), finishedSuccessfully()), //
-			event(testClass(testClass), finishedSuccessfully()));
+			event(testClass(testClass), finishedSuccessfully()), //
+			event(engine(), finishedSuccessfully()));
 	}
 
 	@Test
