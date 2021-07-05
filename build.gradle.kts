@@ -58,23 +58,18 @@ val supportedTestNGTestFixturesConfigurationsByVersion = supportedTestNGVersions
 dependencies {
     api(platform("org.junit:junit-bom:5.7.2"))
     api("org.junit.platform:junit-platform-engine")
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.junit.platform:junit-platform-testkit")
-    testImplementation("org.apache.maven:maven-artifact:3.8.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-console")
-    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.14.1"))
-    testRuntimeOnly("org.apache.logging.log4j:log4j-core")
-    testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
-    testFixturesImplementation("junit:junit:4.13.2")
-    testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
-    compileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
-    testCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+
     implementation("org.testng:testng") {
         version {
             require(supportedTestNGVersions.first())
             prefer(supportedTestNGVersions.last())
         }
     }
+
+    compileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+    testCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+    testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+
     constraints {
         supportedTestNGTestConfigurationsByVersion.forEach { (version, configuration) ->
             configuration("org.testng:testng") {
@@ -91,6 +86,19 @@ dependencies {
             }
         }
     }
+
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.platform:junit-platform-testkit")
+    testImplementation("org.apache.maven:maven-artifact:3.8.1") {
+        because("ComparableVersion is used to reason about tested TestNG version")
+    }
+
+    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.14.1"))
+    testRuntimeOnly("org.apache.logging.log4j:log4j-core")
+    testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
+
+    testFixturesImplementation("junit:junit:4.13.2")
+    testFixturesRuntimeOnly("org.junit.platform:junit-platform-console")
 }
 
 tasks {
@@ -130,13 +138,14 @@ tasks {
         val java8Launcher = project.the<JavaToolchainService>().launcherFor {
             languageVersion.set(JavaLanguageVersion.of(8))
         }
-        register<Test>("testFixturesTestNG_${version.replace('.', '_')}") {
+        val versionSuffix = version.replace('.', '_')
+        register<Test>("testFixturesTestNG_${versionSuffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useTestNG()
         }
-        register<Test>("testFixturesJUnitPlatform_${version.replace('.', '_')}") {
+        register<Test>("testFixturesJUnitPlatform_${versionSuffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
@@ -147,7 +156,7 @@ tasks {
                 events = EnumSet.allOf(TestLogEvent::class.java)
             }
         }
-        register<JavaExec>("testFixturesConsoleLauncher_${version.replace('.', '_')}") {
+        register<JavaExec>("testFixturesConsoleLauncher_${versionSuffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             mainClass.set("org.junit.platform.console.ConsoleLauncher")
