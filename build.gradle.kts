@@ -50,7 +50,7 @@ val supportedTestNGConfigurationsByVersion = supportedTestNGVersions.associateWi
 }
 
 dependencies {
-    api(platform("org.junit:junit-bom:5.7.1"))
+    api(platform("org.junit:junit-bom:5.7.2"))
     api("org.junit.platform:junit-platform-engine")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
