@@ -101,7 +101,8 @@ class TestDescriptorFactory {
 		else {
 			displayName = String.format("[%d]", invocationIndex);
 		}
-		return new InvocationDescriptor(uniqueId, displayName, parent.getMethodSource(), invocationIndex);
+		String legacyReportingName = String.format("%s[%d]", parent.getLegacyReportingName(), invocationIndex);
+		return new InvocationDescriptor(uniqueId, displayName, legacyReportingName, parent.getMethodSource());
 	}
 
 	private TestTag createTag(String value) {

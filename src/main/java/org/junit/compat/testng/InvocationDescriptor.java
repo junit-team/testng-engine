@@ -17,17 +17,16 @@ import org.junit.platform.engine.support.descriptor.MethodSource;
 class InvocationDescriptor extends AbstractTestDescriptor {
 
 	static final String SEGMENT_TYPE = "invoc";
-	private final int invocationIndex;
+	private final String legacyReportingName;
 
-	InvocationDescriptor(UniqueId uniqueId, String displayName, MethodSource source, int invocationIndex) {
+	InvocationDescriptor(UniqueId uniqueId, String displayName, String legacyReportingName, MethodSource source) {
 		super(uniqueId, displayName, source);
-		this.invocationIndex = invocationIndex;
+		this.legacyReportingName = legacyReportingName;
 	}
 
 	@Override
 	public String getLegacyReportingName() {
-		return String.format("%s[%d]", getParent().orElseThrow(IllegalStateException::new).getLegacyReportingName(),
-			invocationIndex);
+		return legacyReportingName;
 	}
 
 	@Override
