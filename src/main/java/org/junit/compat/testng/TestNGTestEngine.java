@@ -110,7 +110,7 @@ public class TestNGTestEngine implements TestEngine {
 	 *     <dd>the output directory for reports (default: "test-output")</dd>
 	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
 	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
-	 *     <dt>{@code testng.verbose} (boolean)</dt>
+	 *     <dt>{@code testng.verbose} (integer)</dt>
 	 *     <dd>TestNG's level of verbosity (default: 0)</dd>
 	 * </dl>
 	 * <p>

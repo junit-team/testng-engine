@@ -127,7 +127,7 @@ the output directory for reports (default: "test-output")
 `testng.useDefaultListeners` (boolean)::
 whether TestNG's default report generating listeners should be used (default: `false`)
 +
-`testng.verbose` (boolean)::
+`testng.verbose` (integer)::
 TestNG's level of verbosity (default: 0)
 
 === Generating TestNG reports
