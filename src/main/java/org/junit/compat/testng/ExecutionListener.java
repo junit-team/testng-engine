@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.TestExecutionResult;
@@ -52,8 +54,8 @@ class ExecutionListener extends DefaultListener {
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
 		ClassDescriptor classDescriptor = engineDescriptor.findClassDescriptor(testClass.getRealClass());
-		if (classDescriptor != null) {
-			testClassRegistry.start(testClass, () -> {
+		if (classDescriptor != null) { // TODO throw an exception in these cases
+			testClassRegistry.start(testClass.getRealClass(), () -> {
 				delegate.executionStarted(classDescriptor);
 				return classDescriptor;
 			});
@@ -62,7 +64,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onConfigurationFailure(ITestResult result) {
-		Optional<ClassDescriptor> classDescriptor = testClassRegistry.get(result.getTestClass());
+		Optional<ClassDescriptor> classDescriptor = testClassRegistry.get(result.getTestClass().getRealClass());
 		if (classDescriptor.isPresent()) {
 			classFailures.computeIfAbsent(classDescriptor.get(), __ -> ConcurrentHashMap.newKeySet()) //
 					.add(result.getThrowable());
@@ -74,7 +76,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		testClassRegistry.finish(testClass, classDescriptor -> {
+		testClassRegistry.finish(testClass.getRealClass(), classDescriptor -> {
 			finishMethodsNotYetReportedAsFinished(testClass);
 			Set<Throwable> failures = classFailures.remove(classDescriptor);
 			delegate.executionFinished(classDescriptor, toTestExecutionResult(failures));
@@ -86,9 +88,10 @@ class ExecutionListener extends DefaultListener {
 		MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
 		MethodProgress progress = inProgressTestMethods.computeIfAbsent(result.getMethod(),
 			__ -> new MethodProgress(result.getMethod(), methodDescriptor));
-		int invocationIndex = result.getMethod().getCurrentInvocationCount();
+		int invocationIndex = progress.invocationIndex.getAndIncrement();
 		if (invocationIndex == 0) {
 			delegate.executionStarted(methodDescriptor);
+			progress.reportedAsStarted.countDown();
 			String description = result.getMethod().getDescription();
 			if (description != null && !description.trim().isEmpty()) {
 				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from("description", description.trim()));
@@ -99,6 +102,12 @@ class ExecutionListener extends DefaultListener {
 			}
 		}
 		if (methodDescriptor.getType().isContainer()) {
+			try {
+				progress.reportedAsStarted.await();
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException("Interrupted while waiting for test method to be reported as started");
+			}
 			createInvocationAndReportStarted(progress, invocationIndex, result);
 		}
 	}
@@ -150,10 +159,10 @@ class ExecutionListener extends DefaultListener {
 	private void reportFinished(ITestResult result, TestExecutionResult executionResult, boolean willRetry) {
 		MethodProgress progress = inProgressTestMethods.get(result.getMethod());
 		if (progress.descriptor.getType().isContainer()) {
-			int invocationIndex = result.getMethod().getCurrentInvocationCount() - 1;
-			InvocationDescriptor invocationDescriptor = progress.invocations.remove(invocationIndex);
+			InvocationDescriptor invocationDescriptor = progress.invocations.remove(result.getMethod().getId());
 			delegate.executionFinished(invocationDescriptor, executionResult);
-			boolean lastInvocation = !willRetry //
+			boolean lastInvocation = result.getMethod().getThreadPoolSize() == 0 // avoid race condition and rely on onAfterClass to eventually report the container as finished
+					&& !willRetry //
 					&& (executionResult.getStatus() == ABORTED || !result.getMethod().hasMoreInvocation());
 			if (lastInvocation) {
 				inProgressTestMethods.remove(result.getMethod());
@@ -167,7 +176,7 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	private MethodDescriptor findOrCreateMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass()) //
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass().getRealClass()) //
 				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
 		Optional<MethodDescriptor> methodDescriptor = classDescriptor.findMethodDescriptor(result);
 		if (methodDescriptor.isPresent()) {
@@ -183,7 +192,7 @@ class ExecutionListener extends DefaultListener {
 	private void createInvocationAndReportStarted(MethodProgress progress, int invocationIndex, ITestResult result) {
 		InvocationDescriptor invocationDescriptor = getTestDescriptorFactory().createInvocationDescriptor(
 			progress.descriptor, result, invocationIndex);
-		progress.invocations.put(invocationIndex, invocationDescriptor);
+		progress.invocations.put(result.getMethod().getId(), invocationDescriptor);
 		progress.descriptor.addChild(invocationDescriptor);
 		delegate.dynamicTestRegistered(invocationDescriptor);
 		delegate.executionStarted(invocationDescriptor);
@@ -211,7 +220,9 @@ class ExecutionListener extends DefaultListener {
 	static class MethodProgress {
 		final ITestNGMethod method;
 		final MethodDescriptor descriptor;
-		final ConcurrentMap<Integer, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
+		final ConcurrentMap<String, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
+		final AtomicInteger invocationIndex = new AtomicInteger();
+		public CountDownLatch reportedAsStarted = new CountDownLatch(1);
 
 		public MethodProgress(ITestNGMethod method, MethodDescriptor descriptor) {
 			this.method = method;

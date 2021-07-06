@@ -36,6 +36,7 @@ import java.util.Map;
 import example.basics.CustomAttributeTestCase;
 import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
+import example.basics.ParallelExecutionTestCase;
 import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
@@ -287,6 +288,32 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), reportEntry(Map.of("foo", "bar, baz"))), //
 			event(test("method:test()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsParallelInvocations() {
+		var testClass = ParallelExecutionTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.containerEvents().assertStatistics(stats -> stats.started(3).finished(3));
+		results.testEvents().assertStatistics(stats -> stats.started(10).finished(10));
+
+		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:test()"), started()), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(test("method:test()"), dynamicTestRegistered("invoc")), //
+			event(container("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 }

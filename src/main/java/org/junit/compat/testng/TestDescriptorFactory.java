@@ -58,6 +58,7 @@ class TestDescriptorFactory {
 	private boolean reportsInvocations(ITestNGMethod method) {
 		return isDataDriven(method) //
 				|| method.getInvocationCount() > 1 //
+				|| method.getThreadPoolSize() > 0 //
 				|| getRetryAnalyzerClass(method) != getDefaultRetryAnalyzer();
 	}
 

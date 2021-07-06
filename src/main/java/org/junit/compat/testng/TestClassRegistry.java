@@ -18,14 +18,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.testng.IClass;
-
 class TestClassRegistry {
 
 	private final Set<ClassDescriptor> classDescriptors = ConcurrentHashMap.newKeySet();
-	private final Map<IClass, Entry> testClasses = new ConcurrentHashMap<>();
+	private final Map<Class<?>, Entry> testClasses = new ConcurrentHashMap<>();
 
-	void start(IClass testClass, Supplier<ClassDescriptor> onFirst) {
+	void start(Class<?> testClass, Supplier<ClassDescriptor> onFirst) {
 		Entry entry = testClasses.computeIfAbsent(testClass, __ -> {
 			ClassDescriptor classDescriptor = onFirst.get();
 			classDescriptors.add(classDescriptor);
@@ -34,12 +32,12 @@ class TestClassRegistry {
 		entry.inProgress.incrementAndGet();
 	}
 
-	Optional<ClassDescriptor> get(IClass testClass) {
+	Optional<ClassDescriptor> get(Class<?> testClass) {
 		Entry entry = testClasses.get(testClass);
 		return Optional.ofNullable(entry).map(it -> it.descriptor);
 	}
 
-	void finish(IClass testClass, Consumer<ClassDescriptor> onLast) {
+	void finish(Class<?> testClass, Consumer<ClassDescriptor> onLast) {
 		testClasses.compute(testClass, (__, value) -> {
 			if (value == null) {
 				return null;

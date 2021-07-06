@@ -34,12 +34,13 @@ class DiscoveryListener extends DefaultListener {
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		testClassRegistry.start(testClass, () -> engineDescriptor.findClassDescriptor(testClass.getRealClass()));
+		testClassRegistry.start(testClass.getRealClass(),
+			() -> engineDescriptor.findClassDescriptor(testClass.getRealClass()));
 	}
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		testClassRegistry.finish(testClass, __ -> {
+		testClassRegistry.finish(testClass.getRealClass(), __ -> {
 			// do nothing
 		});
 	}
@@ -55,7 +56,7 @@ class DiscoveryListener extends DefaultListener {
 	}
 
 	private void addMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass()) //
+		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass().getRealClass()) //
 				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
 		if (!classDescriptor.findMethodDescriptor(result).isPresent()) {
 			classDescriptor.addChild(
