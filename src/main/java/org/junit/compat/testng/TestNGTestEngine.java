@@ -214,9 +214,12 @@ public class TestNGTestEngine implements TestEngine {
 		abstract void configure(TestNG testNG, ConfigurationParameters config);
 	}
 
+	/**
+	 * Needed to make {@link #configure(CommandLineArgs)} accessible.
+	 */
 	private static class ConfigurableTestNG extends TestNG {
 		@Override
-		public void configure(CommandLineArgs cla) {
+		protected void configure(CommandLineArgs cla) {
 			super.configure(cla);
 		}
 	}
