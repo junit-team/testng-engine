@@ -29,4 +29,9 @@ public class DataProviders {
 	public static Iterator<Object[]> ints() {
 		return Stream.of(singletonList(1), singletonList(2)).map(List::toArray).iterator();
 	}
+
+	@DataProvider
+	public static Iterator<Object[]> exception() {
+		throw new RuntimeException("exception in data provider");
+	}
 }

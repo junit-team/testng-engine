@@ -25,7 +25,6 @@ import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.reportEntry;
-import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
@@ -93,19 +92,6 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@RequiresTestNGVersion(max = "6.14.3")
-	void reportsMethodsSkippedDueToFailingDependencyAsSkipped() {
-		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(testClass(SimpleTestCase.class), started()), //
-			event(test("method:skippedDueToFailingDependency()"),
-				skippedWithReason(it -> it.contains("depends on not successfully finished methods"))), //
-			event(testClass(SimpleTestCase.class), finishedSuccessfully()));
-	}
-
-	@Test
-	@RequiresTestNGVersion(min = "7.0")
 	void reportsMethodsSkippedDueToFailingDependencyAsAborted() {
 		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
 

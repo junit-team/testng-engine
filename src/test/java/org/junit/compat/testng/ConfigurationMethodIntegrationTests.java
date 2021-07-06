@@ -67,22 +67,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromBeforeMethodConfigurationMethodAsSkipped() {
-		var testClass = FailingBeforeMethodConfigurationMethodTestCase.class;
-
-		var results = testNGEngine().selectors(selectClass(testClass)).execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(testClass(testClass), started()), //
-			event(test("method:a()"), started()), //
-			event(test("method:a()"), finishedSuccessfully()), //
-			event(test("method:b()"), skippedWithReason("boom")), //
-			event(testClass(testClass), finishedWithFailure(message("boom"))));
-	}
-
-	@Test
-	@RequiresTestNGVersion(min = "7.0")
+	@RequiresTestNGVersion(min = "6.11")
 	void reportsFailureFromBeforeMethodConfigurationMethodAsAbortedWithThrowable() {
 		var testClass = FailingBeforeMethodConfigurationMethodTestCase.class;
 
@@ -114,7 +99,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@RequiresTestNGVersion(max = "6.10")
+	@RequiresTestNGVersion(max = "6.9.13.6")
 	void reportsFailureFromBeforeSuiteMethodAsSkipped() {
 		var testClass = FailingBeforeSuiteConfigurationMethodTestCase.class;
 
@@ -130,25 +115,11 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 
 	@ParameterizedTest
 	@TestCasesWithEarlyEngineLevelConfigurationMethodFailures
-	@RequiresTestNGVersion(min = "6.11", max = "6.14.3")
-	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsSkipped(Class<?> testClass) {
-		var results = testNGEngine().selectors(selectClass(testClass)).execute();
-
-		results.allEvents().assertEventsMatchExactly( //
-			event(engine(), started()), //
-			event(testClass(testClass), started()), //
-			event(test("method:test()"), skippedWithReason("boom")), //
-			event(testClass(testClass), finishedSuccessfully()), //
-			event(engine(), finishedWithFailure(message("boom"))));
-	}
-
-	@ParameterizedTest
-	@TestCasesWithEarlyEngineLevelConfigurationMethodFailures
-	@RequiresTestNGVersion(min = "7.0")
+	@RequiresTestNGVersion(min = "6.10")
 	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsAbortedWithThrowable(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
-		results.allEvents().assertEventsMatchExactly( //
+		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //

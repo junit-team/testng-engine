@@ -85,23 +85,12 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
-		MethodProgress progress = inProgressTestMethods.computeIfAbsent(result.getMethod(),
-			__ -> new MethodProgress(result.getMethod(), methodDescriptor));
+		MethodProgress progress = startMethodProgress(result);
 		int invocationIndex = progress.invocationIndex.getAndIncrement();
 		if (invocationIndex == 0) {
-			delegate.executionStarted(methodDescriptor);
-			progress.reportedAsStarted.countDown();
-			String description = result.getMethod().getDescription();
-			if (description != null && !description.trim().isEmpty()) {
-				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from("description", description.trim()));
-			}
-			Map<String, String> attributes = getAttributes(result);
-			if (!attributes.isEmpty()) {
-				delegate.reportingEntryPublished(methodDescriptor, ReportEntry.from(attributes));
-			}
+			reportStarted(result, progress);
 		}
-		if (methodDescriptor.getType().isContainer()) {
+		if (progress.descriptor.getType().isContainer()) {
 			try {
 				progress.reportedAsStarted.await();
 			}
@@ -119,16 +108,16 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
-		if (inProgressTestMethods.containsKey(result.getMethod())) {
+		MethodProgress progress = inProgressTestMethods.get(result.getMethod());
+		if (progress != null || result.getThrowable() != null) {
+			if (progress == null) {
+				reportStarted(result, startMethodProgress(result));
+			}
 			reportFinished(result, aborted(result.getThrowable()), willRetry(result));
 		}
 		else {
 			MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
-			String reason = "<unknown>";
-			if (result.getThrowable() != null) {
-				reason = result.getThrowable().getMessage();
-			}
-			delegate.executionSkipped(methodDescriptor, reason);
+			delegate.executionSkipped(methodDescriptor, "<unknown>");
 		}
 	}
 
@@ -147,6 +136,12 @@ class ExecutionListener extends DefaultListener {
 		onTestFailure(result);
 	}
 
+	private MethodProgress startMethodProgress(ITestResult result) {
+		MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
+		return inProgressTestMethods.computeIfAbsent(result.getMethod(),
+			__ -> new MethodProgress(result.getMethod(), methodDescriptor));
+	}
+
 	private void finishMethodsNotYetReportedAsFinished(ITestClass testClass) {
 		for (ITestNGMethod testMethod : testClass.getTestMethods()) {
 			MethodProgress progress = inProgressTestMethods.remove(testMethod);
@@ -156,9 +151,23 @@ class ExecutionListener extends DefaultListener {
 		}
 	}
 
+	private void reportStarted(ITestResult result, MethodProgress progress) {
+		delegate.executionStarted(progress.descriptor);
+		progress.reportedAsStarted.countDown();
+		String description = result.getMethod().getDescription();
+		if (description != null && !description.trim().isEmpty()) {
+			delegate.reportingEntryPublished(progress.descriptor, ReportEntry.from("description", description.trim()));
+		}
+		Map<String, String> attributes = getAttributes(result);
+		if (!attributes.isEmpty()) {
+			delegate.reportingEntryPublished(progress.descriptor, ReportEntry.from(attributes));
+		}
+	}
+
 	private void reportFinished(ITestResult result, TestExecutionResult executionResult, boolean willRetry) {
 		MethodProgress progress = inProgressTestMethods.get(result.getMethod());
-		if (progress.descriptor.getType().isContainer()) {
+		if (progress.descriptor.getType().isContainer()
+				&& progress.invocations.containsKey(result.getMethod().getId())) {
 			InvocationDescriptor invocationDescriptor = progress.invocations.remove(result.getMethod().getId());
 			delegate.executionFinished(invocationDescriptor, executionResult);
 			boolean lastInvocation = result.getMethod().getThreadPoolSize() == 0 // avoid race condition and rely on onAfterClass to eventually report the container as finished
@@ -222,7 +231,7 @@ class ExecutionListener extends DefaultListener {
 		final MethodDescriptor descriptor;
 		final ConcurrentMap<String, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
 		final AtomicInteger invocationIndex = new AtomicInteger();
-		public CountDownLatch reportedAsStarted = new CountDownLatch(1);
+		final CountDownLatch reportedAsStarted = new CountDownLatch(1);
 
 		public MethodProgress(ITestNGMethod method, MethodDescriptor descriptor) {
 			this.method = method;

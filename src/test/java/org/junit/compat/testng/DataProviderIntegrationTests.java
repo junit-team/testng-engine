@@ -18,6 +18,7 @@ import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
+import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.dynamicTestRegistered;
@@ -28,8 +29,10 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedWithFail
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstring;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import example.dataproviders.DataProviderMethodErrorHandlingTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 import example.dataproviders.FactoryWithDataProviderTestCase;
 
@@ -162,5 +165,18 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:b()@1"), started()), //
 			event(test("method:b()@1"), finishedWithFailure(message("b"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsExceptionInDataProviderMethodAsAborted() {
+		var testClass = DataProviderMethodErrorHandlingTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:test(int)"), started()), //
+			event(container("method:test(int)"), abortedWithReason(cause(message("exception in data provider")))), //
+			event(testClass(testClass), finishedSuccessfully()));
 	}
 }
