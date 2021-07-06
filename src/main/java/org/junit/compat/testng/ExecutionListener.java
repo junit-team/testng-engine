@@ -11,6 +11,7 @@
 package org.junit.compat.testng;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
@@ -53,13 +54,12 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		ClassDescriptor classDescriptor = engineDescriptor.findClassDescriptor(testClass.getRealClass());
-		if (classDescriptor != null) { // TODO throw an exception in these cases
-			testClassRegistry.start(testClass.getRealClass(), () -> {
-				delegate.executionStarted(classDescriptor);
-				return classDescriptor;
-			});
-		}
+		ClassDescriptor classDescriptor = requireNonNull(engineDescriptor.findClassDescriptor(testClass.getRealClass()),
+			"Missing class descriptor");
+		testClassRegistry.start(testClass.getRealClass(), () -> {
+			delegate.executionStarted(classDescriptor);
+			return classDescriptor;
+		});
 	}
 
 	@Override
