@@ -34,4 +34,9 @@ public class DataProviders {
 	public static Iterator<Object[]> exception() {
 		throw new RuntimeException("exception in data provider");
 	}
+
+	@DataProvider
+	public static Object[][] empty() {
+		return new Object[0][];
+	}
 }

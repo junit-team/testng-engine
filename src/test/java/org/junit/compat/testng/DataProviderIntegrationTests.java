@@ -32,6 +32,7 @@ import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrin
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
+import example.dataproviders.DataProviderMethodEmptyListTestCase;
 import example.dataproviders.DataProviderMethodErrorHandlingTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 import example.dataproviders.FactoryWithDataProviderTestCase;
@@ -178,5 +179,16 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(container("method:test(int)"), started()), //
 			event(container("method:test(int)"), abortedWithReason(cause(message("exception in data provider")))), //
 			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsNoEventsForDataProviderWithZeroInvocations() {
+		var testClass = DataProviderMethodEmptyListTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(engine(), finishedSuccessfully()));
 	}
 }
