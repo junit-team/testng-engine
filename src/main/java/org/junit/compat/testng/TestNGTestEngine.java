@@ -10,7 +10,6 @@
 
 package org.junit.compat.testng;
 
-import static java.util.Collections.emptyList;
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
 import java.util.List;
@@ -22,9 +21,9 @@ import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.support.config.PrefixedConfigurationParameters;
 import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
 import org.testng.CommandLineArgs;
+import org.testng.ITestNGListener;
 import org.testng.TestNG;
 
 /**
@@ -75,25 +74,24 @@ public class TestNGTestEngine implements TestEngine {
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest request, UniqueId uniqueId) {
 		TestNGEngineDescriptor engineDescriptor = new TestNGEngineDescriptor(uniqueId);
-		DISCOVERY_REQUEST_RESOLVER.resolve(request, engineDescriptor);
 
+		DISCOVERY_REQUEST_RESOLVER.resolve(request, engineDescriptor);
 		Class<?>[] testClasses = engineDescriptor.getTestClasses();
 		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
+
+		ConfigurationParameters configurationParameters = request.getConfigurationParameters();
 		DiscoveryListener listener = new DiscoveryListener(engineDescriptor);
 
 		if (testClasses.length > 0) {
-			TestNG testNG = createTestNG(Phase.DISCOVERY, request.getConfigurationParameters(), testClasses,
-				emptyList());
-			testNG.addListener(listener);
-
-			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+			TestNG testNG = createTestNGForTestClasses(testClasses);
+			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true",
+				() -> configureAndRun(testNG, Phase.DISCOVERY, configurationParameters, listener));
 		}
 
 		if (!methodNames.isEmpty()) {
-			TestNG testNG = createTestNG(Phase.DISCOVERY, request.getConfigurationParameters(), null, methodNames);
-			testNG.addListener(listener);
-
-			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true", testNG::run);
+			TestNG testNG = createTestNGForTestMethods(methodNames);
+			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true",
+				() -> configureAndRun(testNG, Phase.DISCOVERY, configurationParameters, listener));
 		}
 
 		listener.finalizeDiscovery();
@@ -134,13 +132,10 @@ public class TestNGTestEngine implements TestEngine {
 		listener.executionStarted(engineDescriptor);
 		engineDescriptor.prepareExecution();
 		ExecutionListener executionListener = createExecutionListener(listener, engineDescriptor);
-		Class<?>[] testClasses = engineDescriptor.getTestClasses();
 		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
-		if (testClasses.length > 0 || !methodNames.isEmpty()) {
-			TestNG testNG = createTestNG(Phase.EXECUTION, request.getConfigurationParameters(), testClasses,
-				methodNames);
-			testNG.addListener(executionListener);
-			testNG.run();
+		if (!methodNames.isEmpty()) {
+			configureAndRun(createTestNGForTestMethods(methodNames), Phase.EXECUTION,
+				request.getConfigurationParameters(), executionListener);
 		}
 		listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 	}
@@ -150,15 +145,24 @@ public class TestNGTestEngine implements TestEngine {
 		return new ExecutionListener(listener, engineDescriptor);
 	}
 
-	private ConfigurableTestNG createTestNG(Phase phase, ConfigurationParameters configurationParameters,
-			Class<?>[] testClasses, List<String> methodNames) {
+	private void configureAndRun(TestNG testNG, Phase phase, ConfigurationParameters configurationParameters,
+			ITestNGListener listener) {
+		phase.configure(testNG, configurationParameters);
+		testNG.addListener(listener);
+		testNG.run();
+	}
+
+	private TestNG createTestNGForTestClasses(Class<?>[] testClasses) {
+		ConfigurableTestNG testNG = new ConfigurableTestNG();
+		testNG.setTestClasses(testClasses);
+		return testNG;
+	}
+
+	private TestNG createTestNGForTestMethods(List<String> methodNames) {
 		ConfigurableTestNG testNG = new ConfigurableTestNG();
 		if (!methodNames.isEmpty()) {
 			testNG.configure(createCommandLineArgs(methodNames));
 		}
-		testNG.addListener(LoggingListener.INSTANCE);
-		phase.configure(testNG, new PrefixedConfigurationParameters(configurationParameters, "testng."));
-		testNG.setTestClasses(testClasses);
 		return testNG;
 	}
 
@@ -191,6 +195,7 @@ public class TestNGTestEngine implements TestEngine {
 		DISCOVERY {
 			@Override
 			void configure(TestNG testNG, ConfigurationParameters config) {
+				testNG.addListener(LoggingListener.INSTANCE);
 				testNG.setVerbose(0);
 				testNG.setUseDefaultListeners(false);
 			}
@@ -199,9 +204,10 @@ public class TestNGTestEngine implements TestEngine {
 		EXECUTION {
 			@Override
 			void configure(TestNG testNG, ConfigurationParameters config) {
-				testNG.setVerbose(config.get("verbose", Integer::valueOf).orElse(0));
-				testNG.setUseDefaultListeners(config.getBoolean("useDefaultListeners").orElse(false));
-				config.get("outputDirectory").ifPresent(testNG::setOutputDirectory);
+				testNG.addListener(LoggingListener.INSTANCE);
+				testNG.setVerbose(config.get("testng.verbose", Integer::valueOf).orElse(0));
+				testNG.setUseDefaultListeners(config.getBoolean("testng.useDefaultListeners").orElse(false));
+				config.get("testng.outputDirectory").ifPresent(testNG::setOutputDirectory);
 			}
 		};
 
