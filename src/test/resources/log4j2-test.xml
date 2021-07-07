@@ -6,7 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="org.junit.compat" level="info" /> <!-- Set to "debug" to see LoggingListener output -->
+    <Logger name="org.junit.support.testng.engine" level="info" /> <!-- Set to "debug" to see LoggingListener output -->
     <Root level="error">
       <AppenderRef ref="Console" />
     </Root>

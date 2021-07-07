@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import org.testng.IClassListener;
 import org.testng.IConfigurationListener;

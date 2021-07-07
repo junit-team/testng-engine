@@ -8,9 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
-
-import static org.junit.compat.testng.TestContext.testNGVersion;
+package org.junit.support.testng.engine;
 
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
@@ -22,7 +20,7 @@ class TestNGVersionAppendingDisplayNameGenerator extends DisplayNameGenerator.St
 	@Override
 	public String generateDisplayNameForMethod(Class<?> testClass, Method testMethod) {
 		var regularDisplayName = super.generateDisplayNameForMethod(testClass, testMethod);
-		return MessageFormat.format("{0} [{1}]", regularDisplayName, testNGVersion());
+		return MessageFormat.format("{0} [{1}]", regularDisplayName, TestContext.testNGVersion());
 	}
 
 }

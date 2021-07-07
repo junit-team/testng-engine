@@ -17,7 +17,7 @@ Allows executing https://testng.org[TestNG] tests on the JUnit Platform
 When running without a build tool, you need to download the following jars from Maven Central:
 
 * https://search.maven.org/remotecontent?filepath=org/junit/platform/junit-platform-console-standalone/{junit-platform-version}/junit-platform-console-standalone-{junit-platform-version}.jar[junit-platform-console-standalone-{junit-platform-version}.jar]
-* https://search.maven.org/remotecontent?filepath=org/junit/compat/testng-engine/{testng-engine-version}/testng-engine-{testng-engine-version}.jar[testng-engine-{testng-engine-version}.jar]
+* https://search.maven.org/remotecontent?filepath=org/junit/support/testng-engine/{testng-engine-version}/testng-engine-{testng-engine-version}.jar[testng-engine-{testng-engine-version}.jar]
 * https://search.maven.org/remotecontent?filepath=org/testng/testng/{testng-max-version}/testng-{testng-max-version}.jar[testng-{testng-max-version}.jar]
 * https://search.maven.org/remotecontent?filepath=com/beust/jcommander/{jcommander-version}/jcommander-{jcommander-version}.jar[jcommander-{jcommander-version}.jar]
 * https://search.maven.org/remotecontent?filepath=org/webjars/jquery/{jquery-version}/jquery-{jquery-version}.jar[jquery-{jquery-version}.jar]
@@ -68,7 +68,7 @@ Test run finished after 38 ms
 ----
 dependencies {
     testImplementation("org.testng:testng:{testng-max-version}")
-    testRuntimeOnly("org.junit.compat:testng-engine:{testng-engine-version}") // <.>
+    testRuntimeOnly("org.junit.support:testng-engine:{testng-engine-version}") // <.>
 }
 tasks.test {
     useJUnitPlatform() // <.>
@@ -94,7 +94,7 @@ tasks.test {
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.compat</groupId>
+            <groupId>org.junit.support</groupId>
             <artifactId>testng-engine</artifactId>
             <version>{testng-engine-version}</version>
             <scope>test</scope>

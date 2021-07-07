@@ -8,14 +8,14 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.function.Predicate.isEqual;
-import static org.junit.compat.testng.TestContext.testNGVersion;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled;
+import static org.junit.support.testng.engine.TestContext.testNGVersion;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

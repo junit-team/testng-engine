@@ -118,7 +118,7 @@ tasks {
         val files = files(sourceSets.main.map { it.java.srcDirs })
         inputs.files(files).withPropertyName("mainSrcDirs").withPathSensitivity(RELATIVE)
         options.compilerArgumentProviders += CommandLineArgumentProvider {
-            listOf("--patch-module", "org.junit.compat.testng.engine=${files.asPath}")
+            listOf("--patch-module", "org.junit.support.testng.engine=${files.asPath}")
         }
     }
     withType<JavaCompile>().configureEach {

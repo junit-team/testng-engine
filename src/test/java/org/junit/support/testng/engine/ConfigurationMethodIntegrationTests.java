@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;

@@ -8,13 +8,13 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
-import static org.junit.compat.testng.MethodDescriptor.toMethodId;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
+import static org.junit.support.testng.engine.MethodDescriptor.toMethodId;
 
 import java.util.Arrays;
 import java.util.Map;

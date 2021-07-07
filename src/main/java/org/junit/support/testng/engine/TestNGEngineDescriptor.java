@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;

@@ -13,11 +13,11 @@
  *
  * @since 1.0
  * @provides org.junit.platform.engine.TestEngine
- * @see org.junit.compat.testng.TestNGTestEngine
+ * @see org.junit.support.testng.engine.TestNGTestEngine
  */
-module org.junit.compat.testng.engine {
+module org.junit.support.testng.engine {
     requires org.junit.platform.engine;
     requires org.testng;
     requires java.logging;
-    provides org.junit.platform.engine.TestEngine with org.junit.compat.testng.TestNGTestEngine;
+    provides org.junit.platform.engine.TestEngine with org.junit.support.testng.engine.TestNGTestEngine;
 }

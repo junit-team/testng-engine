@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package org.junit.compat.testng;
+package org.junit.support.testng.engine;
 
 import static java.util.Collections.unmodifiableSet;
 import static org.junit.platform.commons.support.ClassSupport.nullSafeToString;
