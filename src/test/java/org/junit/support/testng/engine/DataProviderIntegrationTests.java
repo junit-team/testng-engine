@@ -36,6 +36,7 @@ import example.dataproviders.DataProviderMethodEmptyListTestCase;
 import example.dataproviders.DataProviderMethodErrorHandlingTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 import example.dataproviders.FactoryWithDataProviderTestCase;
+import example.dataproviders.ParallelDataProviderTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestDescriptor;
@@ -190,5 +191,20 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
 			event(engine(), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsParallelDataProviderCorrectly() {
+		var testClass = ParallelDataProviderTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.containerEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:test(java.lang.Integer)"), started()), //
+			event(container("method:test(java.lang.Integer)"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+		results.testEvents().assertStatistics(
+			stats -> stats.dynamicallyRegistered(11).started(11).succeeded(11).finished(11));
 	}
 }
