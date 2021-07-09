@@ -13,7 +13,6 @@ package org.junit.support.testng.engine;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
-import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
@@ -103,7 +102,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
-		reportFinished(result, successful(), false);
+		reportFinished(result, successful());
 	}
 
 	@Override
@@ -113,7 +112,7 @@ class ExecutionListener extends DefaultListener {
 			if (progress == null) {
 				reportStarted(result, startMethodProgress(result));
 			}
-			reportFinished(result, aborted(result.getThrowable()), willRetry(result));
+			reportFinished(result, aborted(result.getThrowable()));
 		}
 		else {
 			MethodDescriptor methodDescriptor = findOrCreateMethodDescriptor(result);
@@ -123,7 +122,7 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		reportFinished(result, failed(result.getThrowable()), false);
+		reportFinished(result, failed(result.getThrowable()));
 	}
 
 	@Override
@@ -164,19 +163,11 @@ class ExecutionListener extends DefaultListener {
 		}
 	}
 
-	private void reportFinished(ITestResult result, TestExecutionResult executionResult, boolean willRetry) {
+	private void reportFinished(ITestResult result, TestExecutionResult executionResult) {
 		MethodProgress progress = inProgressTestMethods.get(result.getMethod());
-		if (progress.descriptor.getType().isContainer()
-				&& progress.invocations.containsKey(result.getMethod().getId())) {
-			InvocationDescriptor invocationDescriptor = progress.invocations.remove(result.getMethod().getId());
+		if (progress.descriptor.getType().isContainer() && progress.invocations.containsKey(result)) {
+			InvocationDescriptor invocationDescriptor = progress.invocations.remove(result);
 			delegate.executionFinished(invocationDescriptor, executionResult);
-			boolean lastInvocation = result.getMethod().getThreadPoolSize() == 0 // avoid race condition and rely on onAfterClass to eventually report the container as finished
-					&& !willRetry //
-					&& (executionResult.getStatus() == ABORTED || !result.getMethod().hasMoreInvocation());
-			if (lastInvocation) {
-				inProgressTestMethods.remove(result.getMethod());
-				delegate.executionFinished(progress.descriptor, successful());
-			}
 		}
 		else {
 			inProgressTestMethods.remove(result.getMethod());
@@ -201,7 +192,7 @@ class ExecutionListener extends DefaultListener {
 	private void createInvocationAndReportStarted(MethodProgress progress, int invocationIndex, ITestResult result) {
 		InvocationDescriptor invocationDescriptor = getTestDescriptorFactory().createInvocationDescriptor(
 			progress.descriptor, result, invocationIndex);
-		progress.invocations.put(result.getMethod().getId(), invocationDescriptor);
+		progress.invocations.put(result, invocationDescriptor);
 		progress.descriptor.addChild(invocationDescriptor);
 		delegate.dynamicTestRegistered(invocationDescriptor);
 		delegate.executionStarted(invocationDescriptor);
@@ -229,7 +220,7 @@ class ExecutionListener extends DefaultListener {
 	static class MethodProgress {
 		final ITestNGMethod method;
 		final MethodDescriptor descriptor;
-		final ConcurrentMap<String, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
+		final ConcurrentMap<ITestResult, InvocationDescriptor> invocations = new ConcurrentHashMap<>();
 		final AtomicInteger invocationIndex = new AtomicInteger();
 		final CountDownLatch reportedAsStarted = new CountDownLatch(1);
 
@@ -250,14 +241,5 @@ class ExecutionListener extends DefaultListener {
 		catch (NoSuchMethodError ignore) {
 		}
 		return emptyMap();
-	}
-
-	private boolean willRetry(ITestResult result) {
-		try {
-			return result.wasRetried();
-		}
-		catch (NoSuchMethodError ignore) {
-			return true;
-		}
 	}
 }
