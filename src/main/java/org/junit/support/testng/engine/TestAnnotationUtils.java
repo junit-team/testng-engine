@@ -81,7 +81,7 @@ class TestAnnotationUtils {
 
 	private static List<Class<?>> getClassHierarchy(Class<?> testClass) {
 		List<Class<?>> result = new ArrayList<>();
-		for (Class<?> clazz = testClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+		for (Class<?> clazz = testClass; clazz != Object.class && clazz != null; clazz = clazz.getSuperclass()) {
 			result.add(clazz);
 		}
 		return result;

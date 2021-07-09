@@ -261,4 +261,20 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
 		assertThat(methodDescriptor.getDisplayName()).isEqualTo("test");
 	}
+
+	@ParameterizedTest
+	@ValueSource(classes = { InterfaceTestCase.class, AbstractTestCase.class })
+	void doesNotThrowExceptionWhenNonExecutableTypeOfClassIsSelected(Class<?> testClass) {
+		var request = request().selectors(selectClass(testClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
+
+	interface InterfaceTestCase {
+	}
+
+	static abstract class AbstractTestCase {
+	}
 }
