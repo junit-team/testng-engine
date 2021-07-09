@@ -10,13 +10,16 @@
 
 package org.junit.support.testng.engine;
 
+import static java.util.Spliterators.spliteratorUnknownSize;
+
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.testng.ITestNGMethod;
 import org.testng.annotations.Test;
@@ -74,16 +77,27 @@ class TestAnnotationUtils {
 	}
 
 	private static Stream<Test> collectTestAnnotations(Class<?> testClass) {
-		return getClassHierarchy(testClass).stream() //
+		return getClassHierarchy(testClass) //
 				.map(clazz -> clazz.getAnnotation(Test.class)) //
 				.filter(Objects::nonNull);
 	}
 
-	private static List<Class<?>> getClassHierarchy(Class<?> testClass) {
-		List<Class<?>> result = new ArrayList<>();
-		for (Class<?> clazz = testClass; clazz != Object.class && clazz != null; clazz = clazz.getSuperclass()) {
-			result.add(clazz);
-		}
-		return result;
+	private static Stream<Class<?>> getClassHierarchy(Class<?> testClass) {
+		Iterator<Class<?>> iterator = new Iterator<Class<?>>() {
+			Class<?> next = testClass;
+
+			@Override
+			public boolean hasNext() {
+				return next != Object.class && next != null;
+			}
+
+			@Override
+			public Class<?> next() {
+				Class<?> result = next;
+				next = next.getSuperclass();
+				return result;
+			}
+		};
+		return StreamSupport.stream(spliteratorUnknownSize(iterator, Spliterator.ORDERED), false);
 	}
 }
