@@ -5,7 +5,7 @@
 :surefire-version: 3.0.0-M5
 :testng-min-version: 6.9.13.6
 :testng-max-version: 7.4.0
-:testng-engine-version: 1.0.0-M1
+:testng-engine-version: 1.0.0-M2
 
 Allows executing https://testng.org[TestNG] tests on the JUnit Platform
 
