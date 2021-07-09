@@ -263,7 +263,8 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(classes = { InterfaceTestCase.class, AbstractTestCase.class })
+	@ValueSource(classes = { InterfaceTestCase.class, AbstractTestCase.class, RecordTestCase.class,
+			EnumTestCase.class })
 	void doesNotThrowExceptionWhenNonExecutableTypeOfClassIsSelected(Class<?> testClass) {
 		var request = request().selectors(selectClass(testClass)).build();
 
@@ -276,5 +277,11 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	static abstract class AbstractTestCase {
+	}
+
+	record RecordTestCase() {
+	}
+
+	enum EnumTestCase {
 	}
 }
