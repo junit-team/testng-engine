@@ -127,6 +127,9 @@ the output directory for reports (default: "test-output")
 `testng.useDefaultListeners` (boolean)::
 whether TestNG's default report generating listeners should be used (default: `false`)
 +
+`testng.listeners` (comma-separated list of fully-qualified class names)::
+custom listeners that should be registered when executing tests (default: none)
++
 `testng.verbose` (integer)::
 TestNG's level of verbosity (default: 0)
 
@@ -181,6 +184,60 @@ tasks.test {
                         <configurationParameters>
                             testng.useDefaultListeners = true
                             testng.outputDirectory = ${project.build.directory}/testng-reports
+                        </configurationParameters>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <!-- ... -->
+</project>
+----
+====
+
+=== Registering custom listeners
+
+.Console Launcher
+[%collapsible]
+====
+[source]
+----
+$ java -cp 'lib/*' org.junit.platform.console.ConsoleLauncher \
+       -cp bin/main -cp bin/test \
+       --include-engine=testng --scan-classpath=bin/test \
+       --config=testng.listeners=com.acme.MyCustomListener1,com.acme.MyCustomListener2
+----
+====
+
+.Gradle
+[%collapsible]
+====
+[source,kotlin,subs="attributes+"]
+.build.gradle[.kts]
+----
+tasks.test {
+    useJUnitPlatform()
+    systemProperty("testng.listeners", "com.acme.MyCustomListener1, com.acme.MyCustomListener2")
+}
+----
+====
+
+.Maven
+[%collapsible]
+====
+[source,xml,subs="attributes+"]
+----
+<project>
+    <!-- ... -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>{surefire-version}</version>
+                <configuration>
+                    <properties>
+                        <configurationParameters>
+                            testng.listeners = com.acme.MyCustomListener1, com.acme.MyCustomListener2
                         </configurationParameters>
                     </properties>
                 </configuration>

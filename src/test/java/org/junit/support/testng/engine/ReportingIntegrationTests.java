@@ -42,6 +42,8 @@ import example.basics.SuccessPercentageTestCase;
 import example.basics.TimeoutTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
+import example.listeners.SystemPropertyProvidingListener;
+import example.listeners.SystemPropertyReadingTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -300,6 +302,21 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), dynamicTestRegistered("invoc")), //
 			event(test("method:test()"), dynamicTestRegistered("invoc")), //
 			event(container("method:test()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void registersCustomListeners() {
+		var testClass = SystemPropertyReadingTestCase.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName()).execute();
+
+		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 }

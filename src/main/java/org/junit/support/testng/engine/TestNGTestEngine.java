@@ -12,8 +12,11 @@ package org.junit.support.testng.engine;
 
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.junit.platform.commons.JUnitException;
+import org.junit.platform.commons.support.ReflectionSupport;
 import org.junit.platform.engine.ConfigurationParameters;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
@@ -108,6 +111,8 @@ public class TestNGTestEngine implements TestEngine {
 	 *     <dd>the output directory for reports (default: "test-output")</dd>
 	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
 	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
+	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
+	 *     <dd>custom listeners that should be registered when executing tests (default: none)</dd>
 	 *     <dt>{@code testng.verbose} (integer)</dt>
 	 *     <dd>TestNG's level of verbosity (default: 0)</dd>
 	 * </dl>
@@ -208,6 +213,18 @@ public class TestNGTestEngine implements TestEngine {
 				testNG.setVerbose(config.get("testng.verbose", Integer::valueOf).orElse(0));
 				testNG.setUseDefaultListeners(config.getBoolean("testng.useDefaultListeners").orElse(false));
 				config.get("testng.outputDirectory").ifPresent(testNG::setOutputDirectory);
+				config.get("testng.listeners").ifPresent(listeners -> Arrays.stream(listeners.split(",")) //
+						.map(ReflectionSupport::tryToLoadClass) //
+						.map(result -> result.getOrThrow(
+							cause -> new JUnitException("Failed to load custom listener class", cause))) //
+						.map(listenerClass -> {
+							if (!ITestNGListener.class.isAssignableFrom(listenerClass)) {
+								throw new JUnitException("Custom listener class must implement "
+										+ ITestNGListener.class.getName() + ": " + listenerClass.getName());
+							}
+							return (ITestNGListener) ReflectionSupport.newInstance(listenerClass);
+						}) //
+						.forEach(testNG::addListener));
 			}
 		};
 
