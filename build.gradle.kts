@@ -90,6 +90,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.11.2")
     testImplementation("org.apache.maven:maven-artifact:3.8.1") {
         because("ComparableVersion is used to reason about tested TestNG version")
     }
@@ -144,7 +145,9 @@ tasks {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
-            useTestNG()
+            useTestNG {
+                listeners.add("example.listeners.SystemPropertyProvidingListener")
+            }
         }
         register<Test>("testFixturesJUnitPlatform_${versionSuffix}") {
             javaLauncher.set(java8Launcher)
@@ -153,6 +156,7 @@ tasks {
             useJUnitPlatform {
                 includeEngines("testng")
             }
+            systemProperty("testng.listeners", "example.listeners.SystemPropertyProvidingListener")
             testLogging {
                 events = EnumSet.allOf(TestLogEvent::class.java)
             }
