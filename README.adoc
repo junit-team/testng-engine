@@ -113,9 +113,15 @@ tasks.test {
 ----
 ====
 
-=== Supported TestNG versions
+=== Supported versions
+
+==== TestNG
 
 The engine supports TestNG version {testng-min-version} and above.
+
+==== JUnit Platform
+
+The engine requires at least JUnit Platform 1.5.x.
 
 === Configuration Parameters
 
