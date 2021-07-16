@@ -107,14 +107,16 @@ public class TestNGTestEngine implements TestEngine {
 	 * <p>
 	 * Supports the following configuration parameters:
 	 * <dl>
+	 *     <dt>{@code testng.allowReturnValues} (file path)</dt>
+	 *     <dd>whether methods with return values should be considered test methods (default: {@code false})</dd>
+	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
+	 *     <dd>custom listeners that should be registered when executing tests (default: {@code ""})</dd>
 	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
-	 *     <dd>the output directory for reports (default: "test-output")</dd>
+	 *     <dd>the output directory for reports (default: {@code "test-output"})</dd>
 	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
 	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
-	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
-	 *     <dd>custom listeners that should be registered when executing tests (default: none)</dd>
 	 *     <dt>{@code testng.verbose} (integer)</dt>
-	 *     <dd>TestNG's level of verbosity (default: 0)</dd>
+	 *     <dd>TestNG's level of verbosity (default: {@code 0})</dd>
 	 * </dl>
 	 * <p>
 	 * The implementation configures TestNG as if the discovered methods were specified on the
@@ -153,6 +155,7 @@ public class TestNGTestEngine implements TestEngine {
 	private void configureAndRun(TestNG testNG, Phase phase, ConfigurationParameters configurationParameters,
 			ITestNGListener listener) {
 		phase.configure(testNG, configurationParameters);
+		testNG.addListener(new ConfiguringListener(configurationParameters));
 		testNG.addListener(listener);
 		testNG.run();
 	}

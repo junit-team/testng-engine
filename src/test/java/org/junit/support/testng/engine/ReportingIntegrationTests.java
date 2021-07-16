@@ -37,6 +37,7 @@ import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.ParallelExecutionTestCase;
 import example.basics.RetriedTestCase;
+import example.basics.ReturnValuesTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.basics.TimeoutTestCase;
@@ -310,9 +311,26 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 		var results = testNGEngine() //
 				.selectors(selectClass(testClass)) //
-				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName()).execute();
+				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName()) //
+				.execute();
 
-		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(test("method:test()"), started()), //
+			event(test("method:test()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void executesTestMethodsWithReturnValuesWhenEnabledViaConfigurationParameter() {
+		var testClass = ReturnValuesTestCase.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.allowReturnValues", "true") //
+				.execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), finishedSuccessfully()), //

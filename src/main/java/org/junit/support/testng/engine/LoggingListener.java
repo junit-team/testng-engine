@@ -10,12 +10,14 @@
 
 package org.junit.support.testng.engine;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.testng.ITestClass;
 import org.testng.ITestContext;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.xml.XmlSuite;
 
 class LoggingListener extends DefaultListener {
 
@@ -23,6 +25,11 @@ class LoggingListener extends DefaultListener {
 	private static final Logger LOGGER = Logger.getLogger(LoggingListener.class.getName());
 
 	private LoggingListener() {
+	}
+
+	@Override
+	public void alter(List<XmlSuite> suites) {
+		LOGGER.fine(() -> "alter: " + suites);
 	}
 
 	@Override

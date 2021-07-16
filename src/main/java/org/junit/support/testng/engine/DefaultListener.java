@@ -10,6 +10,9 @@
 
 package org.junit.support.testng.engine;
 
+import java.util.List;
+
+import org.testng.IAlterSuiteListener;
 import org.testng.IClassListener;
 import org.testng.IConfigurationListener;
 import org.testng.ITestClass;
@@ -17,8 +20,13 @@ import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.xml.XmlSuite;
 
-abstract class DefaultListener implements IClassListener, ITestListener, IConfigurationListener {
+abstract class DefaultListener implements IClassListener, ITestListener, IConfigurationListener, IAlterSuiteListener {
+
+	@Override
+	public void alter(List<XmlSuite> suites) {
+	}
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
