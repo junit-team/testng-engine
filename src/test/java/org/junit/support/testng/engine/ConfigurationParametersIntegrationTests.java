@@ -90,4 +90,17 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 
 		results.testEvents().debug().assertStatistics(stats -> stats.succeeded(2));
 	}
+
+	@Test
+	void configuresThreadCount() {
+		var testClass = ParallelMethodsTestCase.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.parallel", "methods") //
+				.configurationParameter("testng.threadCount", "1") //
+				.execute();
+
+		results.testEvents().debug().assertStatistics(stats -> stats.succeeded(1).failed(1));
+	}
 }

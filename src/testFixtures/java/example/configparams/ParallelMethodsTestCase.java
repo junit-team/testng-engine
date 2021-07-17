@@ -10,10 +10,10 @@
 
 package example.configparams;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
 
@@ -33,6 +33,6 @@ public class ParallelMethodsTestCase {
 
 	private void countDownAndAwait() throws InterruptedException {
 		latch.countDown();
-		assertTrue(latch.await(5, TimeUnit.SECONDS));
+		assertTrue(latch.await(1, SECONDS));
 	}
 }

@@ -107,21 +107,27 @@ public class TestNGTestEngine implements TestEngine {
 	 * Execute the previously discovered TestNG tests in the supplied {@linkplain ExecutionRequest request}.
 	 * <p>
 	 * Supports the following configuration parameters:
+	 * <h4>Execution</h4>
 	 * <dl>
 	 *     <dt>{@code testng.allowReturnValues} (file path)</dt>
 	 *     <dd>whether methods with return values should be considered test methods (default: {@code false})</dd>
-	 *
-	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
-	 *     <dd>custom listeners that should be registered when executing tests (default: {@code ""})</dd>
-	 *
-	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
-	 *     <dd>the output directory for reports (default: {@code "test-output"})</dd>
 	 *
 	 *     <dt>{@code testng.parallel} (methods|tests|classes|instances|none)</dt>
 	 *     <dd>TestNG's parallel execution mode for running tests in separate threads (default: {@code "none"})</dd>
 	 *
 	 *     <dt>{@code testng.preserveOrder} (boolean)</dt>
 	 *     <dd>whether classes and methods should be run in a predictable order (default: {@code true})</dd>
+	 *
+	 *     <dt>{@code testng.threadCount} (boolean)</dt>
+	 *     <dd>default maximum number of threads to use for running tests in parallel, if enabled (default: {@code 5})</dd>
+	 * </dl>
+	 * <h4>Reporting</h4>
+	 * <dl>
+	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
+	 *     <dd>custom listeners that should be registered when executing tests (default: {@code ""})</dd>
+	 *
+	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
+	 *     <dd>the output directory for reports (default: {@code "test-output"})</dd>
 	 *
 	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
 	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
@@ -242,9 +248,10 @@ public class TestNGTestEngine implements TestEngine {
 						.forEach(testNG::addListener));
 				config.getBoolean("testng.preserveOrder") //
 						.ifPresent(testNG::setPreserveOrder);
-				config.get("testng.parallel") //
-						.map(ParallelMode::getValidParallel) //
+				config.get("testng.parallel", ParallelMode::getValidParallel) //
 						.ifPresent(testNG::setParallel);
+				config.get("testng.threadCount", Integer::parseInt) //
+						.ifPresent(testNG::setThreadCount);
 			}
 		};
 

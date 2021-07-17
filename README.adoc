@@ -125,22 +125,29 @@ The engine requires at least JUnit Platform 1.5.x.
 
 === Configuration Parameters
 
-The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#running-tests-config-params[configuration parameters] are supported:
+The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#running-tests-config-params[configuration parameters] are supported.
+
+==== Execution
 
 `testng.allowReturnValues` (boolean)::
 whether methods with return values should be considered test methods (default: `false`)
-+
-`testng.listeners` (comma-separated list of fully-qualified class names)::
-custom listeners that should be registered when executing tests (default: `""`)
-+
-`testng.outputDirectory` (file path)::
-the output directory for reports (default: `"test-output"`)
 +
 `testng.parallel` (methods|tests|classes|instances|none)::
 TestNG's parallel execution mode for running tests in separate threads (default: `"none"`)
 +
 `testng.preserveOrder` (boolean)::
 whether classes and methods should be run in a predictable order (default: `true`)
++
+`testng.threadCount` (integer)::
+default maximum number of threads to use for running tests in parallel, if enabled (default: `5`)
+
+==== Reporting
+
+`testng.listeners` (comma-separated list of fully-qualified class names)::
+custom listeners that should be registered when executing tests (default: `""`)
++
+`testng.outputDirectory` (file path)::
+the output directory for reports (default: `"test-output"`)
 +
 `testng.useDefaultListeners` (boolean)::
 whether TestNG's default report generating listeners should be used (default: `false`)
