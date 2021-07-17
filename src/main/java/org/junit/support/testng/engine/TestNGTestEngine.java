@@ -28,6 +28,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
 import org.testng.CommandLineArgs;
 import org.testng.ITestNGListener;
 import org.testng.TestNG;
+import org.testng.xml.XmlSuite.ParallelMode;
 
 /**
  * The TestNG {@link TestEngine} for running TestNG tests on the JUnit Platform.
@@ -115,6 +116,9 @@ public class TestNGTestEngine implements TestEngine {
 	 *
 	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
 	 *     <dd>the output directory for reports (default: {@code "test-output"})</dd>
+	 *
+	 *     <dt>{@code testng.parallel} (methods|tests|classes|instances|none)</dt>
+	 *     <dd>TestNG's parallel execution mode for running tests in separate threads (default: {@code "none"})</dd>
 	 *
 	 *     <dt>{@code testng.preserveOrder} (boolean)</dt>
 	 *     <dd>whether classes and methods should be run in a predictable order (default: {@code true})</dd>
@@ -237,6 +241,9 @@ public class TestNGTestEngine implements TestEngine {
 						.forEach(testNG::addListener));
 				config.getBoolean("testng.preserveOrder") //
 						.ifPresent(testNG::setPreserveOrder);
+				config.get("testng.parallel") //
+						.map(ParallelMode::getValidParallel) //
+						.ifPresent(testNG::setParallel);
 			}
 		};
 

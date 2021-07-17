@@ -17,6 +17,7 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedWithFail
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 
+import example.configparams.ParallelMethodsTestCase;
 import example.configparams.PreserveOrderTestCase;
 import example.configparams.ReturnValuesTestCase;
 import example.configparams.SystemPropertyProvidingListener;
@@ -78,4 +79,15 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 
+	@Test
+	void configuresParallelMode() {
+		var testClass = ParallelMethodsTestCase.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.parallel", "methods") //
+				.execute();
+
+		results.testEvents().debug().assertStatistics(stats -> stats.succeeded(2));
+	}
 }

@@ -136,6 +136,9 @@ custom listeners that should be registered when executing tests (default: `""`)
 `testng.outputDirectory` (file path)::
 the output directory for reports (default: `"test-output"`)
 +
+`testng.parallel` (methods|tests|classes|instances|none)::
+TestNG's parallel execution mode for running tests in separate threads (default: `"none"`)
++
 `testng.preserveOrder` (boolean)::
 whether classes and methods should be run in a predictable order (default: `true`)
 +
