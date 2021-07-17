@@ -19,6 +19,12 @@ java {
 
 repositories {
     mavenCentral()
+    maven(url = "https://oss.sonatype.org/content/repositories/snapshots/") {
+        mavenContent {
+            includeModule("org.testng", "testng")
+            snapshotsOnly()
+        }
+    }
 }
 
 val moduleSourceSet = sourceSets.create("module") {
@@ -32,26 +38,32 @@ configurations {
 }
 
 val supportedTestNGVersions = listOf(
-        "6.9.13.6",
-        "6.10",
-        "6.11",
-        "6.13.1",
-        "6.14.3",
-        "7.0.0",
-        "7.1.0",
-        "7.3.0",
-        "7.4.0"
-)
+    "6.9.13.6",
+    "6.10",
+    "6.11",
+    "6.13.1",
+    "6.14.3",
+    "7.0.0",
+    "7.1.0",
+    "7.3.0",
+    "7.4.0"
+).map(::Version)
+val snapshotTestNGVersion = Version("7.5-SNAPSHOT")
+
+val allTestNGVersions = supportedTestNGVersions + listOf(snapshotTestNGVersion)
+
+fun versionSuffix(version: String) =
+    if (version.endsWith("-SNAPSHOT")) "snapshot" else version.replace('.', '_')
 
 val testRuntimeClasspath: Configuration by configurations.getting
-val supportedTestNGTestConfigurationsByVersion = supportedTestNGVersions.associateWith { version ->
-    configurations.create("testRuntimeClasspath_${version.replace('.', '_')}") {
+val testNGTestConfigurationsByVersion = allTestNGVersions.associateWith { version ->
+    configurations.create("testRuntimeClasspath_${version.suffix}") {
         extendsFrom(testRuntimeClasspath)
     }
 }
 val testFixturesRuntimeClasspath: Configuration by configurations.getting
-val supportedTestNGTestFixturesConfigurationsByVersion = supportedTestNGVersions.associateWith { version ->
-    configurations.create("testFixturesRuntimeClasspath_${version.replace('.', '_')}") {
+val testNGTestFixturesConfigurationsByVersion = allTestNGVersions.associateWith { version ->
+    configurations.create("testFixturesRuntimeClasspath_${version.suffix}") {
         extendsFrom(testFixturesRuntimeClasspath)
     }
 }
@@ -62,8 +74,8 @@ dependencies {
 
     implementation("org.testng:testng") {
         version {
-            require(supportedTestNGVersions.first())
-            prefer(supportedTestNGVersions.last())
+            require(supportedTestNGVersions.first().value)
+            prefer(supportedTestNGVersions.last().value)
         }
     }
 
@@ -72,17 +84,17 @@ dependencies {
     testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
 
     constraints {
-        supportedTestNGTestConfigurationsByVersion.forEach { (version, configuration) ->
+        testNGTestConfigurationsByVersion.forEach { (version, configuration) ->
             configuration("org.testng:testng") {
                 version {
-                    strictly(version)
+                    strictly(version.value)
                 }
             }
         }
-        supportedTestNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
+        testNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
             configuration("org.testng:testng") {
                 version {
-                    strictly(version)
+                    strictly(version.value)
                 }
             }
         }
@@ -136,12 +148,11 @@ tasks {
             into("META-INF")
         }
     }
-    supportedTestNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
+    testNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
         val java8Launcher = project.the<JavaToolchainService>().launcherFor {
             languageVersion.set(JavaLanguageVersion.of(8))
         }
-        val versionSuffix = version.replace('.', '_')
-        register<Test>("testFixturesTestNG_${versionSuffix}") {
+        register<Test>("testFixturesTestNG_${version.suffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
@@ -149,7 +160,7 @@ tasks {
                 listeners.add("example.listeners.SystemPropertyProvidingListener")
             }
         }
-        register<Test>("testFixturesJUnitPlatform_${versionSuffix}") {
+        register<Test>("testFixturesJUnitPlatform_${version.suffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
@@ -161,7 +172,7 @@ tasks {
                 events = EnumSet.allOf(TestLogEvent::class.java)
             }
         }
-        register<JavaExec>("testFixturesConsoleLauncher_${versionSuffix}") {
+        register<JavaExec>("testFixturesConsoleLauncher_${version.suffix}") {
             javaLauncher.set(java8Launcher)
             classpath = configuration + sourceSets.testFixtures.get().output
             mainClass.set("org.junit.platform.console.ConsoleLauncher")
@@ -176,13 +187,14 @@ tasks {
             isIgnoreExitValue = true
         }
     }
-    val testTasks = supportedTestNGTestConfigurationsByVersion.map { (version, configuration) ->
-        register<Test>("test_${version.replace('.', '_')}") {
+    val testTasks = testNGTestConfigurationsByVersion.map { (version, configuration) ->
+        register<Test>("test_${version.suffix}") {
             classpath = configuration + sourceSets.test.get().output
+            group = JavaBasePlugin.VERIFICATION_GROUP
             useJUnitPlatform {
                 includeEngines("junit-jupiter")
             }
-            systemProperty("testng.version", version)
+            systemProperty("testng.version", version.value)
             systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
         }
     }
@@ -256,4 +268,17 @@ publishing {
 signing {
     sign(publishing.publications)
     isRequired = !project.version.toString().contains("SNAPSHOT")
+}
+
+data class Version(val value: String) {
+
+    companion object {
+        private val pattern = "[^\\w]".toRegex()
+    }
+
+    val suffix: String by lazy {
+        value.replace(pattern, "_")
+    }
+
+    override fun toString() = value
 }
