@@ -237,7 +237,6 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "timeOut", "invocationTimeOut" })
-	@RequiresTestNGVersion(except = "6.11") // https://github.com/cbeust/testng/issues/1493
 	void reportsTimedOutTestsAsFailures(String methodName) {
 		var testClass = TimeoutTestCase.class;
 

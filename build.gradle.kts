@@ -38,10 +38,6 @@ configurations {
 }
 
 val supportedTestNGVersions = listOf(
-    "6.9.13.6",
-    "6.10",
-    "6.11",
-    "6.13.1",
     "6.14.3",
     "7.0.0",
     "7.1.0",

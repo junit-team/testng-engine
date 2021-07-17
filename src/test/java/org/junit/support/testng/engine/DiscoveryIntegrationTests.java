@@ -27,6 +27,7 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import example.basics.DryRunTestCase;
 import example.basics.IgnoredTestCase;
 import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
 import example.basics.InheritingSubClassTestCase;
@@ -52,6 +53,20 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	private final TestNGTestEngine testEngine = new TestNGTestEngine();
 	private final UniqueId engineId = UniqueId.forEngine(testEngine.getId());
+
+	@Test
+	void discoveryDoesNotRunTests() {
+		var testClass = DryRunTestCase.class;
+		DryRunTestCase.INVOCATIONS = 0;
+		var request = request().selectors(selectClass(testClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(DryRunTestCase.INVOCATIONS).isEqualTo(0);
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getChildren()).isEmpty();
+	}
 
 	@ParameterizedTest
 	@ValueSource(classes = { SimpleTestCase.class, InheritingSubClassTestCase.class })
@@ -251,7 +266,6 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@RequiresTestNGVersion(min = "6.13") // introduced in 6.13
 	void ignoresIgnoredTests() {
 		var request = request().selectors(selectClass(IgnoredTestCase.class)).build();
 
