@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.listeners;
+package example.configparams;
 
 import org.testng.IClassListener;
 import org.testng.ITestClass;

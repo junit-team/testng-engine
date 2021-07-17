@@ -37,14 +37,11 @@ import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.ParallelExecutionTestCase;
 import example.basics.RetriedTestCase;
-import example.basics.ReturnValuesTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.basics.TimeoutTestCase;
 import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
-import example.listeners.SystemPropertyProvidingListener;
-import example.listeners.SystemPropertyReadingTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -305,35 +302,4 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 
-	@Test
-	void registersCustomListeners() {
-		var testClass = SystemPropertyReadingTestCase.class;
-
-		var results = testNGEngine() //
-				.selectors(selectClass(testClass)) //
-				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName()) //
-				.execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(testClass(testClass), started()), //
-			event(test("method:test()"), started()), //
-			event(test("method:test()"), finishedSuccessfully()), //
-			event(testClass(testClass), finishedSuccessfully()));
-	}
-
-	@Test
-	void executesTestMethodsWithReturnValuesWhenEnabledViaConfigurationParameter() {
-		var testClass = ReturnValuesTestCase.class;
-
-		var results = testNGEngine() //
-				.selectors(selectClass(testClass)) //
-				.configurationParameter("testng.allowReturnValues", "true") //
-				.execute();
-
-		results.allEvents().assertEventsMatchLooselyInOrder( //
-			event(testClass(testClass), started()), //
-			event(test("method:test()"), started()), //
-			event(test("method:test()"), finishedSuccessfully()), //
-			event(testClass(testClass), finishedSuccessfully()));
-	}
 }

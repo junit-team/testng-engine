@@ -8,17 +8,14 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.listeners;
-
-import static example.listeners.SystemPropertyProvidingListener.SYSTEM_PROPERTY_KEY;
-import static org.testng.Assert.assertEquals;
+package example.configparams;
 
 import org.testng.annotations.Test;
 
-public class SystemPropertyReadingTestCase {
+public class ReturnValuesTestCase {
 
 	@Test
-	public void test() {
-		assertEquals(System.getProperty(SYSTEM_PROPERTY_KEY), SystemPropertyReadingTestCase.class.getName());
+	public String test() {
+		return "some bogus return value";
 	}
 }

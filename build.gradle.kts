@@ -153,7 +153,7 @@ tasks {
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useTestNG {
-                listeners.add("example.listeners.SystemPropertyProvidingListener")
+                listeners.add("example.configparams.SystemPropertyProvidingListener")
             }
         }
         register<Test>("testFixturesJUnitPlatform_${version.suffix}") {
@@ -163,7 +163,7 @@ tasks {
             useJUnitPlatform {
                 includeEngines("testng")
             }
-            systemProperty("testng.listeners", "example.listeners.SystemPropertyProvidingListener")
+            systemProperty("testng.listeners", "example.configparams.SystemPropertyProvidingListener")
             testLogging {
                 events = EnumSet.allOf(TestLogEvent::class.java)
             }
