@@ -136,6 +136,9 @@ custom listeners that should be registered when executing tests (default: `""`)
 `testng.outputDirectory` (file path)::
 the output directory for reports (default: `"test-output"`)
 +
+`testng.preserveOrder` (boolean)::
+whether classes and methods should be run in a predictable order (default: `true`)
++
 `testng.useDefaultListeners` (boolean)::
 whether TestNG's default report generating listeners should be used (default: `false`)
 +

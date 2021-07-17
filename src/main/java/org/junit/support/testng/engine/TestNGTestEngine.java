@@ -109,12 +109,19 @@ public class TestNGTestEngine implements TestEngine {
 	 * <dl>
 	 *     <dt>{@code testng.allowReturnValues} (file path)</dt>
 	 *     <dd>whether methods with return values should be considered test methods (default: {@code false})</dd>
+	 *
 	 *     <dt>{@code testng.listeners} (comma-separated list of fully-qualified class names)</dt>
 	 *     <dd>custom listeners that should be registered when executing tests (default: {@code ""})</dd>
+	 *
 	 *     <dt>{@code testng.outputDirectory} (file path)</dt>
 	 *     <dd>the output directory for reports (default: {@code "test-output"})</dd>
+	 *
+	 *     <dt>{@code testng.preserveOrder} (boolean)</dt>
+	 *     <dd>whether classes and methods should be run in a predictable order (default: {@code true})</dd>
+	 *
 	 *     <dt>{@code testng.useDefaultListeners} (boolean)</dt>
 	 *     <dd>whether TestNG's default report generating listeners should be used (default: {@code false})</dd>
+	 *
 	 *     <dt>{@code testng.verbose} (integer)</dt>
 	 *     <dd>TestNG's level of verbosity (default: {@code 0})</dd>
 	 * </dl>
@@ -228,6 +235,8 @@ public class TestNGTestEngine implements TestEngine {
 							return (ITestNGListener) ReflectionSupport.newInstance(listenerClass);
 						}) //
 						.forEach(testNG::addListener));
+				config.getBoolean("testng.preserveOrder") //
+						.ifPresent(testNG::setPreserveOrder);
 			}
 		};
 
