@@ -226,7 +226,8 @@ public class TestNGTestEngine implements TestEngine {
 				testNG.addListener(LoggingListener.INSTANCE);
 				testNG.setVerbose(config.get("testng.verbose", Integer::valueOf).orElse(0));
 				testNG.setUseDefaultListeners(config.getBoolean("testng.useDefaultListeners").orElse(false));
-				config.get("testng.outputDirectory").ifPresent(testNG::setOutputDirectory);
+				config.get("testng.outputDirectory") //
+						.ifPresent(testNG::setOutputDirectory);
 				config.get("testng.listeners").ifPresent(listeners -> Arrays.stream(listeners.split(",")) //
 						.map(ReflectionSupport::tryToLoadClass) //
 						.map(result -> result.getOrThrow(
