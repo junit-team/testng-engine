@@ -132,6 +132,9 @@ The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#r
 `testng.allowReturnValues` (boolean)::
 whether methods with return values should be considered test methods (default: `false`)
 +
+`testng.dataProviderThreadCount` (integer)::
+maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`)
++
 `testng.parallel` (methods|tests|classes|instances|none)::
 TestNG's parallel execution mode for running tests in separate threads (default: `"none"`)
 +
@@ -139,7 +142,7 @@ TestNG's parallel execution mode for running tests in separate threads (default:
 whether classes and methods should be run in a predictable order (default: `true`)
 +
 `testng.threadCount` (integer)::
-default maximum number of threads to use for running tests in parallel, if enabled (default: `5`)
+maximum number of threads for running tests in parallel, if enabled via `testng.parallel` (default: `5`)
 
 ==== Reporting
 

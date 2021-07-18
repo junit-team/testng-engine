@@ -17,6 +17,7 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedWithFail
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 
+import example.configparams.DataProviderThreadCountTestCase;
 import example.configparams.ParallelMethodsTestCase;
 import example.configparams.PreserveOrderTestCase;
 import example.configparams.ReturnValuesTestCase;
@@ -102,5 +103,18 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 				.execute();
 
 		results.testEvents().debug().assertStatistics(stats -> stats.succeeded(1).failed(1));
+	}
+
+	@Test
+	void configuresDataProviderThreadCount() {
+		var testClass = DataProviderThreadCountTestCase.class;
+		var numInvocations = DataProviderThreadCountTestCase.NUM_INVOCATIONS;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.dataProviderThreadCount", String.valueOf(numInvocations)) //
+				.execute();
+
+		results.testEvents().debug().assertStatistics(stats -> stats.succeeded(numInvocations));
 	}
 }

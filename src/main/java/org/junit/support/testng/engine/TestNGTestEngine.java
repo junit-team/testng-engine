@@ -28,6 +28,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
 import org.testng.CommandLineArgs;
 import org.testng.ITestNGListener;
 import org.testng.TestNG;
+import org.testng.annotations.DataProvider;
 import org.testng.xml.XmlSuite.ParallelMode;
 
 /**
@@ -112,6 +113,9 @@ public class TestNGTestEngine implements TestEngine {
 	 *     <dt>{@code testng.allowReturnValues} (file path)</dt>
 	 *     <dd>whether methods with return values should be considered test methods (default: {@code false})</dd>
 	 *
+	 *     <dt>{@code testng.dataProviderThreadCount} (file path)</dt>
+	 *     <dd>maximum number of threads to use for running data providers in parallel, if enabled via {@link DataProvider#parallel()} (default: {@code 10})</dd>
+	 *
 	 *     <dt>{@code testng.parallel} (methods|tests|classes|instances|none)</dt>
 	 *     <dd>TestNG's parallel execution mode for running tests in separate threads (default: {@code "none"})</dd>
 	 *
@@ -119,7 +123,7 @@ public class TestNGTestEngine implements TestEngine {
 	 *     <dd>whether classes and methods should be run in a predictable order (default: {@code true})</dd>
 	 *
 	 *     <dt>{@code testng.threadCount} (boolean)</dt>
-	 *     <dd>default maximum number of threads to use for running tests in parallel, if enabled (default: {@code 5})</dd>
+	 *     <dd>maximum number of threads for running tests in parallel, if enabled via {@code testng.parallel} (default: {@code 5})</dd>
 	 * </dl>
 	 * <h4>Reporting</h4>
 	 * <dl>
@@ -252,6 +256,8 @@ public class TestNGTestEngine implements TestEngine {
 						.ifPresent(testNG::setParallel);
 				config.get("testng.threadCount", Integer::parseInt) //
 						.ifPresent(testNG::setThreadCount);
+				config.get("testng.dataProviderThreadCount", Integer::parseInt) //
+						.ifPresent(testNG::setDataProviderThreadCount);
 			}
 		};
 
