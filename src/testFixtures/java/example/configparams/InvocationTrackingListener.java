@@ -15,11 +15,11 @@ import org.testng.ITestClass;
 
 public class InvocationTrackingListener implements IClassListener {
 
-	public static boolean INVOKED;
+	public static boolean invoked;
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		INVOKED = true;
+		invoked = true;
 	}
 
 	@Override

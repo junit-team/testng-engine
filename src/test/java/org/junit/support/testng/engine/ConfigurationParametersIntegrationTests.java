@@ -35,7 +35,7 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 	@Test
 	void registersCustomListeners() {
 		var testClass = SystemPropertyReadingTestCase.class;
-		InvocationTrackingListener.INVOKED = false;
+		InvocationTrackingListener.invoked = false;
 
 		var results = testNGEngine() //
 				.selectors(selectClass(testClass)) //
@@ -43,7 +43,7 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 						+ InvocationTrackingListener.class.getName()) //
 				.execute();
 
-		assertThat(InvocationTrackingListener.INVOKED).isTrue();
+		assertThat(InvocationTrackingListener.invoked).isTrue();
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
