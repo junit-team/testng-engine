@@ -40,7 +40,7 @@ import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.basics.TimeoutTestCase;
-import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
+import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 
 import org.junit.jupiter.api.Test;

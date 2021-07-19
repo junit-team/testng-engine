@@ -8,15 +8,15 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configuration;
+package example.configuration.methods;
 
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class FailingBeforeClassConfigurationMethodTestCase {
+public class FailingBeforeTestConfigurationMethodTestCase {
 
-	@BeforeClass
-	public void beforeClass() {
+	@BeforeTest
+	public void beforeTest() {
 		throw new AssertionError("boom");
 	}
 

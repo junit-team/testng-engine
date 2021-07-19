@@ -8,18 +8,20 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configparams;
+package example.configuration.methods;
 
-import static org.testng.Assert.assertTrue;
-
-import org.testng.ITestContext;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Test;
 
-public class PreserveOrderTestCase {
+public class FailingAfterSuiteConfigurationMethodTestCase {
+
+	@AfterSuite
+	public void afterSuite() {
+		throw new AssertionError("boom");
+	}
 
 	@Test
-	public void test(ITestContext context) {
-		assertTrue(context.getSuite().getXmlSuite().getPreserveOrder());
-		assertTrue(context.getCurrentXmlTest().getPreserveOrder());
+	public void test() {
+		// never called
 	}
 }

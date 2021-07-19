@@ -20,14 +20,14 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.configuration.FailingAfterClassConfigurationMethodTestCase;
-import example.configuration.FailingAfterMethodConfigurationMethodTestCase;
-import example.configuration.FailingAfterSuiteConfigurationMethodTestCase;
-import example.configuration.FailingAfterTestConfigurationMethodTestCase;
-import example.configuration.FailingBeforeClassConfigurationMethodTestCase;
-import example.configuration.FailingBeforeMethodConfigurationMethodTestCase;
-import example.configuration.FailingBeforeSuiteConfigurationMethodTestCase;
-import example.configuration.FailingBeforeTestConfigurationMethodTestCase;
+import example.configuration.methods.FailingAfterClassConfigurationMethodTestCase;
+import example.configuration.methods.FailingAfterMethodConfigurationMethodTestCase;
+import example.configuration.methods.FailingAfterSuiteConfigurationMethodTestCase;
+import example.configuration.methods.FailingAfterTestConfigurationMethodTestCase;
+import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
+import example.configuration.methods.FailingBeforeMethodConfigurationMethodTestCase;
+import example.configuration.methods.FailingBeforeSuiteConfigurationMethodTestCase;
+import example.configuration.methods.FailingBeforeTestConfigurationMethodTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

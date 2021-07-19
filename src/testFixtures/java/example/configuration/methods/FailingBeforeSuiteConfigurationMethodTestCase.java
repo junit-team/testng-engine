@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configuration;
+package example.configuration.methods;
 
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;

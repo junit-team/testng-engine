@@ -8,20 +8,14 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configuration;
+package example.configuration.parameters;
 
-import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Test;
 
-public class FailingAfterSuiteConfigurationMethodTestCase {
-
-	@AfterSuite
-	public void afterSuite() {
-		throw new AssertionError("boom");
-	}
+public class ReturnValuesTestCase {
 
 	@Test
-	public void test() {
-		// never called
+	public String test() {
+		return "some bogus return value";
 	}
 }

@@ -8,17 +8,18 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configparams;
+package example.configuration.parameters;
 
-import static example.configparams.SystemPropertyProvidingListener.SYSTEM_PROPERTY_KEY;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
+import org.testng.ITestContext;
 import org.testng.annotations.Test;
 
-public class SystemPropertyReadingTestCase {
+public class PreserveOrderTestCase {
 
 	@Test
-	public void test() {
-		assertEquals(System.getProperty(SYSTEM_PROPERTY_KEY), SystemPropertyReadingTestCase.class.getName());
+	public void test(ITestContext context) {
+		assertTrue(context.getSuite().getXmlSuite().getPreserveOrder());
+		assertTrue(context.getCurrentXmlTest().getPreserveOrder());
 	}
 }

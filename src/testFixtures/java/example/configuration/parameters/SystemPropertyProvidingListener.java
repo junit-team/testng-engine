@@ -8,22 +8,22 @@
  * https://www.eclipse.org/legal/epl-v20.html
  */
 
-package example.configparams;
+package example.configuration.parameters;
 
 import org.testng.IClassListener;
 import org.testng.ITestClass;
 
-public class InvocationTrackingListener implements IClassListener {
+public class SystemPropertyProvidingListener implements IClassListener {
 
-	public static boolean invoked;
+	public static final String SYSTEM_PROPERTY_KEY = "test.class";
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		invoked = true;
+		System.setProperty(SYSTEM_PROPERTY_KEY, testClass.getName());
 	}
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		// do nothing
+		System.clearProperty(SYSTEM_PROPERTY_KEY);
 	}
 }

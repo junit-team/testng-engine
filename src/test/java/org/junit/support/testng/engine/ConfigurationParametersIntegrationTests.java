@@ -18,13 +18,13 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedWithFail
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 
-import example.configparams.DataProviderThreadCountTestCase;
-import example.configparams.InvocationTrackingListener;
-import example.configparams.ParallelMethodsTestCase;
-import example.configparams.PreserveOrderTestCase;
-import example.configparams.ReturnValuesTestCase;
-import example.configparams.SystemPropertyProvidingListener;
-import example.configparams.SystemPropertyReadingTestCase;
+import example.configuration.parameters.DataProviderThreadCountTestCase;
+import example.configuration.parameters.InvocationTrackingListener;
+import example.configuration.parameters.ParallelMethodsTestCase;
+import example.configuration.parameters.PreserveOrderTestCase;
+import example.configuration.parameters.ReturnValuesTestCase;
+import example.configuration.parameters.SystemPropertyProvidingListener;
+import example.configuration.parameters.SystemPropertyReadingTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
