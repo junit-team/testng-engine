@@ -14,8 +14,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertTrue;
 import static org.testng.xml.XmlSuite.DEFAULT_DATA_PROVIDER_THREAD_COUNT;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
@@ -32,8 +30,7 @@ public class DataProviderThreadCountTestCase {
 	@DataProvider(name = "numbers", parallel = true)
 	public static Iterator<Object[]> numbers() {
 		return IntStream.range(0, NUM_INVOCATIONS) //
-				.mapToObj(Arrays::asList) //
-				.map(Collection::toArray) //
+				.mapToObj(i -> new Object[] { i }) //
 				.iterator();
 	}
 
