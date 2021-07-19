@@ -10,13 +10,12 @@
 
 package org.junit.support.testng.engine;
 
+import static org.junit.support.testng.engine.TestNGTestEngine.Configurer.testClasses;
+import static org.junit.support.testng.engine.TestNGTestEngine.Configurer.testMethods;
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
-import java.util.Arrays;
 import java.util.List;
 
-import org.junit.platform.commons.JUnitException;
-import org.junit.platform.commons.support.ReflectionSupport;
 import org.junit.platform.engine.ConfigurationParameters;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
@@ -88,15 +87,13 @@ public class TestNGTestEngine implements TestEngine {
 		DiscoveryListener listener = new DiscoveryListener(engineDescriptor);
 
 		if (testClasses.length > 0) {
-			TestNG testNG = createTestNGForTestClasses(testClasses);
 			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true",
-				() -> configureAndRun(testNG, Phase.DISCOVERY, configurationParameters, listener));
+				() -> configureAndRun(configurationParameters, listener, testClasses(testClasses), Phase.DISCOVERY));
 		}
 
 		if (!methodNames.isEmpty()) {
-			TestNG testNG = createTestNGForTestMethods(methodNames);
 			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true",
-				() -> configureAndRun(testNG, Phase.DISCOVERY, configurationParameters, listener));
+				() -> configureAndRun(configurationParameters, listener, testMethods(methodNames), Phase.DISCOVERY));
 		}
 
 		listener.finalizeDiscovery();
@@ -159,47 +156,30 @@ public class TestNGTestEngine implements TestEngine {
 		TestNGEngineDescriptor engineDescriptor = (TestNGEngineDescriptor) request.getRootTestDescriptor();
 		listener.executionStarted(engineDescriptor);
 		engineDescriptor.prepareExecution();
-		ExecutionListener executionListener = createExecutionListener(listener, engineDescriptor);
+		ExecutionListener executionListener = new ExecutionListener(listener, engineDescriptor);
 		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
 		if (!methodNames.isEmpty()) {
-			configureAndRun(createTestNGForTestMethods(methodNames), Phase.EXECUTION,
-				request.getConfigurationParameters(), executionListener);
+			configureAndRun(request.getConfigurationParameters(), executionListener, testMethods(methodNames),
+				Phase.EXECUTION);
 		}
 		listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 	}
 
-	private ExecutionListener createExecutionListener(EngineExecutionListener listener,
-			TestNGEngineDescriptor engineDescriptor) {
-		return new ExecutionListener(listener, engineDescriptor);
-	}
-
-	private void configureAndRun(TestNG testNG, Phase phase, ConfigurationParameters configurationParameters,
-			ITestNGListener listener) {
-		phase.configure(testNG, configurationParameters);
+	private static void configureAndRun(ConfigurationParameters configurationParameters, ITestNGListener listener,
+			Configurer... configurers) {
+		CommandLineArgs commandLineArgs = new CommandLineArgs();
+		for (Configurer configurer : configurers) {
+			configurer.configure(commandLineArgs, configurationParameters);
+		}
+		ConfigurableTestNG testNG = new ConfigurableTestNG();
+		testNG.configure(commandLineArgs);
+		for (Configurer configurer : configurers) {
+			configurer.configure(testNG, configurationParameters);
+		}
+		testNG.addListener(LoggingListener.INSTANCE);
 		testNG.addListener(new ConfiguringListener(configurationParameters));
 		testNG.addListener(listener);
 		testNG.run();
-	}
-
-	private TestNG createTestNGForTestClasses(Class<?>[] testClasses) {
-		ConfigurableTestNG testNG = new ConfigurableTestNG();
-		testNG.setTestClasses(testClasses);
-		return testNG;
-	}
-
-	private TestNG createTestNGForTestMethods(List<String> methodNames) {
-		ConfigurableTestNG testNG = new ConfigurableTestNG();
-		if (!methodNames.isEmpty()) {
-			testNG.configure(createCommandLineArgs(methodNames));
-		}
-		return testNG;
-	}
-
-	private static CommandLineArgs createCommandLineArgs(List<String> methodNames) {
-		CommandLineArgs commandLineArgs = new CommandLineArgs();
-		commandLineArgs.useDefaultListeners = String.valueOf(false);
-		commandLineArgs.commandLineMethods = methodNames;
-		return commandLineArgs;
 	}
 
 	@SuppressWarnings("SameParameterValue")
@@ -219,12 +199,39 @@ public class TestNGTestEngine implements TestEngine {
 		}
 	}
 
-	enum Phase {
+	interface Configurer {
+
+		static Configurer testClasses(Class<?>[] testClasses) {
+			return new Configurer() {
+				@Override
+				public void configure(TestNG testNG, ConfigurationParameters config) {
+					testNG.setTestClasses(testClasses);
+				}
+			};
+		}
+
+		static Configurer testMethods(List<String> methodNames) {
+			return new Configurer() {
+				@Override
+				public void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
+					commandLineArgs.commandLineMethods = methodNames;
+				}
+			};
+		}
+
+		default void configure(TestNG testNG, ConfigurationParameters config) {
+		}
+
+		default void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
+		}
+
+	}
+
+	enum Phase implements Configurer {
 
 		DISCOVERY {
 			@Override
-			void configure(TestNG testNG, ConfigurationParameters config) {
-				testNG.addListener(LoggingListener.INSTANCE);
+			public void configure(TestNG testNG, ConfigurationParameters config) {
 				testNG.setVerbose(0);
 				testNG.setUseDefaultListeners(false);
 			}
@@ -232,24 +239,11 @@ public class TestNGTestEngine implements TestEngine {
 
 		EXECUTION {
 			@Override
-			void configure(TestNG testNG, ConfigurationParameters config) {
-				testNG.addListener(LoggingListener.INSTANCE);
+			public void configure(TestNG testNG, ConfigurationParameters config) {
 				testNG.setVerbose(config.get("testng.verbose", Integer::valueOf).orElse(0));
 				testNG.setUseDefaultListeners(config.getBoolean("testng.useDefaultListeners").orElse(false));
 				config.get("testng.outputDirectory") //
 						.ifPresent(testNG::setOutputDirectory);
-				config.get("testng.listeners").ifPresent(listeners -> Arrays.stream(listeners.split(",")) //
-						.map(ReflectionSupport::tryToLoadClass) //
-						.map(result -> result.getOrThrow(
-							cause -> new JUnitException("Failed to load custom listener class", cause))) //
-						.map(listenerClass -> {
-							if (!ITestNGListener.class.isAssignableFrom(listenerClass)) {
-								throw new JUnitException("Custom listener class must implement "
-										+ ITestNGListener.class.getName() + ": " + listenerClass.getName());
-							}
-							return (ITestNGListener) ReflectionSupport.newInstance(listenerClass);
-						}) //
-						.forEach(testNG::addListener));
 				config.getBoolean("testng.preserveOrder") //
 						.ifPresent(testNG::setPreserveOrder);
 				config.get("testng.parallel", ParallelMode::getValidParallel) //
@@ -259,9 +253,13 @@ public class TestNGTestEngine implements TestEngine {
 				config.get("testng.dataProviderThreadCount", Integer::parseInt) //
 						.ifPresent(testNG::setDataProviderThreadCount);
 			}
-		};
 
-		abstract void configure(TestNG testNG, ConfigurationParameters config);
+			@Override
+			public void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
+				config.get("testng.listeners") //
+						.ifPresent(listeners -> commandLineArgs.listener = listeners);
+			}
+		};
 	}
 
 	/**

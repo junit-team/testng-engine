@@ -10,6 +10,7 @@
 
 package org.junit.support.testng.engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
@@ -18,6 +19,7 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 
 import example.configparams.DataProviderThreadCountTestCase;
+import example.configparams.InvocationTrackingListener;
 import example.configparams.ParallelMethodsTestCase;
 import example.configparams.PreserveOrderTestCase;
 import example.configparams.ReturnValuesTestCase;
@@ -33,12 +35,15 @@ class ConfigurationParametersIntegrationTests extends AbstractIntegrationTests {
 	@Test
 	void registersCustomListeners() {
 		var testClass = SystemPropertyReadingTestCase.class;
+		InvocationTrackingListener.INVOKED = false;
 
 		var results = testNGEngine() //
 				.selectors(selectClass(testClass)) //
-				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName()) //
+				.configurationParameter("testng.listeners", SystemPropertyProvidingListener.class.getName() + " , "
+						+ InvocationTrackingListener.class.getName()) //
 				.execute();
 
+		assertThat(InvocationTrackingListener.INVOKED).isTrue();
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
