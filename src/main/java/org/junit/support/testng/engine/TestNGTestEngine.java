@@ -108,7 +108,7 @@ public class TestNGTestEngine implements TestEngine {
 	 * <h4>Execution</h4>
 	 * <dl>
 	 *     <dt>{@code testng.allowReturnValues} (file path)</dt>
-	 *     <dd>whether methods with return values should be considered test methods (default: {@code false})</dd>
+	 *     <dd>whether methods annotated with {@code @Test} that have return values should be considered test methods (default: {@code false})</dd>
 	 *
 	 *     <dt>{@code testng.dataProviderThreadCount} (file path)</dt>
 	 *     <dd>maximum number of threads to use for running data providers in parallel, if enabled via {@link DataProvider#parallel()} (default: {@code 10})</dd>

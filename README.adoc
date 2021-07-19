@@ -130,33 +130,33 @@ The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#r
 ==== Execution
 
 `testng.allowReturnValues` (boolean)::
-whether methods with return values should be considered test methods (default: `false`)
+whether methods annotated with `@Test` that have return values should be considered test methods (default: `false`; see https://testng.org/doc/documentation-main.html#test-methods[documentation])
 +
 `testng.dataProviderThreadCount` (integer)::
-maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`)
+maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`; see https://testng.org/doc/documentation-main.html#parameters-dataproviders[documentation])
 +
 `testng.parallel` (methods|tests|classes|instances|none)::
-TestNG's parallel execution mode for running tests in separate threads (default: `"none"`)
+TestNG's parallel execution mode for running tests in separate threads (default: `"none"`; see https://testng.org/doc/documentation-main.html#parallel-tests[documentation])
 +
 `testng.preserveOrder` (boolean)::
-whether classes and methods should be run in a predictable order (default: `true`)
+whether classes and methods should be run in a predictable order (default: `true`; see https://testng.org/doc/documentation-main.html#testng-xml[documentation])
 +
 `testng.threadCount` (integer)::
-maximum number of threads for running tests in parallel, if enabled via `testng.parallel` (default: `5`)
+maximum number of threads for running tests in parallel, if enabled via `testng.parallel` (default: `5`; see https://testng.org/doc/documentation-main.html#parallel-tests[documentation])
 
 ==== Reporting
 
 `testng.listeners` (comma-separated list of fully-qualified class names)::
-custom listeners that should be registered when executing tests (default: `""`)
+custom listeners that should be registered when executing tests (default: `""`; see https://testng.org/doc/documentation-main.html#testng-listeners[documentation])
 +
 `testng.outputDirectory` (file path)::
-the output directory for reports (default: `"test-output"`)
+the output directory for reports (default: `"test-output"`; see https://testng.org/doc/documentation-main.html#running-testng[documentation])
 +
 `testng.useDefaultListeners` (boolean)::
-whether TestNG's default report generating listeners should be used (default: `false`)
+whether TestNG's default report generating listeners should be used (default: `false`; see https://testng.org/doc/documentation-main.html#running-testng[documentation])
 +
 `testng.verbose` (integer)::
-TestNG's level of verbosity (default: `0`)
+TestNG's level of verbosity for console output (default: `0`)
 
 === Generating TestNG reports
 
