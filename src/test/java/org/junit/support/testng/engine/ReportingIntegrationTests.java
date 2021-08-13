@@ -10,6 +10,28 @@
 
 package org.junit.support.testng.engine;
 
+import example.basics.CustomAttributeTestCase;
+import example.basics.DisabledClassTestCase;
+import example.basics.ExpectedExceptionsTestCase;
+import example.basics.InheritingSubClassTestCase;
+import example.basics.ParallelExecutionTestCase;
+import example.basics.RetriedTestCase;
+import example.basics.SimpleTestCase;
+import example.basics.SuccessPercentageTestCase;
+import example.basics.TimeoutTestCase;
+import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
+import example.dataproviders.DataProviderMethodTestCase;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.junit.platform.launcher.PostDiscoveryFilter;
+import org.testng.SkipException;
+import org.testng.internal.thread.ThreadTimeoutException;
+
+import java.util.Map;
+
 import static org.junit.platform.commons.util.StringUtils.isBlank;
 import static org.junit.platform.engine.FilterResult.excluded;
 import static org.junit.platform.engine.FilterResult.includedIf;
@@ -25,32 +47,11 @@ import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.reportEntry;
+import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
-
-import java.util.Map;
-
-import example.basics.CustomAttributeTestCase;
-import example.basics.ExpectedExceptionsTestCase;
-import example.basics.InheritingSubClassTestCase;
-import example.basics.ParallelExecutionTestCase;
-import example.basics.RetriedTestCase;
-import example.basics.SimpleTestCase;
-import example.basics.SuccessPercentageTestCase;
-import example.basics.TimeoutTestCase;
-import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
-import example.dataproviders.DataProviderMethodTestCase;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.support.descriptor.MethodSource;
-import org.junit.platform.launcher.PostDiscoveryFilter;
-import org.testng.SkipException;
-import org.testng.internal.thread.ThreadTimeoutException;
 
 class ReportingIntegrationTests extends AbstractIntegrationTests {
 
@@ -300,6 +301,26 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), dynamicTestRegistered("invoc")), //
 			event(container("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsDisabledTestsMethodsAsSkipped() {
+		var results = testNGEngine().selectors(selectClass(SimpleTestCase.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+				event(testClass(SimpleTestCase.class), started()), //
+				event(test("method:disabled()"), skippedWithReason(__ -> true)), //
+				event(testClass(SimpleTestCase.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void reportsTestMethodsInDisabledClassesAsSkipped() {
+		var results = testNGEngine().selectors(selectClass(DisabledClassTestCase.class)).execute();
+
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+				event(testClass(SimpleTestCase.class), started()), //
+				event(test("method:test()"), skippedWithReason(__ -> true)), //
+				event(testClass(SimpleTestCase.class), finishedSuccessfully()));
 	}
 
 }

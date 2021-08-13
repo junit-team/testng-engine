@@ -13,7 +13,7 @@ package example.basics;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
-public class IgnoredTestCase {
+public class IgnoredMethodTestCase {
 
 	@Test
 	public void test() {

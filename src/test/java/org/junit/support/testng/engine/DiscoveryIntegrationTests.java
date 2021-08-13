@@ -10,6 +10,34 @@
 
 package org.junit.support.testng.engine;
 
+import example.basics.DryRunTestCase;
+import example.basics.IgnoredMethodTestCase;
+import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
+import example.basics.InheritingSubClassTestCase;
+import example.basics.JUnitTestCase;
+import example.basics.SimpleTestCase;
+import example.basics.SuccessPercentageTestCase;
+import example.basics.TwoMethodsTestCase;
+import example.tmp.ClassWithOnlyDisabledTestsAtClassLevel;
+import example.tmp.ClassWithOnlyDisabledTestsAtMethodLevel;
+import example.tmp.ClassWithOnlyIgnoredTestsAtClassLevel;
+import example.tmp.ClassWithOnlyIgnoredTestsAtMethodLevel;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.engine.DiscoverySelector;
+import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestTag;
+import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.ClassSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.junit.platform.launcher.core.LauncherConfig;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,31 +51,6 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPacka
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.launcher.TagFilter.includeTags;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
-
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import example.basics.DryRunTestCase;
-import example.basics.IgnoredTestCase;
-import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
-import example.basics.InheritingSubClassTestCase;
-import example.basics.JUnitTestCase;
-import example.basics.SimpleTestCase;
-import example.basics.SuccessPercentageTestCase;
-import example.basics.TwoMethodsTestCase;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.platform.engine.DiscoverySelector;
-import org.junit.platform.engine.TestDescriptor;
-import org.junit.platform.engine.TestTag;
-import org.junit.platform.engine.UniqueId;
-import org.junit.platform.engine.support.descriptor.ClassSource;
-import org.junit.platform.engine.support.descriptor.MethodSource;
-import org.junit.platform.launcher.core.LauncherConfig;
-import org.junit.platform.launcher.core.LauncherFactory;
-import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 
 class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
@@ -267,7 +270,7 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void ignoresIgnoredTests() {
-		var request = request().selectors(selectClass(IgnoredTestCase.class)).build();
+		var request = request().selectors(selectClass(IgnoredMethodTestCase.class)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
 
@@ -280,6 +283,19 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 	@ValueSource(classes = { InterfaceTestCase.class, AbstractTestCase.class, RecordTestCase.class,
 			EnumTestCase.class })
 	void doesNotThrowExceptionWhenNonExecutableTypeOfClassIsSelected(Class<?> testClass) {
+		var request = request().selectors(selectClass(testClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
+
+	@ParameterizedTest
+	@ValueSource(classes = { ClassWithOnlyDisabledTestsAtClassLevel.class,
+			ClassWithOnlyDisabledTestsAtMethodLevel.class,
+			ClassWithOnlyIgnoredTestsAtClassLevel.class,
+			ClassWithOnlyIgnoredTestsAtMethodLevel.class })
+	void tmp(Class<?> testClass) {
 		var request = request().selectors(selectClass(testClass)).build();
 
 		var rootDescriptor = testEngine.discover(request, engineId);
