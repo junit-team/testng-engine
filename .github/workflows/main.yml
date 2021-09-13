@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk: ['8', '11', '16', '17-ea']
+        jdk: ['8', '11', '16']
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
@@ -21,6 +21,28 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.jdk }}
+          cache: gradle
+      - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+  ea-build:
+    strategy:
+      matrix:
+        jdk: ['17', '18']
+    runs-on: ubuntu-latest
+    name: "Early Access Build (JDK ${{ matrix.jdk }})"
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Download JDK ${{ matrix.jdk }}'
+        id: download-jdk
+        uses: sormuras/download-jdk@v1
+        with:
+          feature: '${{ matrix.jdk }}'
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'jdkfile'
+          java-version: '${{ steps.download-jdk.outputs.version }}'
+          jdkFile: '${{ steps.download-jdk.outputs.file }}'
           cache: gradle
       - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
         env:
