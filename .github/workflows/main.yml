@@ -21,6 +21,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.jdk }}
+          cache: gradle
       - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -35,6 +36,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 11
+          cache: gradle
       - run: ./gradlew publish -x check --scan -Dscan.tag.publish
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
