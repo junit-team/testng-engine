@@ -55,7 +55,7 @@ class ExecutionListener extends DefaultListener {
 	public void onBeforeClass(ITestClass testClass) {
 		ClassDescriptor classDescriptor = requireNonNull(engineDescriptor.findClassDescriptor(testClass.getRealClass()),
 			"Missing class descriptor");
-		testClassRegistry.start(testClass.getRealClass(), () -> {
+		testClassRegistry.start(testClass.getRealClass(), __ -> {
 			delegate.executionStarted(classDescriptor);
 			return classDescriptor;
 		});

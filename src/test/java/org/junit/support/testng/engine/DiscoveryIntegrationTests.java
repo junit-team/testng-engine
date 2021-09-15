@@ -32,6 +32,7 @@ import example.basics.IgnoredTestCase;
 import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.JUnitTestCase;
+import example.basics.NestedTestClass;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.basics.TwoMethodsTestCase;
@@ -285,6 +286,32 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		var rootDescriptor = testEngine.discover(request, engineId);
 
 		assertThat(rootDescriptor.getChildren()).isEmpty();
+	}
+
+	@Test
+	void discoversNestedTestClasses() {
+		var selectedTestClass = NestedTestClass.class;
+		var request = request().selectors(selectClass(selectedTestClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(engineId);
+		assertThat(rootDescriptor.getChildren()).hasSize(2);
+
+		Map<String, TestDescriptor> classDescriptors = rootDescriptor.getChildren().stream() //
+				.collect(toMap(TestDescriptor::getDisplayName, identity()));
+
+		TestDescriptor classDescriptor = classDescriptors.get("A");
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(NestedTestClass.A.class.getName());
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(NestedTestClass.A.class));
+		assertThat(classDescriptor.getChildren()).hasSize(1);
+
+		classDescriptor = classDescriptors.get("B");
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(NestedTestClass.B.class.getName());
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).contains(ClassSource.from(NestedTestClass.B.class));
+		assertThat(classDescriptor.getChildren()).hasSize(1);
 	}
 
 	interface InterfaceTestCase {

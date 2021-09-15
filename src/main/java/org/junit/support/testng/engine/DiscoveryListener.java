@@ -12,8 +12,12 @@ package org.junit.support.testng.engine;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
+import org.junit.platform.engine.EngineDiscoveryRequest;
+import org.junit.platform.engine.Filter;
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.discovery.ClassNameFilter;
 import org.testng.ITestClass;
 import org.testng.ITestResult;
 
@@ -21,8 +25,10 @@ class DiscoveryListener extends DefaultListener {
 
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final TestNGEngineDescriptor engineDescriptor;
+	private final Predicate<String> classNameFilter;
 
-	public DiscoveryListener(TestNGEngineDescriptor engineDescriptor) {
+	public DiscoveryListener(EngineDiscoveryRequest request, TestNGEngineDescriptor engineDescriptor) {
+		this.classNameFilter = Filter.composeFilters(request.getFiltersByType(ClassNameFilter.class)).toPredicate();
 		this.engineDescriptor = engineDescriptor;
 	}
 
@@ -34,8 +40,15 @@ class DiscoveryListener extends DefaultListener {
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		testClassRegistry.start(testClass.getRealClass(),
-			() -> engineDescriptor.findClassDescriptor(testClass.getRealClass()));
+		testClassRegistry.start(testClass.getRealClass(), realClass -> {
+			ClassDescriptor classDescriptor = engineDescriptor.findClassDescriptor(realClass);
+			if (classDescriptor == null && classNameFilter.test(realClass.getName())) {
+				classDescriptor = engineDescriptor.getTestDescriptorFactory().createClassDescriptor(engineDescriptor,
+					realClass);
+				engineDescriptor.addChild(classDescriptor);
+			}
+			return classDescriptor;
+		});
 	}
 
 	@Override
