@@ -16,20 +16,25 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 class TestClassRegistry {
 
 	private final Set<ClassDescriptor> classDescriptors = ConcurrentHashMap.newKeySet();
 	private final Map<Class<?>, Entry> testClasses = new ConcurrentHashMap<>();
 
-	void start(Class<?> testClass, Supplier<ClassDescriptor> onFirst) {
+	void start(Class<?> testClass, Function<Class<?>, ClassDescriptor> onFirst) {
 		Entry entry = testClasses.computeIfAbsent(testClass, __ -> {
-			ClassDescriptor classDescriptor = onFirst.get();
-			classDescriptors.add(classDescriptor);
-			return new Entry(classDescriptor);
+			ClassDescriptor classDescriptor = onFirst.apply(testClass);
+			if (classDescriptor != null) {
+				classDescriptors.add(classDescriptor);
+				return new Entry(classDescriptor);
+			}
+			return null;
 		});
-		entry.inProgress.incrementAndGet();
+		if (entry != null) {
+			entry.inProgress.incrementAndGet();
+		}
 	}
 
 	Optional<ClassDescriptor> get(Class<?> testClass) {

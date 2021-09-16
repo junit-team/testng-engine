@@ -84,7 +84,7 @@ public class TestNGTestEngine implements TestEngine {
 		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
 
 		ConfigurationParameters configurationParameters = request.getConfigurationParameters();
-		DiscoveryListener listener = new DiscoveryListener(engineDescriptor);
+		DiscoveryListener listener = new DiscoveryListener(request, engineDescriptor);
 
 		if (testClasses.length > 0) {
 			withTemporarySystemProperty(TESTNG_MODE_DRYRUN, "true",

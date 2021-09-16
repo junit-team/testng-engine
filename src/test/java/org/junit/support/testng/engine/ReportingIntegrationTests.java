@@ -13,6 +13,7 @@ package org.junit.support.testng.engine;
 import static org.junit.platform.commons.util.StringUtils.isBlank;
 import static org.junit.platform.engine.FilterResult.excluded;
 import static org.junit.platform.engine.FilterResult.includedIf;
+import static org.junit.platform.engine.discovery.ClassNameFilter.excludeClassNamePatterns;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
@@ -35,6 +36,7 @@ import java.util.Map;
 import example.basics.CustomAttributeTestCase;
 import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
+import example.basics.NestedTestClass;
 import example.basics.ParallelExecutionTestCase;
 import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
@@ -46,6 +48,7 @@ import example.dataproviders.DataProviderMethodTestCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.engine.Filter;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.PostDiscoveryFilter;
@@ -300,6 +303,19 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), dynamicTestRegistered("invoc")), //
 			event(container("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	void onlyExecutesNestedTestClassesThatMatchClassNameFilter() {
+		var selectedTestClass = NestedTestClass.class;
+
+		var results = testNGEngine() //
+				.selectors(selectClass(selectedTestClass)) //
+				.filters((Filter<?>) excludeClassNamePatterns(".*A$")) //
+				.execute();
+
+		results.containerEvents().assertStatistics(stats -> stats.started(2).finished(2));
+		results.testEvents().assertStatistics(stats -> stats.started(1).finished(1));
 	}
 
 }
