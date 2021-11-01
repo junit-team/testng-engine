@@ -12,7 +12,7 @@ plugins {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
     withJavadocJar()
     withSourcesJar()
 }
@@ -119,7 +119,7 @@ tasks {
         options.release.set(8)
     }
     compileTestJava {
-        options.release.set(16)
+        options.release.set(17)
     }
     named<JavaCompile>(moduleSourceSet.compileJavaTaskName) {
         options.release.set(9)
