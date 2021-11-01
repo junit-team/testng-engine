@@ -42,7 +42,7 @@ val supportedTestNGVersions = listOf(
     "7.0.0",
     "7.1.0",
     "7.3.0",
-    "7.4.0"
+    "7.4.0" // Keep in sync with TestContext.java
 ).map(::Version)
 val snapshotTestNGVersion = Version("7.5-SNAPSHOT")
 
