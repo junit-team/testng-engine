@@ -21,10 +21,17 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.jdk }}
-          cache: gradle
-      - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
+      - uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        with:
+          arguments: |
+            -Porg.gradle.java.installations.auto-download=false
+            "-Dscan.value.GitHub job=${{ github.job }}"
+            -Dscan.tag.JDK_${{ matrix.jdk }}
+            --scan
+            javaToolchains
+            build
   ea-build:
     strategy:
       matrix:
@@ -43,10 +50,17 @@ jobs:
           distribution: 'jdkfile'
           java-version: '${{ steps.download-jdk.outputs.version }}'
           jdkFile: '${{ steps.download-jdk.outputs.file }}'
-          cache: gradle
-      - run: ./gradlew build --scan -Dscan.tag.JDK_${{ matrix.jdk }}
+      - uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        with:
+          arguments: |
+            -Porg.gradle.java.installations.auto-download=false
+            "-Dscan.value.GitHub job=${{ github.job }}"
+            -Dscan.tag.JDK_${{ matrix.jdk }}
+            --scan
+            javaToolchains
+            build
   publish:
     name: Publish Snapshots
     needs: build
@@ -58,9 +72,17 @@ jobs:
         with:
           distribution: temurin
           java-version: 11
-          cache: gradle
-      - run: ./gradlew publish -x check --scan -Dscan.tag.publish
+      - uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+        with:
+          arguments: |
+            -Porg.gradle.java.installations.auto-download=false
+            "-Dscan.value.GitHub job=${{ github.job }}"
+            -Dscan.tag.publish
+            --scan
+            javaToolchains
+            publish
+            -x check
