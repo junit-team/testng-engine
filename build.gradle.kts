@@ -12,7 +12,10 @@ plugins {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(providers.gradleProperty("javaToolchainVersion")
+        .forUseAtConfigurationTime()
+        .map { JavaLanguageVersion.of(it) }
+        .orElse(JavaLanguageVersion.of(17)))
     withJavadocJar()
     withSourcesJar()
 }
