@@ -88,3 +88,4 @@ jobs:
             javaToolchains
             publish
             -x check
+            --no-configuration-cache
