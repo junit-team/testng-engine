@@ -11,6 +11,7 @@
 package org.junit.support.testng.engine;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -67,9 +68,22 @@ class DiscoveryListener extends DefaultListener {
 		addMethodDescriptor(result);
 	}
 
+	@Override
+	public void onTestFailure(ITestResult result) {
+		getClassDescriptor(result).ifPresent(classDescriptor -> addMethodDescriptor(result, classDescriptor));
+	}
+
 	private void addMethodDescriptor(ITestResult result) {
-		ClassDescriptor classDescriptor = testClassRegistry.get(result.getTestClass().getRealClass()) //
+		ClassDescriptor classDescriptor = getClassDescriptor(result) //
 				.orElseThrow(() -> new IllegalStateException("Missing class descriptor for " + result.getTestClass()));
+		addMethodDescriptor(result, classDescriptor);
+	}
+
+	private Optional<ClassDescriptor> getClassDescriptor(ITestResult result) {
+		return testClassRegistry.get(result.getTestClass().getRealClass());
+	}
+
+	private void addMethodDescriptor(ITestResult result, ClassDescriptor classDescriptor) {
 		if (!classDescriptor.findMethodDescriptor(result).isPresent()) {
 			classDescriptor.addChild(
 				engineDescriptor.getTestDescriptorFactory().createMethodDescriptor(classDescriptor, result));

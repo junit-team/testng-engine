@@ -123,6 +123,9 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onTestFailure(ITestResult result) {
+		if (!inProgressTestMethods.containsKey(result.getMethod())) {
+			reportStarted(result, startMethodProgress(result));
+		}
 		reportFinished(result, failed(result.getThrowable()));
 	}
 

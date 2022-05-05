@@ -10,11 +10,13 @@
 
 package org.junit.support.testng.engine;
 
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
 class TestContext {
 
 	static ComparableVersion testNGVersion() {
-		return new ComparableVersion(System.getProperty("testng.version", "7.5"));
+		return new ComparableVersion(removeEnd(System.getProperty("testng.version", "7.5"), "-SNAPSHOT"));
 	}
 }
