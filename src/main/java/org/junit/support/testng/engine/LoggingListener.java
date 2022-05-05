@@ -11,6 +11,7 @@
 package org.junit.support.testng.engine;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.testng.ITestClass;
@@ -29,96 +30,100 @@ class LoggingListener extends DefaultListener {
 
 	@Override
 	public void alter(List<XmlSuite> suites) {
-		LOGGER.fine(() -> "alter: " + suites);
+		log(() -> "alter: " + suites);
 	}
 
 	@Override
 	public void onBeforeClass(ITestClass testClass) {
-		LOGGER.fine(() -> "onBeforeClass: " + testClass);
+		log(() -> "onBeforeClass: " + testClass);
 	}
 
 	@Override
 	public void onAfterClass(ITestClass testClass) {
-		LOGGER.fine(() -> "onAfterClass: " + testClass);
+		log(() -> "onAfterClass: " + testClass);
 	}
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		LOGGER.fine(() -> "onTestStart: " + result);
+		log(() -> "onTestStart: " + result);
 	}
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
-		LOGGER.fine(() -> "onTestSuccess: " + result);
+		log(() -> "onTestSuccess: " + result);
 	}
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		LOGGER.fine(() -> "onTestFailure: " + result);
+		log(() -> "onTestFailure: " + result);
 	}
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
-		LOGGER.fine(() -> "onTestSkipped: " + result);
+		log(() -> "onTestSkipped: " + result);
 	}
 
 	@Override
 	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-		LOGGER.fine(() -> "onTestFailedButWithinSuccessPercentage: " + result);
+		log(() -> "onTestFailedButWithinSuccessPercentage: " + result);
 	}
 
 	@Override
 	public void onTestFailedWithTimeout(ITestResult result) {
-		LOGGER.fine(() -> "onTestFailedWithTimeout: " + result);
+		log(() -> "onTestFailedWithTimeout: " + result);
 	}
 
 	@Override
 	public void onStart(ITestContext context) {
-		LOGGER.fine(() -> "onStart: " + context);
+		log(() -> "onStart: " + context);
 	}
 
 	@Override
 	public void onFinish(ITestContext context) {
-		LOGGER.fine(() -> "onFinish: " + context);
+		log(() -> "onFinish: " + context);
 	}
 
 	@Override
 	public void onConfigurationSuccess(ITestResult tr) {
-		LOGGER.fine(() -> "onConfigurationSuccess: " + tr);
+		log(() -> "onConfigurationSuccess: " + tr);
 	}
 
 	@Override
 	public void onConfigurationSuccess(ITestResult tr, ITestNGMethod tm) {
-		LOGGER.fine(() -> "onConfigurationSuccess: " + tr + ", " + tm);
+		log(() -> "onConfigurationSuccess: " + tr + ", " + tm);
 	}
 
 	@Override
 	public void onConfigurationFailure(ITestResult tr) {
-		LOGGER.fine(() -> "onConfigurationFailure: " + tr);
+		log(() -> "onConfigurationFailure: " + tr);
 	}
 
 	@Override
 	public void onConfigurationFailure(ITestResult tr, ITestNGMethod tm) {
-		LOGGER.fine(() -> "onConfigurationFailure: " + tr + ", " + tm);
+		log(() -> "onConfigurationFailure: " + tr + ", " + tm);
 	}
 
 	@Override
 	public void onConfigurationSkip(ITestResult tr) {
-		LOGGER.fine(() -> "onConfigurationSkip: " + tr);
+		log(() -> "onConfigurationSkip: " + tr);
 	}
 
 	@Override
 	public void onConfigurationSkip(ITestResult tr, ITestNGMethod tm) {
-		LOGGER.fine(() -> "onConfigurationSkip: " + tr + ", " + tm);
+		log(() -> "onConfigurationSkip: " + tr + ", " + tm);
 	}
 
 	@Override
 	public void beforeConfiguration(ITestResult tr) {
-		LOGGER.fine(() -> "beforeConfiguration: " + tr);
+		log(() -> "beforeConfiguration: " + tr);
 	}
 
 	@Override
 	public void beforeConfiguration(ITestResult tr, ITestNGMethod tm) {
-		LOGGER.fine(() -> "beforeConfiguration: " + tr + ", " + tm);
+		log(() -> "beforeConfiguration: " + tr + ", " + tm);
+	}
+
+	private void log(Supplier<String> message) {
+		LOGGER.fine(message);
 	}
 }
