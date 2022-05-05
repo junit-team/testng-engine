@@ -36,7 +36,7 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	private final ConcurrentMap<String, MethodDescriptor> methodsById = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
 	private final Set<TestTag> tags;
-	final AtomicInteger remainingFinishes = new AtomicInteger();
+	final AtomicInteger remainingIterations = new AtomicInteger();
 	ExecutionStrategy executionStrategy = new IncludeMethodsExecutionStrategy();
 
 	ClassDescriptor(UniqueId uniqueId, Class<?> testClass, Set<TestTag> tags) {
