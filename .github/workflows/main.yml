@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk: ['17']
+        jdk: ['17', '18']
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
@@ -36,21 +36,17 @@ jobs:
   ea-build:
     strategy:
       matrix:
-        jdk: ['18']
+        jdk: ['19']
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
       - uses: actions/checkout@v2
-      - name: 'Download JDK ${{ matrix.jdk }}'
-        id: download-jdk
-        uses: sormuras/download-jdk@v1
+      - name: 'Set up JDK ${{ matrix.jdk }}'
+        uses: oracle-actions/setup-java@v1
         with:
-          feature: '${{ matrix.jdk }}'
-      - uses: actions/setup-java@v2
-        with:
-          distribution: 'jdkfile'
-          java-version: '${{ steps.download-jdk.outputs.version }}'
-          jdkFile: '${{ steps.download-jdk.outputs.file }}'
+          website: jdk.java.net
+          release: ${{ matrix.jdk }}
+          version: latest
       - uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
