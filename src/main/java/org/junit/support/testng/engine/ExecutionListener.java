@@ -76,7 +76,7 @@ class ExecutionListener extends DefaultListener {
 	@Override
 	public void onAfterClass(ITestClass testClass) {
 		testClassRegistry.finish(testClass.getRealClass(),
-			classDescriptor -> classDescriptor.remainingFinishes.decrementAndGet() == 0, classDescriptor -> {
+			classDescriptor -> classDescriptor.remainingIterations.decrementAndGet() == 0, classDescriptor -> {
 				finishMethodsNotYetReportedAsFinished(testClass);
 				Set<Throwable> failures = classFailures.remove(classDescriptor);
 				delegate.executionFinished(classDescriptor, toTestExecutionResult(failures));

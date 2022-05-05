@@ -55,7 +55,7 @@ class DiscoveryListener extends DefaultListener {
 	@Override
 	public void onAfterClass(ITestClass testClass) {
 		testClassRegistry.finish(testClass.getRealClass(), __ -> true,
-			classDescriptor -> classDescriptor.remainingFinishes.incrementAndGet());
+			classDescriptor -> classDescriptor.remainingIterations.incrementAndGet());
 	}
 
 	@Override
