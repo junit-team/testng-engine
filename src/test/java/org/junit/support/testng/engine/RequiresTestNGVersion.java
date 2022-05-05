@@ -35,7 +35,7 @@ import org.junit.platform.commons.support.AnnotationSupport;
 
 	String min() default "";
 
-	String max() default "";
+	String maxExclusive() default "";
 
 	String[] except() default {};
 
@@ -48,9 +48,10 @@ import org.junit.platform.commons.support.AnnotationSupport;
 
 		private ConditionEvaluationResult satisfiesRequirements(RequiresTestNGVersion requirements) {
 			var actualVersion = testNGVersion();
-			if (!requirements.max().isBlank()
-					&& actualVersion.compareTo(new ComparableVersion(requirements.max())) > 0) {
-				return disabled("max constraint not met: %s > %s".formatted(actualVersion, requirements.max()));
+			if (!requirements.maxExclusive().isBlank()
+					&& actualVersion.compareTo(new ComparableVersion(requirements.maxExclusive())) >= 0) {
+				return disabled(
+					"maxExclusive constraint not met: %s > %s".formatted(actualVersion, requirements.maxExclusive()));
 			}
 			if (!requirements.min().isBlank()
 					&& actualVersion.compareTo(new ComparableVersion(requirements.min())) < 0) {

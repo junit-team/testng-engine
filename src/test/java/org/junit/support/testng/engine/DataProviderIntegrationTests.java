@@ -189,6 +189,7 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
+	@RequiresTestNGVersion(maxExclusive = "7.6")
 	void reportsExceptionInDataProviderMethodAsAborted() {
 		var testClass = DataProviderMethodErrorHandlingTestCase.class;
 
@@ -198,6 +199,20 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(testClass), started()), //
 			event(container("method:test(int)"), started()), //
 			event(container("method:test(int)"), abortedWithReason(cause(message("exception in data provider")))), //
+			event(testClass(testClass), finishedSuccessfully()));
+	}
+
+	@Test
+	@RequiresTestNGVersion(min = "7.6")
+	void reportsExceptionInDataProviderMethodAsFailed() {
+		var testClass = DataProviderMethodErrorHandlingTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(testClass), started()), //
+			event(container("method:test(int)"), started()), //
+			event(container("method:test(int)"), finishedWithFailure(cause(message("exception in data provider")))), //
 			event(testClass(testClass), finishedSuccessfully()));
 	}
 
