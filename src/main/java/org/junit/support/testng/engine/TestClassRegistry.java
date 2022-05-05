@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 class TestClassRegistry {
 
@@ -42,13 +43,13 @@ class TestClassRegistry {
 		return Optional.ofNullable(entry).map(it -> it.descriptor);
 	}
 
-	void finish(Class<?> testClass, Consumer<ClassDescriptor> onLast) {
+	void finish(Class<?> testClass, Predicate<ClassDescriptor> last, Consumer<ClassDescriptor> onLast) {
 		testClasses.compute(testClass, (__, value) -> {
 			if (value == null) {
 				return null;
 			}
 			int inProgress = value.inProgress.decrementAndGet();
-			if (inProgress == 0) {
+			if (inProgress == 0 && last.test(value.descriptor)) {
 				onLast.accept(value.descriptor);
 				return null;
 			}
