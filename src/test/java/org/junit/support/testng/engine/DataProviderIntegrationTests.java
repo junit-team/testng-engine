@@ -32,11 +32,7 @@ import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrin
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
-import example.dataproviders.DataProviderMethodEmptyListTestCase;
-import example.dataproviders.DataProviderMethodErrorHandlingTestCase;
-import example.dataproviders.DataProviderMethodTestCase;
-import example.dataproviders.FactoryWithDataProviderTestCase;
-import example.dataproviders.ParallelDataProviderTestCase;
+import example.dataproviders.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestDescriptor;
@@ -167,6 +163,29 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:b()@1"), started()), //
 			event(test("method:b()@1"), finishedWithFailure(message("b"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void executesFactoryMethodTestClass() {
+		var results = testNGEngine().selectors(selectClass(FactoryMethodTestCase.class)).execute();
+
+		results.allEvents().debug();
+
+		results.containerEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(testClass(FactoryMethodTestCase.class), started()), //
+			event(testClass(FactoryMethodTestCase.class), finishedSuccessfully()), //
+			event(engine(), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(FactoryMethodTestCase.class), started()), //
+			event(test("method:test()@0"), started()), //
+			event(test("method:test()@0"), finishedSuccessfully()), //
+			event(testClass(FactoryMethodTestCase.class), finishedSuccessfully()));
+		results.allEvents().assertEventsMatchLooselyInOrder( //
+			event(testClass(FactoryMethodTestCase.class), started()), //
+			event(test("method:test()@1"), started()), //
+			event(test("method:test()@1"), finishedSuccessfully()), //
+			event(testClass(FactoryMethodTestCase.class), finishedSuccessfully()));
 	}
 
 	@Test

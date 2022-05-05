@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.junit.platform.engine.TestDescriptor;
@@ -35,6 +36,7 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	private final ConcurrentMap<String, MethodDescriptor> methodsById = new ConcurrentHashMap<>();
 	private final Class<?> testClass;
 	private final Set<TestTag> tags;
+	final AtomicInteger remainingFinishes = new AtomicInteger();
 	ExecutionStrategy executionStrategy = new IncludeMethodsExecutionStrategy();
 
 	ClassDescriptor(UniqueId uniqueId, Class<?> testClass, Set<TestTag> tags) {
