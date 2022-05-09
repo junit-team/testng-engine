@@ -265,6 +265,7 @@ publishing {
 }
 
 signing {
+    useGpgCmd()
     sign(publishing.publications)
     isRequired = !project.version.toString().contains("SNAPSHOT")
 }
