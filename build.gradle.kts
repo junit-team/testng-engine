@@ -267,7 +267,10 @@ publishing {
 signing {
     useGpgCmd()
     sign(publishing.publications)
-    isRequired = !project.version.toString().contains("SNAPSHOT")
+}
+
+tasks.withType<Sign>().configureEach {
+    enabled = !project.version.toString().contains("SNAPSHOT")
 }
 
 data class Version(val value: String) {
