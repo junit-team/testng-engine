@@ -281,7 +281,7 @@ tasks.test {
 
 Groups declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
 Hence, you can use https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag filter expressions] to include or exclude certain groups.
-However, since tags and therefore groups are filtered rather than selected, `@BeforeGroup` and `@AfterGroup` configuration methods are not executed.
+However, since tags and therefore groups are filtered rather than selected, `@BeforeGroups` and `@AfterGroups` configuration methods are not executed.
 
 
 For example, given the following test class, including the tag `included` and excluding `excluded` will run test `a` and `c` but not `b` and `d`.
@@ -301,6 +301,14 @@ public class TestWithGroups {
     public void d() {}
 }
 ----
+
+[TIP]
+====
+JUnit does not support wildcards as tag filters.
+However, in some cases you can work around this limitation by using https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag expressions].
+For example, instead of using group `integration.*`, you could filter by the `integration.a | integration.b` tag expression.
+Alternatively, you could change the declaration of from `@Test(groups = "integration.a")` to `@Test(groups = {"integration", "a"})` and use `integration` as tag filter.
+====
 
 .Console Launcher
 [%collapsible]
