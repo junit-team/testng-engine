@@ -43,6 +43,12 @@ public class TestNGTestEngine implements TestEngine {
 				ctx.getEngineDescriptor().getTestDescriptorFactory())) //
 			.build();
 
+	/**
+	 * Create a new instance (typically called by the JUnit Platform via ServiceLoader).
+	 */
+	public TestNGTestEngine() {
+	}
+
 	@Override
 	public String getId() {
 		return "testng";
