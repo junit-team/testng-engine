@@ -135,6 +135,12 @@ whether methods annotated with `@Test` that have return values should be conside
 `testng.dataProviderThreadCount` (integer)::
 maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`; see https://testng.org/doc/documentation-main.html#parameters-dataproviders[documentation])
 +
+`testng.excludedGroups` (comma-separated list)::
+groups to exclude (see <<groups_vs_tags>>)
++
+`testng.groups` (comma-separated list)::
+groups to be run (see <<groups_vs_tags>>)
++
 `testng.parallel` (methods|tests|classes|instances|none)::
 TestNG's parallel execution mode for running tests in separate threads (default: `"none"`; see https://testng.org/doc/documentation-main.html#parallel-tests[documentation])
 +
@@ -277,13 +283,11 @@ tasks.test {
 
 == Limitations
 
-=== Groups
+[#groups_vs_tags]
+=== Groups vs. Tags
 
-Groups declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
+https://testng.org/doc/documentation-main.html#test-groups[Groups] declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
 Hence, you can use https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag filter expressions] to include or exclude certain groups.
-However, since tags and therefore groups are filtered rather than selected, `@BeforeGroups` and `@AfterGroups` configuration methods are not executed.
-
-
 For example, given the following test class, including the tag `included` and excluding `excluded` will run test `a` and `c` but not `b` and `d`.
 
 [source,java]
@@ -302,13 +306,11 @@ public class TestWithGroups {
 }
 ----
 
-[TIP]
-====
-JUnit does not support wildcards as tag filters.
-However, in some cases you can work around this limitation by using https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag expressions].
-For example, instead of using group `integration.*`, you could filter by the `integration.a | integration.b` tag expression.
-Alternatively, you could change the declaration of from `@Test(groups = "integration.a")` to `@Test(groups = {"integration", "a"})` and use `integration` as tag filter.
-====
+However, since tags and therefore groups are filtered rather than selected, `@BeforeGroups` and `@AfterGroups` configuration methods are not executed on some versions of TestNG.
+Moreover, tag filters do not support wildcards such as `integration.*`.
+Therefore, instead of using tags, you can use the `testng.groups` and `testng.excludedGroups` configuration parameters to specify the groups that should be selected.
+
+==== Using Tags
 
 .Console Launcher
 [%collapsible]
@@ -352,6 +354,62 @@ tasks.test {
                 <configuration>
                     <groups>included</groups>
                     <excludedGroups>excluded</excludedGroups>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <!-- ... -->
+</project>
+----
+====
+
+==== Using Configuration Parameters
+
+.Console Launcher
+[%collapsible]
+====
+[source]
+----
+$ java -cp 'lib/*' org.junit.platform.console.ConsoleLauncher \
+       -cp bin/main -cp bin/test \
+       --include-engine=testng --scan-classpath=bin/test \
+       --config=testng.groups=included --config=testng.excludedGroups=excluded
+----
+====
+
+.Gradle
+[%collapsible]
+====
+[source,kotlin,subs="attributes+"]
+.build.gradle[.kts]
+----
+tasks.test {
+    useJUnitPlatform()
+    systemProperty("testng.groups", "included")
+    systemProperty("testng.excludedGroups", "excluded")
+}
+----
+====
+
+.Maven
+[%collapsible]
+====
+[source,xml,subs="attributes+"]
+----
+<project>
+    <!-- ... -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>{surefire-version}</version>
+                <configuration>
+                    <properties>
+                        <configurationParameters>
+                            testng.groups = included
+                            testng.excludedGroups = excluded
+                        </configurationParameters>
+                    </properties>
                 </configuration>
             </plugin>
         </plugins>
