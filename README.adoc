@@ -310,6 +310,12 @@ However, since tags and therefore groups are filtered rather than selected, `@Be
 Moreover, tag filters do not support wildcards such as `integration.*`.
 Therefore, instead of using tags, you can use the `testng.groups` and `testng.excludedGroups` configuration parameters to specify the groups that should be selected.
 
+[WARNING]
+====
+Ideally, you should use either tags or the group configuration parameters.
+If you specify both, please ensure they match.
+====
+
 ==== Using Tags
 
 .Console Launcher
