@@ -43,6 +43,12 @@ public class TestNGTestEngine implements TestEngine {
 				ctx.getEngineDescriptor().getTestDescriptorFactory())) //
 			.build();
 
+	/**
+	 * Create a new instance (typically called by the JUnit Platform via ServiceLoader).
+	 */
+	public TestNGTestEngine() {
+	}
+
 	@Override
 	public String getId() {
 		return "testng";
@@ -171,6 +177,8 @@ public class TestNGTestEngine implements TestEngine {
 		for (Configurer configurer : configurers) {
 			configurer.configure(commandLineArgs, configurationParameters);
 		}
+		configurationParameters.get("testng.groups").ifPresent(it -> commandLineArgs.groups = it);
+		configurationParameters.get("testng.excludedGroups").ifPresent(it -> commandLineArgs.excludedGroups = it);
 		ConfigurableTestNG testNG = new ConfigurableTestNG();
 		testNG.configure(commandLineArgs);
 		for (Configurer configurer : configurers) {

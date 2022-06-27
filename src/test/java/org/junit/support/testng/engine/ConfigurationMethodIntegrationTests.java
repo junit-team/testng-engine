@@ -10,6 +10,7 @@
 
 package org.junit.support.testng.engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.engine;
@@ -28,6 +29,7 @@ import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCa
 import example.configuration.methods.FailingBeforeMethodConfigurationMethodTestCase;
 import example.configuration.methods.FailingBeforeSuiteConfigurationMethodTestCase;
 import example.configuration.methods.FailingBeforeTestConfigurationMethodTestCase;
+import example.configuration.methods.GroupsConfigurationMethodsTestCase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -102,6 +104,29 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:test()"), finishedSuccessfully()), //
 			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedWithFailure(message("boom"))));
+	}
+
+	@Test
+	void runsGroupsIncludingConfigurationMethods() {
+		Class<?> testClass = GroupsConfigurationMethodsTestCase.class;
+		GroupsConfigurationMethodsTestCase.EVENTS.clear();
+
+		var results = testNGEngine() //
+				.selectors(selectClass(testClass)) //
+				.configurationParameter("testng.groups", "group1") //
+				.configurationParameter("testng.excludedGroups", "group2") //
+				.execute();
+
+		results.allEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(testClass(testClass), started()), //
+			event(test("method:testGroup1()"), started()), //
+			event(test("method:testGroup1()"), finishedSuccessfully()), //
+			event(testClass(testClass), finishedSuccessfully()), //
+			event(engine(), finishedSuccessfully()));
+
+		assertThat(GroupsConfigurationMethodsTestCase.EVENTS) //
+				.containsExactly("beforeGroup1", "testGroup1", "afterGroup1");
 	}
 
 }
