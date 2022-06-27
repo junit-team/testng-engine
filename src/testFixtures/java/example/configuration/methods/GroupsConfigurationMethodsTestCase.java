@@ -31,6 +31,16 @@ public class GroupsConfigurationMethodsTestCase {
 		EVENTS.add("afterGroup1");
 	}
 
+	@BeforeGroups("group2")
+	public void beforeGroup2() {
+		EVENTS.add("beforeGroup2");
+	}
+
+	@AfterGroups("group2")
+	public void afterGroup2() {
+		EVENTS.add("afterGroup2");
+	}
+
 	@Test(groups = "group1")
 	public void testGroup1() {
 		EVENTS.add("testGroup1");
@@ -39,5 +49,10 @@ public class GroupsConfigurationMethodsTestCase {
 	@Test(groups = { "group1", "group2" })
 	public void testGroup1And2() {
 		EVENTS.add("testGroup1And2");
+	}
+
+	@Test(groups = "group2")
+	public void testGroup2() {
+		EVENTS.add("testGroup2");
 	}
 }
