@@ -177,6 +177,8 @@ public class TestNGTestEngine implements TestEngine {
 		for (Configurer configurer : configurers) {
 			configurer.configure(commandLineArgs, configurationParameters);
 		}
+		configurationParameters.get("testng.groups").ifPresent(it -> commandLineArgs.groups = it);
+		configurationParameters.get("testng.excludedGroups").ifPresent(it -> commandLineArgs.excludedGroups = it);
 		ConfigurableTestNG testNG = new ConfigurableTestNG();
 		testNG.configure(commandLineArgs);
 		for (Configurer configurer : configurers) {
