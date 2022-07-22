@@ -7,7 +7,7 @@ plugins {
     `java-test-fixtures`
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "6.0.0"
+    id("com.diffplug.spotless") version "6.8.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
