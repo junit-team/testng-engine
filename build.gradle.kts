@@ -40,16 +40,20 @@ configurations {
 }
 
 val supportedTestNGVersions = listOf(
-    "6.14.3",
-    "7.0.0",
-    "7.1.0",
-    "7.3.0",
-    "7.4.0",
-    "7.5" // Keep in sync with TestContext.java and README.MD
-).map(::Version)
-val snapshotTestNGVersion = Version("7.6.0-SNAPSHOT")
+    "6.14.3" to 8,
+    "7.0.0" to 8,
+    "7.1.0" to 8,
+    "7.3.0" to 8,
+    "7.4.0" to 8,
+    "7.5" to 8,
+    "7.6.1" to 11 // Keep in sync with TestContext.java and README.MD
+).associateBy({ Version(it.first) }, { JavaLanguageVersion.of(it.second) })
 
-val allTestNGVersions = supportedTestNGVersions + listOf(snapshotTestNGVersion)
+val lastJdk8CompatibleRelease = supportedTestNGVersions.entries.last { it.value == JavaLanguageVersion.of(8) }.key
+
+val snapshotTestNGVersion = Version("7.7.0-SNAPSHOT")
+
+val allTestNGVersions = supportedTestNGVersions.keys + listOf(snapshotTestNGVersion)
 
 fun versionSuffix(version: String) =
     if (version.endsWith("-SNAPSHOT")) "snapshot" else version.replace('.', '_')
@@ -73,14 +77,14 @@ dependencies {
 
     implementation("org.testng:testng") {
         version {
-            require(supportedTestNGVersions.first().value)
-            prefer(supportedTestNGVersions.last().value)
+            require(supportedTestNGVersions.keys.first().value)
+            prefer(supportedTestNGVersions.keys.last().value)
         }
     }
 
-    compileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
-    testCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
-    testFixturesCompileOnly("org.testng:testng:${supportedTestNGVersions.last()}")
+    compileOnly("org.testng:testng:${lastJdk8CompatibleRelease}")
+    testCompileOnly("org.testng:testng:${lastJdk8CompatibleRelease}")
+    testFixturesCompileOnly("org.testng:testng:${lastJdk8CompatibleRelease}")
 
     constraints {
         testNGTestConfigurationsByVersion.forEach { (version, configuration) ->
@@ -148,11 +152,11 @@ tasks {
         }
     }
     testNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
-        val java8Launcher = project.the<JavaToolchainService>().launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(8))
+        val javaMinVersionLauncher = project.the<JavaToolchainService>().launcherFor {
+            languageVersion.set(supportedTestNGVersions[version])
         }
         register<Test>("testFixturesTestNG_${version.suffix}") {
-            javaLauncher.set(java8Launcher)
+            javaLauncher.set(javaMinVersionLauncher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useTestNG {
@@ -160,7 +164,7 @@ tasks {
             }
         }
         register<Test>("testFixturesJUnitPlatform_${version.suffix}") {
-            javaLauncher.set(java8Launcher)
+            javaLauncher.set(javaMinVersionLauncher)
             classpath = configuration + sourceSets.testFixtures.get().output
             testClassesDirs = sourceSets.testFixtures.get().output
             useJUnitPlatform {
@@ -172,7 +176,7 @@ tasks {
             }
         }
         register<JavaExec>("testFixturesConsoleLauncher_${version.suffix}") {
-            javaLauncher.set(java8Launcher)
+            javaLauncher.set(javaMinVersionLauncher)
             classpath = configuration + sourceSets.testFixtures.get().output
             mainClass.set("org.junit.platform.console.ConsoleLauncher")
             args(
