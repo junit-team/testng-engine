@@ -17,6 +17,6 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 class TestContext {
 
 	static ComparableVersion testNGVersion() {
-		return new ComparableVersion(removeEnd(System.getProperty("testng.version", "7.6.1"), "-SNAPSHOT"));
+		return new ComparableVersion(removeEnd(System.getProperty("testng.version", "7.7.1"), "-SNAPSHOT"));
 	}
 }
