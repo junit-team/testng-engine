@@ -11,10 +11,13 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
+val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion")
+    .map { JavaLanguageVersion.of(it) }
+    .orElse(JavaLanguageVersion.of(17))
+    .get()
+
 java {
-    toolchain.languageVersion.set(providers.gradleProperty("javaToolchainVersion")
-        .map { JavaLanguageVersion.of(it) }
-        .orElse(JavaLanguageVersion.of(17)))
+    toolchain.languageVersion.set(javaToolchainVersion)
     withJavadocJar()
     withSourcesJar()
 }
@@ -121,11 +124,14 @@ dependencies {
 }
 
 tasks {
-    compileJava {
-        options.release.set(8)
-    }
-    compileTestFixturesJava {
-        options.release.set(8)
+    listOf(compileJava, compileTestFixturesJava).forEach { task ->
+        task.configure {
+            options.release.set(8)
+            if (javaToolchainVersion >= JavaLanguageVersion.of(20)) {
+                // `--release=8` is deprecated on JDK 20 and later
+                options.compilerArgs.add("-Xlint:-options")
+            }
+        }
     }
     compileTestJava {
         options.release.set(17)
