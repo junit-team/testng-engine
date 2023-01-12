@@ -31,9 +31,11 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstring;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
+import static org.junit.support.testng.engine.TestContext.testNGVersion;
 
 import example.dataproviders.*;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
@@ -138,6 +140,10 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 	void executesFactoryWithDataProviderTestClass() {
 		var results = testNGEngine().selectors(selectClass(FactoryWithDataProviderTestCase.class)).execute();
 
+		var capturesFactoryParameters = testNGVersion().compareTo(new ComparableVersion("7.0")) >= 0;
+		var firstParamSuffix = capturesFactoryParameters ? "(a)" : "";
+		var secondParamSuffix = capturesFactoryParameters ? "(b)" : "";
+
 		results.containerEvents().assertEventsMatchLooselyInOrder( //
 			event(engine(), started()), //
 			event(testClass(FactoryWithDataProviderTestCase.class), started()), //
@@ -145,22 +151,22 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(engine(), finishedSuccessfully()));
 		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryWithDataProviderTestCase.class), started()), //
-			event(test("method:a()@0"), started()), //
+			event(test("method:a()@0"), started(), displayName("a[0]" + firstParamSuffix)), //
 			event(test("method:a()@0"), finishedWithFailure(message("a"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryWithDataProviderTestCase.class), started()), //
-			event(test("method:a()@1"), started()), //
+			event(test("method:a()@1"), started(), displayName("a[1]" + secondParamSuffix)), //
 			event(test("method:a()@1"), finishedWithFailure(message("b"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryWithDataProviderTestCase.class), started()), //
-			event(test("method:b()@0"), started()), //
+			event(test("method:b()@0"), started(), displayName("b[0]" + firstParamSuffix)), //
 			event(test("method:b()@0"), finishedWithFailure(message("a"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryWithDataProviderTestCase.class), started()), //
-			event(test("method:b()@1"), started()), //
+			event(test("method:b()@1"), started(), displayName("b[1]" + secondParamSuffix)), //
 			event(test("method:b()@1"), finishedWithFailure(message("b"))), //
 			event(testClass(FactoryWithDataProviderTestCase.class), finishedSuccessfully()));
 	}

@@ -44,15 +44,54 @@ class TestDescriptorFactory {
 	MethodDescriptor createMethodDescriptor(ClassDescriptor parent, ITestResult result) {
 		ITestNGMethod method = result.getMethod();
 		MethodSignature methodSignature = MethodSignature.from(method);
-		String name = methodSignature.parameterTypes.length > 0 //
+		StringBuilder name = new StringBuilder(methodSignature.parameterTypes.length > 0 //
 				? methodSignature.stringRepresentation //
-				: result.getName();
+				: result.getName());
+		appendInvocationIndex(name, getFactoryMethodInvocationIndex(result));
+		appendParameterValues(name, getFactoryParameters(result));
 		UniqueId uniqueId = parent.getUniqueId().append(MethodDescriptor.SEGMENT_TYPE,
 			toMethodId(result, methodSignature));
 		Class<?> sourceClass = method.getTestClass().getRealClass();
 		Set<TestTag> tags = Arrays.stream(method.getGroups()).map(this::createTag).collect(toSet());
 		Type type = reportsInvocations(method) ? CONTAINER : TEST;
-		return new MethodDescriptor(uniqueId, name, sourceClass, methodSignature, tags, type);
+		return new MethodDescriptor(uniqueId, name.toString(), sourceClass, methodSignature, tags, type);
+	}
+
+	private static Object[] getFactoryParameters(ITestResult result) {
+		try {
+			return result.getFactoryParameters();
+		}
+		catch (NoSuchMethodError ignore) {
+			// getFactoryParameters() was added in 7.0
+			return null;
+		}
+	}
+
+	private static Integer getFactoryMethodInvocationIndex(ITestResult result) {
+		long[] instanceHashCodes = result.getTestClass().getInstanceHashCodes();
+		if (instanceHashCodes.length > 1) {
+			long hashCode = result.getInstance().hashCode();
+			for (int i = 0; i < instanceHashCodes.length; ++i) {
+				if (instanceHashCodes[i] == hashCode) {
+					return i;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	static void appendInvocationIndex(StringBuilder builder, Integer invocationIndex) {
+		if (invocationIndex != null) {
+			builder.append("[").append(invocationIndex).append("]");
+		}
+	}
+
+	static void appendParameterValues(StringBuilder builder, Object[] parameters) {
+		if (parameters != null && parameters.length > 0) {
+			builder.append("(").append(Arrays.stream(parameters).map(String::valueOf).collect(joining(", "))).append(
+				")");
+		}
 	}
 
 	private boolean reportsInvocations(ITestNGMethod method) {
