@@ -7,8 +7,8 @@ plugins {
     `java-test-fixtures`
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "6.8.0"
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("com.diffplug.spotless") version "6.18.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion")
