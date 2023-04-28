@@ -1,8 +1,8 @@
 import com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
 
 plugins {
-    id("com.gradle.enterprise") version "3.10.3"
-    id("com.gradle.common-custom-user-data-gradle-plugin") version "1.7.2"
+    id("com.gradle.enterprise") version "3.13"
+    id("com.gradle.common-custom-user-data-gradle-plugin") version "1.10"
 }
 
 rootProject.name = "testng-engine"
