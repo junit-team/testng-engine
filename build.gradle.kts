@@ -1,3 +1,4 @@
+import com.diffplug.spotless.LineEnding
 import java.util.EnumSet
 import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -232,6 +233,8 @@ spotless {
         target("src/**/package-info.java", "src/**/module-info.java")
         licenseHeaderFile(licenseHeaderFile, "/\\*\\*")
     }
+    // https://github.com/diffplug/spotless/issues/1644
+    lineEndings = LineEnding.PLATFORM_NATIVE
 }
 
 nexusPublishing {
