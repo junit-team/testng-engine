@@ -48,7 +48,7 @@ val supportedTestNGVersions = listOf(
     "7.1.0" to 8,
     "7.3.0" to 8,
     "7.4.0" to 8,
-    "7.5" to 8,
+    "7.5.1" to 8,
     "7.6.1" to 11, // Keep in sync with TestContext.java and README.MD
     "7.7.1" to 11 // Keep in sync with TestContext.java and README.MD
 ).associateBy({ Version(it.first) }, { JavaLanguageVersion.of(it.second) })
