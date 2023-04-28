@@ -12,9 +12,11 @@ gradleEnterprise {
         val isCiServer = System.getenv("CI") != null
 
         server = "https://ge.junit.org"
-
-        isCaptureTaskInputFiles = true
         isUploadInBackground = !isCiServer
+
+        capture {
+            isTaskInputFiles = true
+        }
 
         obfuscation {
             if (isCiServer) {
