@@ -77,7 +77,7 @@ val testNGTestFixturesConfigurationsByVersion = allTestNGVersions.associateWith 
 }
 
 dependencies {
-    api(platform("org.junit:junit-bom:5.7.2"))
+    api(platform("org.junit:junit-bom:5.9.3"))
     api("org.junit.platform:junit-platform-engine")
 
     implementation("org.testng:testng") {
