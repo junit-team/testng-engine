@@ -7,7 +7,7 @@ on:
 
 jobs:
   combine-prs:
-    if: github.repository == 'junit-team/junit5'
+    if: github.repository == 'junit-team/testng-engine'
     runs-on: ubuntu-latest
     steps:
       - name: combine-prs
