@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         id: setup-gradle-jdk
         with:
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         id: setup-gradle-jdk
         with:
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.repository == 'junit-team/testng-engine' && (startsWith(github.ref, 'refs/heads/releases/') || github.ref == 'refs/heads/main')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
