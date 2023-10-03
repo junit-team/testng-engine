@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk: ['17', '20']
+        jdk: ['17', '21']
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
@@ -47,7 +47,7 @@ jobs:
   ea-build:
     strategy:
       matrix:
-        jdk: ['21']
+        jdk: ['22']
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
