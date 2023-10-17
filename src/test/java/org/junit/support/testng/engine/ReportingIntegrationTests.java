@@ -42,6 +42,7 @@ import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
 import example.basics.TimeoutTestCase;
+import example.configuration.methods.AbortedBeforeClassConfigurationMethodTestCase;
 import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 
@@ -115,6 +116,17 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(FailingBeforeClassConfigurationMethodTestCase.class), started()), //
 			event(testClass(FailingBeforeClassConfigurationMethodTestCase.class),
 				finishedWithFailure(message("boom"))));
+	}
+
+	@Test
+	void reportsAbortedBeforeClassMethod() {
+		var results = testNGEngine().selectors(
+			selectClass(AbortedBeforeClassConfigurationMethodTestCase.class)).execute();
+
+		results.allEvents().debug().assertEventsMatchLooselyInOrder( //
+			event(testClass(AbortedBeforeClassConfigurationMethodTestCase.class), started()), //
+			event(testClass(AbortedBeforeClassConfigurationMethodTestCase.class),
+				abortedWithReason(message("not today"))));
 	}
 
 	@Test
