@@ -20,12 +20,14 @@ import static org.junit.platform.engine.TestExecutionResult.successful;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.TestExecutionResult;
@@ -40,8 +42,8 @@ class ExecutionListener extends DefaultListener {
 	private final TestClassRegistry testClassRegistry = new TestClassRegistry();
 	private final Map<ITestNGMethod, MethodProgress> inProgressTestMethods = new ConcurrentHashMap<>();
 
-	private final Set<Throwable> engineFailures = ConcurrentHashMap.newKeySet();
-	private final Map<ClassDescriptor, Set<Throwable>> classFailures = new ConcurrentHashMap<>();
+	private final Set<ITestResult> engineLevelFailureResults = ConcurrentHashMap.newKeySet();
+	private final Map<ClassDescriptor, Set<ITestResult>> classLevelFailureResults = new ConcurrentHashMap<>();
 
 	private final EngineExecutionListener delegate;
 	private final TestNGEngineDescriptor engineDescriptor;
@@ -63,13 +65,22 @@ class ExecutionListener extends DefaultListener {
 
 	@Override
 	public void onConfigurationFailure(ITestResult result) {
+		handleConfigurationResult(result);
+	}
+
+	@Override
+	public void onConfigurationSkip(ITestResult result) {
+		handleConfigurationResult(result);
+	}
+
+	private void handleConfigurationResult(ITestResult result) {
 		Optional<ClassDescriptor> classDescriptor = testClassRegistry.get(result.getTestClass().getRealClass());
 		if (classDescriptor.isPresent()) {
-			classFailures.computeIfAbsent(classDescriptor.get(), __ -> ConcurrentHashMap.newKeySet()) //
-					.add(result.getThrowable());
+			classLevelFailureResults.computeIfAbsent(classDescriptor.get(), __ -> ConcurrentHashMap.newKeySet()) //
+					.add(result);
 		}
 		else {
-			engineFailures.add(result.getThrowable());
+			engineLevelFailureResults.add(result);
 		}
 	}
 
@@ -78,8 +89,8 @@ class ExecutionListener extends DefaultListener {
 		testClassRegistry.finish(testClass.getRealClass(),
 			classDescriptor -> classDescriptor.remainingIterations.decrementAndGet() == 0, classDescriptor -> {
 				finishMethodsNotYetReportedAsFinished(testClass);
-				Set<Throwable> failures = classFailures.remove(classDescriptor);
-				delegate.executionFinished(classDescriptor, toTestExecutionResult(failures));
+				Set<ITestResult> results = classLevelFailureResults.remove(classDescriptor);
+				delegate.executionFinished(classDescriptor, toTestExecutionResult(results));
 			});
 	}
 
@@ -207,14 +218,24 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	public TestExecutionResult toEngineResult() {
-		return toTestExecutionResult(engineFailures);
+		return toTestExecutionResult(engineLevelFailureResults);
 	}
 
-	private TestExecutionResult toTestExecutionResult(Set<Throwable> failures) {
-		return failures == null || failures.isEmpty() ? successful() : failed(chain(failures));
+	private TestExecutionResult toTestExecutionResult(Set<ITestResult> results) {
+		return results == null || results.isEmpty() ? successful() : abortedOrFailed(results);
 	}
 
-	private Throwable chain(Set<Throwable> failures) {
+	private static TestExecutionResult abortedOrFailed(Set<ITestResult> results) {
+		return results.stream().allMatch(it -> it.getStatus() == ITestResult.SKIP) //
+				? aborted(chain(throwables(results))) //
+				: failed(chain(throwables(results)));
+	}
+
+	private static Stream<Throwable> throwables(Set<ITestResult> results) {
+		return results.stream().map(ITestResult::getThrowable).filter(Objects::nonNull);
+	}
+
+	private static Throwable chain(Stream<Throwable> failures) {
 		Iterator<Throwable> iterator = failures.iterator();
 		Throwable throwable = iterator.next();
 		iterator.forEachRemaining(throwable::addSuppressed);
