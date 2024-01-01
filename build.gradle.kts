@@ -117,7 +117,7 @@ dependencies {
         because("ComparableVersion is used to reason about tested TestNG version")
     }
 
-    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.22.0"))
+    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.22.1"))
     testRuntimeOnly("org.apache.logging.log4j:log4j-core")
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
 
