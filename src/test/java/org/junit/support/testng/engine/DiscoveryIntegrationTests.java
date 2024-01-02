@@ -326,6 +326,52 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(rootDescriptor.getChildren()).isEmpty();
 	}
 
+	@Test
+	void discoversAllTestMethodsForDefaultVisibilityWithDeclaredMethodTestCase() {
+		var request = request() //
+				.selectors(selectPackage("example.basics")) //
+				.filters(includeClassNamePatterns(".+\\.DefaultVisibilityWithDeclaredMethodTestCase")) //
+				.build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(engineId);
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo("DefaultVisibilityWithDeclaredMethodTestCase");
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(
+			"example.basics.DefaultVisibilityWithDeclaredMethodTestCase");
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).containsInstanceOf(ClassSource.class);
+		assertThat(classDescriptor.getChildren()) //
+				.extracting(TestDescriptor::getDisplayName) //
+				.containsExactlyInAnyOrder("baseMethod", "declaredMethod");
+	}
+
+	@Test
+	void discoversAllTestMethodsForDefaultVisibilityWithoutDeclaredMethodTestCase() {
+		var request = request() //
+				.selectors(selectPackage("example.basics")) //
+				.filters(includeClassNamePatterns(".+\\.DefaultVisibilityWithoutDeclaredMethodTestCase")) //
+				.build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(engineId);
+		assertThat(rootDescriptor.getChildren()).hasSize(1);
+
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		assertThat(classDescriptor.getDisplayName()).isEqualTo("DefaultVisibilityWithoutDeclaredMethodTestCase");
+		assertThat(classDescriptor.getLegacyReportingName()).isEqualTo(
+			"example.basics.DefaultVisibilityWithoutDeclaredMethodTestCase");
+		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
+		assertThat(classDescriptor.getSource()).containsInstanceOf(ClassSource.class);
+		assertThat(classDescriptor.getChildren()) //
+				.extracting(TestDescriptor::getDisplayName) //
+				.containsExactlyInAnyOrder("baseMethod");
+	}
+
 	interface InterfaceTestCase {
 	}
 

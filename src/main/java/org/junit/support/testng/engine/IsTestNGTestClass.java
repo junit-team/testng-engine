@@ -10,8 +10,12 @@
 
 package org.junit.support.testng.engine;
 
-import java.util.Arrays;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.Predicate;
+
+import org.junit.platform.commons.support.HierarchyTraversalMode;
+import org.junit.platform.commons.support.ReflectionSupport;
 
 class IsTestNGTestClass implements Predicate<Class<?>> {
 
@@ -22,6 +26,8 @@ class IsTestNGTestClass implements Predicate<Class<?>> {
 	}
 
 	private boolean hasMethodWithTestAnnotation(Class<?> candidateClass) {
-		return Arrays.stream(candidateClass.getMethods()).anyMatch(TestAnnotationUtils::isAnnotatedDirectly);
+		List<Method> testMethods = ReflectionSupport.findMethods(candidateClass,
+			TestAnnotationUtils::isAnnotatedDirectly, HierarchyTraversalMode.BOTTOM_UP);
+		return !testMethods.isEmpty();
 	}
 }
