@@ -47,7 +47,7 @@ jobs:
   ea-build:
     strategy:
       matrix:
-        jdk: ['22']
+        jdk: ['22', '23']
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
