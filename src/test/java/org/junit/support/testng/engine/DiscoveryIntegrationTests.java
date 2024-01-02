@@ -27,6 +27,7 @@ import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.r
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import example.basics.AnonymousClassTestCase;
 import example.basics.DryRunTestCase;
 import example.basics.IgnoredTestCase;
 import example.basics.InheritedClassLevelOnlyAnnotationTestCase;
@@ -312,6 +313,17 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(classDescriptor.getType()).isEqualTo(CONTAINER);
 		assertThat(classDescriptor.getSource()).contains(ClassSource.from(NestedTestClass.B.class));
 		assertThat(classDescriptor.getChildren()).hasSize(1);
+	}
+
+	@Test
+	void ignoresAnonymousClasses() {
+		var selectedTestClass = AnonymousClassTestCase.class.getName() + "$1";
+		var request = request().selectors(selectClass(selectedTestClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(rootDescriptor.getUniqueId()).isEqualTo(engineId);
+		assertThat(rootDescriptor.getChildren()).isEmpty();
 	}
 
 	interface InterfaceTestCase {

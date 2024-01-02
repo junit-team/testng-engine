@@ -40,9 +40,14 @@ class ClassDescriptor extends AbstractTestDescriptor {
 	ExecutionStrategy executionStrategy = new IncludeMethodsExecutionStrategy();
 
 	ClassDescriptor(UniqueId uniqueId, Class<?> testClass, Set<TestTag> tags) {
-		super(uniqueId, testClass.getSimpleName(), ClassSource.from(testClass));
+		super(uniqueId, determineDisplayName(testClass), ClassSource.from(testClass));
 		this.testClass = testClass;
 		this.tags = tags;
+	}
+
+	private static String determineDisplayName(Class<?> testClass) {
+		String simpleName = testClass.getSimpleName();
+		return simpleName.isEmpty() ? testClass.getName() : simpleName;
 	}
 
 	@Override
