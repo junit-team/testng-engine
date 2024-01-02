@@ -204,6 +204,7 @@ tasks {
     val testTasks = testNGTestConfigurationsByVersion.map { (version, configuration) ->
         register<Test>("test_${version.suffix}") {
             classpath = configuration + sourceSets.test.get().output
+            testClassesDirs = files(testing.suites.named<JvmTestSuite>("test").map { it.sources.output.classesDirs })
             group = JavaBasePlugin.VERIFICATION_GROUP
             useJUnitPlatform {
                 includeEngines("junit-jupiter")
