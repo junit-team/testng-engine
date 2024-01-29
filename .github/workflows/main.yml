@@ -31,7 +31,7 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/gradle-build-action@v2
+      - uses: gradle/gradle-build-action@v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
@@ -66,7 +66,7 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/gradle-build-action@v2
+      - uses: gradle/gradle-build-action@v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
@@ -90,7 +90,7 @@ jobs:
         with:
           distribution: liberica
           java-version: 17
-      - uses: gradle/gradle-build-action@v2
+      - uses: gradle/gradle-build-action@v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
