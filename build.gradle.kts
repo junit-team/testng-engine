@@ -113,7 +113,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
     testImplementation("org.mockito:mockito-junit-jupiter:5.9.0")
-    testImplementation("org.assertj:assertj-core:3.25.1")
+    testImplementation("org.assertj:assertj-core:3.25.2")
     testImplementation("org.apache.maven:maven-artifact:3.9.6") {
         because("ComparableVersion is used to reason about tested TestNG version")
     }
