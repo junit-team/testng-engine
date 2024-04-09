@@ -53,17 +53,15 @@ val supportedTestNGVersions = listOf(
     "7.6.1" to 11,
     "7.7.1" to 11,
     "7.8.0" to 11,
-    "7.9.0" to 11 // Keep in sync with TestContext.java and README.MD
+    "7.9.0" to 11,
+    "7.10.1" to 11, // Keep in sync with TestContext.java and README.adoc
 ).associateBy({ Version(it.first) }, { JavaLanguageVersion.of(it.second) })
 
 val lastJdk8CompatibleRelease = supportedTestNGVersions.entries.last { it.value == JavaLanguageVersion.of(8) }.key
 
-val snapshotTestNGVersion = Version("7.10.0-SNAPSHOT")
+val snapshotTestNGVersion = Version("7.11.0-SNAPSHOT")
 
 val allTestNGVersions = supportedTestNGVersions.keys + listOf(snapshotTestNGVersion)
-
-fun versionSuffix(version: String) =
-    if (version.endsWith("-SNAPSHOT")) "snapshot" else version.replace('.', '_')
 
 val testRuntimeClasspath: Configuration by configurations.getting
 val testNGTestConfigurationsByVersion = allTestNGVersions.associateWith { version ->
@@ -211,6 +209,7 @@ tasks {
             }
             systemProperty("testng.version", version.value)
             systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
+            ignoreFailures = version.isSnapshot() // TODO remove this line once a new 7.11.0-SNAPSHOT artifact is available
         }
     }
     test {
@@ -300,6 +299,8 @@ data class Version(val value: String) {
     val suffix: String by lazy {
         value.replace(pattern, "_")
     }
+
+    fun isSnapshot() : Boolean = value.endsWith("-SNAPSHOT")
 
     override fun toString() = value
 }
