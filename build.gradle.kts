@@ -209,7 +209,6 @@ tasks {
             }
             systemProperty("testng.version", version.value)
             systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
-            ignoreFailures = version.isSnapshot() // TODO remove this line once a new 7.11.0-SNAPSHOT artifact is available
         }
     }
     test {
