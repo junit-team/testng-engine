@@ -45,6 +45,7 @@ jobs:
             -Dscan.tag.JDK_${{ matrix.jdk }}
             -PjavaToolchainVersion=${{ matrix.jdk }}
             --scan
+            --refresh-dependencies
             javaToolchains
             build
   ea-build:
@@ -80,6 +81,7 @@ jobs:
             -Dscan.tag.JDK_${{ matrix.jdk }}
             -PjavaToolchainVersion=${{ matrix.jdk }}
             --scan
+            --refresh-dependencies
             javaToolchains
             build
   publish:
