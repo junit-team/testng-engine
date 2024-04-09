@@ -6,3 +6,4 @@ build
 
 # Ignore SDKMAN config
 /.sdkmanrc
+/.idea/
