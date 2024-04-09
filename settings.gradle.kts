@@ -1,22 +1,16 @@
-import com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
-
 plugins {
-    id("com.gradle.enterprise") version "3.17"
+    id("com.gradle.develocity") version "3.17"
     id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0"
 }
 
 rootProject.name = "testng-engine"
 
-gradleEnterprise {
+develocity {
     buildScan {
         val isCiServer = System.getenv("CI") != null
 
         server = "https://ge.junit.org"
-        isUploadInBackground = !isCiServer
-
-        capture {
-            isTaskInputFiles = true
-        }
+        uploadInBackground = !isCiServer
 
         obfuscation {
             if (isCiServer) {
@@ -27,7 +21,6 @@ gradleEnterprise {
             }
         }
 
-        this as BuildScanExtensionWithHiddenFeatures
-        publishIfAuthenticated()
+        publishing.onlyIf { it.isAuthenticated }
     }
 }
