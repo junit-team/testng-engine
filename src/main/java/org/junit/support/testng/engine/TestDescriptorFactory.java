@@ -67,6 +67,7 @@ class TestDescriptorFactory {
 		}
 	}
 
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
 	private static Integer getFactoryMethodInvocationIndex(ITestResult result) {
 		long[] instanceHashCodes = result.getTestClass().getInstanceHashCodes();
 		if (instanceHashCodes.length > 1) {
