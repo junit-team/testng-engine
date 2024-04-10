@@ -27,6 +27,7 @@ import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.internal.IParameterInfo;
 import org.testng.internal.annotations.DisabledRetryAnalyzer;
 
 class TestDescriptorFactory {
@@ -67,8 +68,19 @@ class TestDescriptorFactory {
 		}
 	}
 
-	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
 	private static Integer getFactoryMethodInvocationIndex(ITestResult result) {
+		try {
+			IParameterInfo parameterInfo = result.getMethod().getFactoryMethodParamsInfo();
+			return parameterInfo == null ? null : parameterInfo.getIndex();
+		}
+		catch (NoSuchMethodError ignore) {
+			return getFactoryMethodInvocationIndex_6_14(result);
+		}
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
+	private static Integer getFactoryMethodInvocationIndex_6_14(ITestResult result) {
+		// ITestNGMethod.getFactoryMethodParamsInfo() was added in 7.0 and IParameterInfo.getIndex() in 7.5
 		long[] instanceHashCodes = result.getTestClass().getInstanceHashCodes();
 		if (instanceHashCodes.length > 1) {
 			long hashCode = result.getInstance().hashCode();
@@ -78,7 +90,6 @@ class TestDescriptorFactory {
 				}
 			}
 		}
-
 		return null;
 	}
 
