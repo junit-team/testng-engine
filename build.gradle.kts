@@ -80,6 +80,9 @@ val testNGTestFixturesConfigurationsByVersion = allTestNGVersions.associateWith 
         extendsFrom(testFixturesRuntimeClasspath)
     }
 }
+val latestCompileClasspath: Configuration by configurations.creating {
+    extendsFrom(configurations.compileClasspath.get())
+}
 
 dependencies {
     api(platform(libs.junit.bom))
@@ -102,6 +105,11 @@ dependencies {
                 version {
                     strictly(version.value)
                 }
+            }
+        }
+        latestCompileClasspath("org.testng:testng") {
+            version {
+                strictly(supportedTestNGVersions.keys.last().value)
             }
         }
     }
@@ -145,6 +153,11 @@ tasks {
         options.compilerArgumentProviders += CommandLineArgumentProvider {
             listOf("--patch-module", "org.junit.support.testng.engine=${files.asPath}")
         }
+    }
+    val compileJavaLatest by registering(JavaCompile::class) {
+        source = compileJava.get().source
+        classpath = latestCompileClasspath
+        destinationDirectory = layout.buildDirectory.dir("latestClasses")
     }
     withType<JavaCompile>().configureEach {
         options.compilerArgs.addAll(listOf("-Xlint:all,-requires-automatic", "-Werror"))
@@ -226,6 +239,9 @@ tasks {
         enabled = false
         develocity.predictiveTestSelection.enabled = false
         dependsOn(testTasks)
+    }
+    check {
+        dependsOn(compileJavaLatest)
     }
 }
 
