@@ -34,20 +34,21 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/gradle-build-action@v3
+      - uses: gradle/actions/setup-gradle@v3
+      - shell: bash
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
-        with:
-          arguments: |
-            -Porg.gradle.java.installations.auto-download=false
-            "-Dscan.value.GitHub job=${{ github.job }}"
-            -Dscan.tag.JDK_${{ matrix.jdk }}
-            -PjavaToolchainVersion=${{ matrix.jdk }}
-            --scan
-            --refresh-dependencies
-            javaToolchains
-            build
+        run: |
+          ./gradlew \
+          -Porg.gradle.java.installations.auto-download=false \
+          "-Dscan.value.GitHub job=${{ github.job }}" \
+          -Dscan.tag.JDK_${{ matrix.jdk }} \
+          -PjavaToolchainVersion=${{ matrix.jdk }} \
+          --scan \
+          --refresh-dependencies \
+          javaToolchains \
+          build
   ea-build:
     strategy:
       matrix:
@@ -70,20 +71,21 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/gradle-build-action@v3
+      - uses: gradle/actions/setup-gradle@v3
+      - shell: bash
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
-        with:
-          arguments: |
-            -Porg.gradle.java.installations.auto-download=false
-            "-Dscan.value.GitHub job=${{ github.job }}"
-            -Dscan.tag.JDK_${{ matrix.jdk }}
-            -PjavaToolchainVersion=${{ matrix.jdk }}
-            --scan
-            --refresh-dependencies
-            javaToolchains
-            build
+        run: |
+          ./gradlew \
+          -Porg.gradle.java.installations.auto-download=false \
+          "-Dscan.value.GitHub job=${{ github.job }}" \
+          -Dscan.tag.JDK_${{ matrix.jdk }} \
+          -PjavaToolchainVersion=${{ matrix.jdk }} \
+          --scan \
+          --refresh-dependencies \
+          javaToolchains \
+          build
   publish:
     name: Publish Snapshots
     needs: build
@@ -95,18 +97,19 @@ jobs:
         with:
           distribution: liberica
           java-version: 17
-      - uses: gradle/gradle-build-action@v3
+      - uses: gradle/actions/setup-gradle@v3
+      - shell: bash
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-        with:
-          arguments: |
-            -Porg.gradle.java.installations.auto-download=false
-            "-Dscan.value.GitHub job=${{ github.job }}"
-            -Dscan.tag.publish
-            --scan
-            javaToolchains
-            publish
-            -x check
-            --no-configuration-cache
+        run: |
+          ./gradlew \
+          -Porg.gradle.java.installations.auto-download=false \
+          "-Dscan.value.GitHub job=${{ github.job }}" \
+          -Dscan.tag.publish \
+          --scan \
+          javaToolchains \
+          publish \
+          -x check \
+          --no-configuration-cache
