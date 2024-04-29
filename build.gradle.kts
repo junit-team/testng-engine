@@ -54,12 +54,12 @@ val supportedTestNGVersions = listOf(
     "7.7.1" to 11,
     "7.8.0" to 11,
     "7.9.0" to 11,
-    "7.10.1" to 11, // Keep in sync with TestContext.java and README.adoc
+    libs.versions.latestTestNG.get() to 11,
 ).associateBy({ Version(it.first) }, { JavaLanguageVersion.of(it.second) })
 
 val lastJdk8CompatibleRelease = supportedTestNGVersions.entries.last { it.value == JavaLanguageVersion.of(8) }.key
 
-val snapshotTestNGVersion = Version("7.11.0-SNAPSHOT")
+val snapshotTestNGVersion = Version(libs.versions.snapshotTestNG.get())
 
 val allTestNGVersions = supportedTestNGVersions.keys + listOf(snapshotTestNGVersion)
 
@@ -77,7 +77,7 @@ val testNGTestFixturesConfigurationsByVersion = allTestNGVersions.associateWith 
 }
 
 dependencies {
-    api(platform("org.junit:junit-bom:5.7.2"))
+    api(platform(libs.junit.bom))
     api("org.junit.platform:junit-platform-engine")
 
     implementation("org.testng:testng") {
@@ -110,17 +110,17 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.platform:junit-platform-testkit")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
-    testImplementation("org.assertj:assertj-core:3.25.3")
-    testImplementation("org.apache.maven:maven-artifact:3.9.6") {
+    testImplementation(libs.mockito.junit.jupiter)
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.maven.artifact) {
         because("ComparableVersion is used to reason about tested TestNG version")
     }
 
-    testRuntimeOnly(platform("org.apache.logging.log4j:log4j-bom:2.23.1"))
+    testRuntimeOnly(platform(libs.log4j.bom))
     testRuntimeOnly("org.apache.logging.log4j:log4j-core")
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
 
-    testFixturesImplementation("junit:junit:4.13.2")
+    testFixturesImplementation(libs.junit4)
     testFixturesRuntimeOnly("org.junit.platform:junit-platform-console")
 }
 
