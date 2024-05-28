@@ -3,7 +3,7 @@ latestTestNG = "7.10.2" # Keep in sync with TestContext.java and README.adoc
 snapshotTestNG = "7.11.0-SNAPSHOT"
 
 [libraries]
-assertj-core = { module = "org.assertj:assertj-core", version = "3.25.3" }
+assertj-core = { module = "org.assertj:assertj-core", version = "3.26.0" }
 junit4 = { module = "junit:junit", version = "4.13.2" }
 junit-bom = { module = "org.junit:junit-bom", version = "5.7.2" }
 log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version = "2.23.1" }
