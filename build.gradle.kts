@@ -115,6 +115,7 @@ dependencies {
     testImplementation(libs.maven.artifact) {
         because("ComparableVersion is used to reason about tested TestNG version")
     }
+    testImplementation(libs.commons.lang3)
 
     testRuntimeOnly(platform(libs.log4j.bom))
     testRuntimeOnly("org.apache.logging.log4j:log4j-core")
