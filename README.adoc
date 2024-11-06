@@ -429,3 +429,4 @@ tasks.test {
 
 The engine's main intention is integration with build tools like Gradle and Maven.
 Hence, custom suites specified via `testng.xml` files are not supported.
+However, you can use https://junit.org/junit5/docs/current/user-guide/#junit-platform-suite-engine[JUnit's suite support] with this engine.
