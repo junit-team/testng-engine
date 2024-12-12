@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk: [ '17', '21', '22' ]
+        jdk: [ '17', '21', '23' ]
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
