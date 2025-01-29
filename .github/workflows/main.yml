@@ -20,12 +20,12 @@ jobs:
     name: "Build (JDK ${{ matrix.jdk }})"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4
         id: setup-gradle-jdk
         with:
           distribution: liberica
           java-version: 17
-      - uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4
         if: matrix.jdk != '17'
         with:
           distribution: liberica
@@ -59,7 +59,7 @@ jobs:
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4
         id: setup-gradle-jdk
         with:
           distribution: liberica
@@ -97,7 +97,7 @@ jobs:
     if: github.event_name == 'push' && github.repository == 'junit-team/testng-engine' && (startsWith(github.ref, 'refs/heads/releases/') || github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4
         with:
           distribution: liberica
           java-version: 17
