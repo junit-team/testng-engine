@@ -34,7 +34,7 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4
+      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - shell: bash
@@ -73,7 +73,7 @@ jobs:
         if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4
+      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - shell: bash
@@ -101,7 +101,7 @@ jobs:
         with:
           distribution: liberica
           java-version: 17
-      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4
+      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - shell: bash
