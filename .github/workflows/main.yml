@@ -15,9 +15,13 @@ jobs:
   build:
     strategy:
       matrix:
-        jdk: [ '17', '21', '23' ]
+        jdk:
+          - version: 17
+          - version: 21
+          - version: 24
+            distribution: oracle
     runs-on: ubuntu-latest
-    name: "Build (JDK ${{ matrix.jdk }})"
+    name: "Build (JDK ${{ matrix.jdk.version }})"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
@@ -26,12 +30,12 @@ jobs:
           distribution: liberica
           java-version: 17
       - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
-        if: matrix.jdk != '17'
+        if: matrix.jdk.version != '17'
         with:
-          distribution: liberica
-          java-version: ${{ matrix.jdk }}
+          distribution: ${{ matrix.jdk.distribution || 'liberica' }}
+          java-version: ${{ matrix.jdk.version }}
       - name: 'Prepare TOOLCHAIN_JDK env var'
-        if: matrix.jdk != '17'
+        if: matrix.jdk.version != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
       - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
@@ -45,8 +49,8 @@ jobs:
           ./gradlew \
           -Porg.gradle.java.installations.auto-download=false \
           "-Dscan.value.GitHub job=${{ github.job }}" \
-          -Dscan.tag.JDK_${{ matrix.jdk }} \
-          -PjavaToolchainVersion=${{ matrix.jdk }} \
+          -Dscan.tag.JDK_${{ matrix.jdk.version }} \
+          -PjavaToolchainVersion=${{ matrix.jdk.version }} \
           --scan \
           --refresh-dependencies \
           javaToolchains \
@@ -54,7 +58,7 @@ jobs:
   ea-build:
     strategy:
       matrix:
-        jdk: [ '23' ]
+        jdk: [ '25' ]
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
@@ -70,7 +74,6 @@ jobs:
           release: ${{ matrix.jdk }}
           version: latest
       - name: 'Prepare TOOLCHAIN_JDK env var'
-        if: matrix.jdk != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
       - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
