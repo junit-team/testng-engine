@@ -10,6 +10,7 @@
 
 package example.configuration.methods;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -18,6 +19,11 @@ public class FailingBeforeTestConfigurationMethodTestCase {
 	@BeforeTest
 	public void beforeTest() {
 		throw new AssertionError("boom");
+	}
+
+	@BeforeMethod
+	public void beforeMethod() {
+		// never called
 	}
 
 	@Test
