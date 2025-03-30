@@ -237,12 +237,12 @@ class ExecutionListener extends DefaultListener {
 
 	private static Throwable chain(Stream<Throwable> failures) {
 		Iterator<Throwable> iterator = failures.iterator();
-        Throwable throwable = null;
-        if (iterator.hasNext()) {
-            throwable = iterator.next();
-            iterator.forEachRemaining(throwable::addSuppressed);
-        }
-        return throwable;
+		Throwable throwable = null;
+		if (iterator.hasNext()) {
+			throwable = iterator.next();
+			iterator.forEachRemaining(throwable::addSuppressed);
+		}
+		return throwable;
 	}
 
 	static class MethodProgress {
