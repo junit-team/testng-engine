@@ -10,6 +10,7 @@
 
 package org.junit.support.testng.engine;
 
+import static org.assertj.core.api.Assertions.allOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
@@ -74,7 +75,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason(message("boom"))), //
-			event(testClass(testClass), abortedWithReason()), //
+			event(testClass(testClass), abortedWithoutReason()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 

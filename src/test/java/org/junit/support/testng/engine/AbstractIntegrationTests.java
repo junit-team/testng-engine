@@ -11,18 +11,24 @@
 package org.junit.support.testng.engine;
 
 import static java.util.function.Predicate.isEqual;
+import static org.assertj.core.api.Assertions.allOf;
 import static org.junit.platform.commons.util.FunctionUtils.where;
+import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.testkit.engine.Event.byTestDescriptor;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
+import static org.junit.platform.testkit.engine.EventConditions.finished;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstring;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.status;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.Event;
 
@@ -48,4 +54,13 @@ abstract class AbstractIntegrationTests {
 			byTestDescriptor(where(TestDescriptor::getLegacyReportingName, isEqual(legacyReportingName))),
 			"descriptor with legacy reporting name '%s'", legacyReportingName);
 	}
+
+	static Condition<Event> abortedWithoutReason() {
+		return finished(allOf(status(ABORTED), emptyThrowable()));
+	}
+
+	static Condition<TestExecutionResult> emptyThrowable() {
+		return new Condition<>(where(TestExecutionResult::getThrowable, Optional::isEmpty), "throwable is empty");
+	}
+
 }
