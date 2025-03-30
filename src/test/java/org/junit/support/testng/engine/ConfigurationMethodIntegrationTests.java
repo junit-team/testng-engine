@@ -74,7 +74,7 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason(message("boom"))), //
-			event(testClass(testClass), finishedSuccessfully()), //
+			event(testClass(testClass), abortedWithoutReason()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
