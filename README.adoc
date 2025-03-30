@@ -1,8 +1,8 @@
 = TestNG Engine for the JUnit Platform
 :jcommander-version: 1.72
 :jquery-version: 3.5.1
-:junit-platform-version: 1.8.2
-:surefire-version: 3.0.0-M7
+:junit-platform-version: 1.12.1
+:surefire-version: 3.5.2
 :testng-min-version: 6.14.3
 :testng-max-version: 7.10.2
 :testng-engine-version: 1.0.5
