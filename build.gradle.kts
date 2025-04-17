@@ -9,7 +9,7 @@ plugins {
     `maven-publish`
     signing
     id("com.diffplug.spotless") version "7.0.3"
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    id("com.gradleup.nmcp") version "0.1.4"
 }
 
 val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion")
@@ -240,13 +240,6 @@ spotless {
     lineEndings = LineEnding.PLATFORM_NATIVE
 }
 
-nexusPublishing {
-    packageGroup.set("org.junit")
-    repositories {
-        sonatype()
-    }
-}
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -279,6 +272,24 @@ publishing {
                 }
             }
         }
+    }
+    repositories {
+        maven {
+            name = "mavenCentralSnapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            credentials {
+                username = providers.gradleProperty("mavenCentralUsername").orNull
+                password = providers.gradleProperty("mavenCentralPassword").orNull
+            }
+        }
+    }
+}
+
+nmcp {
+    centralPortal {
+        username = providers.gradleProperty("mavenCentralUsername")
+        password = providers.gradleProperty("mavenCentralPassword")
+        publishingType = providers.gradleProperty("mavenCentralPublishingType").orElse("USER_MANAGED")
     }
 }
 
