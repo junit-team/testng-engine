@@ -110,8 +110,8 @@ jobs:
       - shell: bash
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         run: |
           ./gradlew \
           -Porg.gradle.java.installations.auto-download=false \
@@ -119,6 +119,6 @@ jobs:
           -Dscan.tag.publish \
           --scan \
           javaToolchains \
-          publish \
+          publishAllPublicationsToMavenCentralSnapshotsRepository \
           -x check \
           --no-configuration-cache
