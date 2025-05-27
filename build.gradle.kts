@@ -8,7 +8,7 @@ plugins {
     `java-test-fixtures`
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "7.0.3"
+    id("com.diffplug.spotless") version "7.0.4"
     id("com.gradleup.nmcp") version "0.1.5"
 }
 
