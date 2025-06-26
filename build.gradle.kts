@@ -286,7 +286,7 @@ publishing {
 }
 
 nmcp {
-    centralPortal {
+    publishAllPublicationsToCentralPortal {
         username = providers.gradleProperty("mavenCentralUsername")
         password = providers.gradleProperty("mavenCentralPassword")
         publishingType = providers.gradleProperty("mavenCentralPublishingType").orElse("USER_MANAGED")
