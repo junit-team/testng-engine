@@ -15,7 +15,10 @@ import static org.junit.support.testng.engine.TestNGTestEngine.Configurer.testMe
 import static org.testng.internal.RuntimeBehavior.TESTNG_MODE_DRYRUN;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
+import org.junit.platform.commons.support.ReflectionSupport;
 import org.junit.platform.engine.ConfigurationParameters;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
@@ -26,6 +29,7 @@ import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
 import org.testng.CommandLineArgs;
 import org.testng.ITestNGListener;
+import org.testng.SkipException;
 import org.testng.TestNG;
 import org.testng.annotations.DataProvider;
 import org.testng.xml.XmlSuite.ParallelMode;
@@ -159,14 +163,22 @@ public class TestNGTestEngine implements TestEngine {
 	@Override
 	public void execute(ExecutionRequest request) {
 		EngineExecutionListener listener = request.getEngineExecutionListener();
+		BooleanSupplier cancellationToken = getCancellationToken(request);
 		TestNGEngineDescriptor engineDescriptor = (TestNGEngineDescriptor) request.getRootTestDescriptor();
 		listener.executionStarted(engineDescriptor);
 		engineDescriptor.prepareExecution();
-		ExecutionListener executionListener = new ExecutionListener(listener, engineDescriptor);
+		ExecutionListener executionListener = new ExecutionListener(listener, cancellationToken, engineDescriptor);
 		List<String> methodNames = engineDescriptor.getQualifiedMethodNames();
 		if (!methodNames.isEmpty()) {
-			configureAndRun(request.getConfigurationParameters(), executionListener, testMethods(methodNames),
-				Phase.EXECUTION);
+			try {
+				configureAndRun(request.getConfigurationParameters(), executionListener, testMethods(methodNames),
+					Phase.EXECUTION);
+			}
+			catch (SkipException e) {
+				if (!cancellationToken.getAsBoolean()) {
+					throw e;
+				}
+			}
 		}
 		listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 	}
@@ -205,6 +217,18 @@ public class TestNGTestEngine implements TestEngine {
 				System.setProperty(key, originalValue);
 			}
 		}
+	}
+
+	private static BooleanSupplier getCancellationToken(ExecutionRequest request) {
+		return ReflectionSupport.findMethod(ExecutionRequest.class, "getCancellationToken") //
+				.map(method -> ReflectionSupport.invokeMethod(method, request)) //
+				.flatMap(TestNGTestEngine::toBooleanSupplier) //
+				.orElse(() -> false);
+	}
+
+	private static Optional<BooleanSupplier> toBooleanSupplier(Object cancellationToken) {
+		return ReflectionSupport.findMethod(cancellationToken.getClass(), "isCancellationRequested") //
+				.map(method -> () -> (boolean) ReflectionSupport.invokeMethod(method, cancellationToken));
 	}
 
 	interface Configurer {

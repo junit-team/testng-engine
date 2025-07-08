@@ -13,6 +13,7 @@ package org.junit.support.testng.engine;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
+import static org.junit.platform.engine.TestExecutionResult.Status.SUCCESSFUL;
 import static org.junit.platform.engine.TestExecutionResult.aborted;
 import static org.junit.platform.engine.TestExecutionResult.failed;
 import static org.junit.platform.engine.TestExecutionResult.successful;
@@ -27,14 +28,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
 
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.reporting.ReportEntry;
+import org.testng.IInvokedMethod;
 import org.testng.ITestClass;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.SkipException;
 import org.testng.annotations.CustomAttribute;
 
 class ExecutionListener extends DefaultListener {
@@ -46,11 +50,28 @@ class ExecutionListener extends DefaultListener {
 	private final Map<ClassDescriptor, Set<ITestResult>> classLevelFailureResults = new ConcurrentHashMap<>();
 
 	private final EngineExecutionListener delegate;
+	private final BooleanSupplier cancellationToken;
 	private final TestNGEngineDescriptor engineDescriptor;
 
-	ExecutionListener(EngineExecutionListener delegate, TestNGEngineDescriptor engineDescriptor) {
+	private volatile SkipException skipException;
+
+	ExecutionListener(EngineExecutionListener delegate, BooleanSupplier cancellationToken,
+			TestNGEngineDescriptor engineDescriptor) {
 		this.delegate = delegate;
+		this.cancellationToken = cancellationToken;
 		this.engineDescriptor = engineDescriptor;
+	}
+
+	@Override
+	public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
+		if (cancellationToken.getAsBoolean()) {
+			SkipException exception = skipException;
+			if (exception == null) {
+				exception = new SkipException("Execution cancelled");
+				skipException = exception;
+			}
+			throw exception;
+		}
 	}
 
 	@Override
@@ -218,7 +239,11 @@ class ExecutionListener extends DefaultListener {
 	}
 
 	public TestExecutionResult toEngineResult() {
-		return toTestExecutionResult(engineLevelFailureResults);
+		TestExecutionResult testExecutionResult = toTestExecutionResult(engineLevelFailureResults);
+		if (testExecutionResult.getStatus() == SUCCESSFUL && skipException != null) {
+			return aborted(skipException);
+		}
+		return testExecutionResult;
 	}
 
 	private TestExecutionResult toTestExecutionResult(Set<ITestResult> results) {
