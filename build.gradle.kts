@@ -31,6 +31,12 @@ repositories {
             snapshotsOnly()
         }
     }
+    maven(url = "https://central.sonatype.com/repository/maven-snapshots") {
+        mavenContent {
+            includeGroupByRegex("org\\.junit.*")
+            snapshotsOnly()
+        }
+    }
 }
 
 val moduleSourceSet = sourceSets.create("module") {
@@ -109,7 +115,7 @@ dependencies {
         }
     }
 
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.versions.latestJUnit.map { "org.junit.jupiter:junit-jupiter:$it" })
     testImplementation("org.junit.platform:junit-platform-testkit")
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.assertj.core)
@@ -123,21 +129,22 @@ dependencies {
     testRuntimeOnly("org.apache.logging.log4j:log4j-jul")
 
     testFixturesImplementation(libs.junit4)
+    testFixturesImplementation(libs.versions.latestJUnit.map { "org.junit.platform:junit-platform-engine:$it" })
     testFixturesRuntimeOnly("org.junit.platform:junit-platform-console")
 }
 
 tasks {
-    listOf(compileJava, compileTestFixturesJava).forEach { task ->
-        task.configure {
-            options.release.set(8)
-            if (javaToolchainVersion >= JavaLanguageVersion.of(20)) {
-                // `--release=8` is deprecated on JDK 20 and later
-                options.compilerArgs.add("-Xlint:-options")
-            }
+    compileJava {
+        options.release.set(8)
+        if (javaToolchainVersion >= JavaLanguageVersion.of(20)) {
+            // `--release=8` is deprecated on JDK 20 and later
+            options.compilerArgs.add("-Xlint:-options")
         }
     }
-    compileTestJava {
-        options.release.set(17)
+    listOf(compileTestJava, compileTestFixturesJava).forEach { task ->
+        task.configure {
+            options.release.set(17)
+        }
     }
     named<JavaCompile>(moduleSourceSet.compileJavaTaskName) {
         options.release.set(9)
