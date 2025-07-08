@@ -30,14 +30,17 @@ import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
+import static org.junit.support.testng.engine.TestContext.testNGVersion;
 
 import java.util.Map;
 
+import example.basics.CancellingTestCase;
 import example.basics.CustomAttributeTestCase;
 import example.basics.ExpectedExceptionsTestCase;
 import example.basics.InheritingSubClassTestCase;
 import example.basics.NestedTestClass;
 import example.basics.ParallelExecutionTestCase;
+import example.basics.PostCancellationTestCase;
 import example.basics.RetriedTestCase;
 import example.basics.SimpleTestCase;
 import example.basics.SuccessPercentageTestCase;
@@ -46,13 +49,17 @@ import example.configuration.methods.AbortedBeforeClassConfigurationMethodTestCa
 import example.configuration.methods.FailingBeforeClassConfigurationMethodTestCase;
 import example.dataproviders.DataProviderMethodTestCase;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.engine.CancellationToken;
 import org.junit.platform.engine.Filter;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.PostDiscoveryFilter;
+import org.junit.platform.testkit.engine.Event;
 import org.testng.SkipException;
 import org.testng.internal.thread.ThreadTimeoutException;
 
@@ -328,6 +335,47 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 
 		results.containerEvents().assertStatistics(stats -> stats.started(2).finished(2));
 		results.testEvents().assertStatistics(stats -> stats.started(1).finished(1));
+	}
+
+	@Test
+	void supportsCancellation() {
+		CancellingTestCase.cancellationToken = CancellationToken.create();
+		try {
+			var results = testNGEngine() //
+					.selectors(selectClass(CancellingTestCase.class), selectClass(PostCancellationTestCase.class)) //
+					.cancellationToken(CancellingTestCase.cancellationToken) //
+					.execute();
+
+			results.allEvents().assertEventsMatchExactly( //
+				event(engine(), started()), //
+				event(testClass(CancellingTestCase.class), started()), //
+				event(test("method"), started()), //
+				event(test("method"), finishedSuccessfully()), //
+				event(test("method"), started()), //
+				event(test("method"),
+					abortedWithReason(instanceOf(SkipException.class), message("Execution cancelled"))), //
+				event(testClass(CancellingTestCase.class), finishedSuccessfully()), //
+				event(testClass(PostCancellationTestCase.class), started()), //
+				event(test("method:test"), started()), //
+				event(test("method:test"), expectedDownstreamTestReportedResultForPriorCancellation()), //
+				event(testClass(PostCancellationTestCase.class), finishedSuccessfully()), //
+				event(engine(), abortedWithReason(instanceOf(SkipException.class), message("Execution cancelled"))));
+		}
+		finally {
+			CancellingTestCase.cancellationToken = null;
+		}
+	}
+
+	private static Condition<Event> expectedDownstreamTestReportedResultForPriorCancellation() {
+		var currentVersion = testNGVersion();
+		if (currentVersion.compareTo(new ComparableVersion("7.0")) < 0) {
+			return abortedWithReason(
+				message(it -> it.contains("depends on not successfully finished methods in group \"cancellation\"")));
+		}
+		if (currentVersion.compareTo(new ComparableVersion("7.4")) < 0) {
+			return finishedSuccessfully();
+		}
+		return abortedWithReason(instanceOf(SkipException.class), message("Execution cancelled"));
 	}
 
 }

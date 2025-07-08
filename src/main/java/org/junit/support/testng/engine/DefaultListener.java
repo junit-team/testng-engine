@@ -15,6 +15,8 @@ import java.util.List;
 import org.testng.IAlterSuiteListener;
 import org.testng.IClassListener;
 import org.testng.IConfigurationListener;
+import org.testng.IInvokedMethod;
+import org.testng.IInvokedMethodListener;
 import org.testng.ITestClass;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -22,7 +24,8 @@ import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.xml.XmlSuite;
 
-abstract class DefaultListener implements IClassListener, ITestListener, IConfigurationListener, IAlterSuiteListener {
+abstract class DefaultListener
+		implements IClassListener, ITestListener, IConfigurationListener, IAlterSuiteListener, IInvokedMethodListener {
 
 	@Override
 	public void alter(List<XmlSuite> suites) {
@@ -98,5 +101,21 @@ abstract class DefaultListener implements IClassListener, ITestListener, IConfig
 
 	@Override
 	public void beforeConfiguration(ITestResult tr, ITestNGMethod tm) {
+	}
+
+	@Override
+	public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
+	}
+
+	@Override
+	public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+	}
+
+	@Override
+	public void beforeInvocation(IInvokedMethod method, ITestResult testResult, ITestContext context) {
+	}
+
+	@Override
+	public void afterInvocation(IInvokedMethod method, ITestResult testResult, ITestContext context) {
 	}
 }
