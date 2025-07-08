@@ -23,6 +23,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPacka
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.launcher.TagFilter.includeTags;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
+import static org.junit.platform.launcher.core.LauncherExecutionRequestBuilder.request;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -209,18 +210,26 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 
 	@Test
 	void supportsPostDiscoveryFilters() {
-		var request = request().selectors(selectClass(SimpleTestCase.class)).filters(includeTags("bar")).build();
 		var launcher = LauncherFactory.create(
 			LauncherConfig.builder().enableTestEngineAutoRegistration(false).addTestEngines(testEngine).build());
-		var listener = new SummaryGeneratingListener();
 
-		var testPlan = launcher.discover(request);
-		launcher.execute(testPlan, listener);
+		var discoveryRequest = request() //
+				.selectors(selectClass(SimpleTestCase.class)) //
+				.filters(includeTags("bar")) //
+				.build();
+		var testPlan = launcher.discover(discoveryRequest);
 
 		var rootIdentifier = getOnlyElement(testPlan.getRoots());
 		var classIdentifier = getOnlyElement(testPlan.getChildren(rootIdentifier));
 		var methodIdentifier = getOnlyElement(testPlan.getChildren(classIdentifier));
 		assertThat(methodIdentifier.getDisplayName()).isEqualTo("successful");
+
+		var listener = new SummaryGeneratingListener();
+		var executionRequest = request(testPlan) //
+				.listeners(listener) //
+				.build();
+		launcher.execute(executionRequest);
+
 		assertThat(listener.getSummary().getTestsStartedCount()).isEqualTo(1);
 		assertThat(listener.getSummary().getTestsSucceededCount()).isEqualTo(1);
 	}
