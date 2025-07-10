@@ -5,7 +5,7 @@ latestJUnit = "6.0.0-SNAPSHOT"
 
 [libraries]
 assertj-core = { module = "org.assertj:assertj-core", version = "3.27.3" }
-commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.17.0" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.18.0" }
 junit4 = { module = "junit:junit", version = "4.13.2" }
 junit-bom = { module = "org.junit:junit-bom", version = "5.7.2" }
 log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version = "2.25.0" }
