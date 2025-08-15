@@ -184,12 +184,12 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 			event(engine(), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryMethodTestCase.class), started()), //
-			event(test("method:test()@0"), started()), //
+			event(test("method:test()@0"), displayName("test[0]"), started()), //
 			event(test("method:test()@0"), finishedSuccessfully()), //
 			event(testClass(FactoryMethodTestCase.class), finishedSuccessfully()));
 		results.allEvents().assertEventsMatchLooselyInOrder( //
 			event(testClass(FactoryMethodTestCase.class), started()), //
-			event(test("method:test()@1"), started()), //
+			event(test("method:test()@1"), displayName("test[1]"), started()), //
 			event(test("method:test()@1"), finishedSuccessfully()), //
 			event(testClass(FactoryMethodTestCase.class), finishedSuccessfully()));
 	}
