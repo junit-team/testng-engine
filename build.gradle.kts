@@ -25,10 +25,9 @@ java {
 
 repositories {
     mavenCentral()
-    maven(url = "https://oss.sonatype.org/content/repositories/snapshots/") {
+    maven(url = "https://jitpack.io") {
         mavenContent {
-            includeModule("org.testng", "testng")
-            snapshotsOnly()
+            includeModule("com.github.testng-team", "testng")
         }
     }
     maven(url = "https://central.sonatype.com/repository/maven-snapshots") {
@@ -99,17 +98,17 @@ dependencies {
     testFixturesCompileOnly("org.testng:testng:${lastJdk8CompatibleRelease}")
 
     constraints {
-        testNGTestConfigurationsByVersion.forEach { (version, configuration) ->
-            configuration("org.testng:testng") {
-                version {
-                    strictly(version.value)
+        (testNGTestConfigurationsByVersion.asSequence() + testNGTestFixturesConfigurationsByVersion.asSequence()).forEach { (version, configuration) ->
+            if (version.isSnapshot()) {
+                configuration.resolutionStrategy.dependencySubstitution {
+                    substitute(module("org.testng:testng"))
+                        .using(module("com.github.testng-team:testng:master-SNAPSHOT"))
                 }
-            }
-        }
-        testNGTestFixturesConfigurationsByVersion.forEach { (version, configuration) ->
-            configuration("org.testng:testng") {
-                version {
-                    strictly(version.value)
+            } else {
+                configuration("org.testng:testng") {
+                    version {
+                        strictly(version.value)
+                    }
                 }
             }
         }
