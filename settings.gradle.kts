@@ -24,3 +24,14 @@ develocity {
         publishing.onlyIf { it.isAuthenticated }
     }
 }
+
+buildCache {
+    val isCiServer = System.getenv("CI") != null
+    local {
+        isEnabled = !isCiServer
+    }
+    remote(develocity.buildCache) {
+        val authenticated = !System.getenv("DEVELOCITY_ACCESS_KEY").isNullOrEmpty()
+        isPush = isCiServer && authenticated
+    }
+}
