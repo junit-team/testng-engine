@@ -50,6 +50,7 @@ jobs:
         run: |
           ./gradlew \
           -Porg.gradle.java.installations.auto-download=false \
+          -Pjunit.develocity.predictiveTestSelection.selectRemainingTests=${{ github.event_name != 'pull_request' }} \
           "-Dscan.value.GitHub job=${{ github.job }}" \
           -Dscan.tag.JDK_${{ matrix.jdk.version }} \
           -PjavaToolchainVersion=${{ matrix.jdk.version }} \
@@ -88,6 +89,7 @@ jobs:
         run: |
           ./gradlew \
           -Porg.gradle.java.installations.auto-download=false \
+          -Pjunit.develocity.predictiveTestSelection.selectRemainingTests=${{ github.event_name != 'pull_request' }} \
           "-Dscan.value.GitHub job=${{ github.job }}" \
           -Dscan.tag.JDK_${{ matrix.jdk }} \
           -PjavaToolchainVersion=${{ matrix.jdk }} \

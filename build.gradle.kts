@@ -1,4 +1,6 @@
 import com.diffplug.spotless.LineEnding
+import com.gradle.develocity.agent.gradle.test.PredictiveTestSelectionMode.RELEVANT_TESTS
+import com.gradle.develocity.agent.gradle.test.PredictiveTestSelectionMode.REMAINING_TESTS
 import java.util.EnumSet
 import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -219,8 +221,20 @@ tasks {
             systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
         }
     }
+    withType<Test>().configureEach {
+        develocity {
+            predictiveTestSelection {
+                enabled = true
+                mode = providers.gradleProperty("junit.develocity.predictiveTestSelection.selectRemainingTests")
+                    .map { it.toBoolean() }
+                    .orElse(false)
+                    .map { if (it) REMAINING_TESTS else RELEVANT_TESTS }
+            }
+        }
+    }
     test {
         enabled = false
+        develocity.predictiveTestSelection.enabled = false
         dependsOn(testTasks)
     }
 }
