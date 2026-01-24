@@ -62,6 +62,7 @@ val supportedTestNGVersions = listOf(
     "7.8.0" to 11,
     "7.9.0" to 11,
     "7.10.2" to 11,
+    "7.11.0" to 11,
     libs.versions.latestTestNG.get() to 11,
 ).associateBy({ Version(it.first) }, { JavaLanguageVersion.of(it.second) })
 
