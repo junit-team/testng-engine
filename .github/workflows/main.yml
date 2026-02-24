@@ -40,7 +40,7 @@ jobs:
         if: matrix.jdk.version != '17'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - uses: testlens-app/setup-testlens@304aa0888a2485ef4135a55d6eb7352e0714a2c1 # v1.7.0
@@ -80,7 +80,7 @@ jobs:
       - name: 'Prepare TOOLCHAIN_JDK env var'
         shell: bash
         run: echo "TOOLCHAIN_JDK=$JAVA_HOME" >> $GITHUB_ENV
-      - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - shell: bash
@@ -109,7 +109,7 @@ jobs:
         with:
           distribution: liberica
           java-version: 17
-      - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - shell: bash
