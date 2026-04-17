@@ -10,6 +10,6 @@ junit4 = { module = "junit:junit", version = "4.13.2" }
 junit-bom = { module = "org.junit:junit-bom", version = "5.7.2" }
 latest-junit-bom = { module = "org.junit:junit-bom", version.ref = "latestJUnit" }
 log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version = "2.25.4" }
-maven-artifact = { module = "org.apache.maven:maven-artifact", version = "3.9.14" }
+maven-artifact = { module = "org.apache.maven:maven-artifact", version = "3.9.15" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version = "5.23.0" }
 testng = { module = "org.testng:testng", version.ref = "latestTestNG" }
