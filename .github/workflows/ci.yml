@@ -26,6 +26,7 @@ jobs:
     name: CodeQL
     uses: ./.github/workflows/_codeql.yml
     permissions:
+      contents: read
       security-events: write
   status:
     name: Status
