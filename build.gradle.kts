@@ -27,14 +27,10 @@ java {
 
 repositories {
     mavenCentral()
-    maven(url = "https://jitpack.io") {
-        mavenContent {
-            includeModule("com.github.testng-team", "testng")
-        }
-    }
     maven(url = "https://central.sonatype.com/repository/maven-snapshots") {
         mavenContent {
             includeGroupByRegex("org\\.junit.*")
+            includeModule("org.testng", "testng")
             snapshotsOnly()
         }
     }
@@ -102,16 +98,9 @@ dependencies {
 
     constraints {
         (testNGTestConfigurationsByVersion.asSequence() + testNGTestFixturesConfigurationsByVersion.asSequence()).forEach { (version, configuration) ->
-            if (version.isSnapshot()) {
-                configuration.resolutionStrategy.dependencySubstitution {
-                    substitute(module("org.testng:testng"))
-                        .using(module("com.github.testng-team:testng:master-SNAPSHOT"))
-                }
-            } else {
-                configuration("org.testng:testng") {
-                    version {
-                        strictly(version.value)
-                    }
+            configuration("org.testng:testng") {
+                version {
+                    strictly(version.value)
                 }
             }
         }
@@ -332,8 +321,6 @@ data class Version(val value: String) {
     val suffix: String by lazy {
         value.replace(pattern, "_")
     }
-
-    fun isSnapshot() : Boolean = value.endsWith("-SNAPSHOT")
 
     override fun toString() = value
 }
