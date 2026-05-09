@@ -13,15 +13,20 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   gradle:
     name: Gradle
     uses: ./.github/workflows/_gradle.yml
     secrets: inherit
+    permissions:
+      contents: read
   codeql:
     name: CodeQL
     uses: ./.github/workflows/_codeql.yml
+    permissions:
+      security-events: write
   status:
     name: Status
     needs: [ gradle, codeql ]
