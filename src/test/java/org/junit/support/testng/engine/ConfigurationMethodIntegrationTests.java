@@ -20,6 +20,7 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedWithFail
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
+import static org.junit.support.testng.engine.TestContext.testNGVersion;
 
 import example.configuration.methods.FailingAfterClassConfigurationMethodTestCase;
 import example.configuration.methods.FailingAfterMethodConfigurationMethodTestCase;
@@ -31,6 +32,7 @@ import example.configuration.methods.FailingBeforeSuiteConfigurationMethodTestCa
 import example.configuration.methods.FailingBeforeTestConfigurationMethodTestCase;
 import example.configuration.methods.GroupsConfigurationMethodsTestCase;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -69,12 +71,15 @@ class ConfigurationMethodIntegrationTests extends AbstractIntegrationTests {
 	void reportsFailureFromEarlyEngineLevelConfigurationMethodAsAborted(Class<?> testClass) {
 		var results = testNGEngine().selectors(selectClass(testClass)).execute();
 
+		var reportsReasonOnClassLevel = testNGVersion().compareTo(new ComparableVersion("7.13")) >= 0;
+
 		results.allEvents().debug().assertEventsMatchExactly( //
 			event(engine(), started()), //
 			event(testClass(testClass), started()), //
 			event(test("method:test()"), started()), //
 			event(test("method:test()"), abortedWithReason(message("boom"))), //
-			event(testClass(testClass), abortedWithoutReason()), //
+			event(testClass(testClass),
+				reportsReasonOnClassLevel ? abortedWithReason(message("boom")) : abortedWithoutReason()), //
 			event(engine(), finishedWithFailure(message("boom"))));
 	}
 
