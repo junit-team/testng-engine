@@ -303,6 +303,14 @@ nmcp {
     }
 }
 
+tasks.nmcpZipAllPublications {
+    eachFile {
+        if (name.contains(".asc.")) {
+            exclude()
+        }
+    }
+}
+
 signing {
     useGpgCmd()
     sign(publishing.publications)
