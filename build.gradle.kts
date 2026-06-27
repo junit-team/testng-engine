@@ -11,7 +11,7 @@ plugins {
     `maven-publish`
     signing
     id("com.diffplug.spotless") version "8.7.0"
-    id("com.gradleup.nmcp") version "1.6.0"
+    id("com.gradleup.nmcp") version "1.5.0"
 }
 
 val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion")
