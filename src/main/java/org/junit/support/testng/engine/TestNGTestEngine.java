@@ -27,7 +27,6 @@ import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
-import org.testng.CommandLineArgs;
 import org.testng.ITestNGListener;
 import org.testng.SkipException;
 import org.testng.TestNG;
@@ -183,17 +182,15 @@ public class TestNGTestEngine implements TestEngine {
 		listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 	}
 
-	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	private static void configureAndRun(ConfigurationParameters configurationParameters, ITestNGListener listener,
 			Configurer... configurers) {
-		CommandLineArgs commandLineArgs = new CommandLineArgs();
+		TestNGCliConfig cliConfig = new TestNGCliConfig();
 		for (Configurer configurer : configurers) {
-			configurer.configure(commandLineArgs, configurationParameters);
+			configurer.configure(cliConfig, configurationParameters);
 		}
-		configurationParameters.get("testng.groups").ifPresent(it -> commandLineArgs.groups = it);
-		configurationParameters.get("testng.excludedGroups").ifPresent(it -> commandLineArgs.excludedGroups = it);
-		ConfigurableTestNG testNG = new ConfigurableTestNG();
-		testNG.configure(commandLineArgs);
+		configurationParameters.get("testng.groups").ifPresent(it -> cliConfig.groups = it);
+		configurationParameters.get("testng.excludedGroups").ifPresent(it -> cliConfig.excludedGroups = it);
+		TestNG testNG = configureTestNgViaCliOptions(cliConfig);
 		for (Configurer configurer : configurers) {
 			configurer.configure(testNG, configurationParameters);
 		}
@@ -201,6 +198,15 @@ public class TestNGTestEngine implements TestEngine {
 		testNG.addListener(new ConfiguringListener(configurationParameters));
 		testNG.addListener(listener);
 		testNG.run();
+	}
+
+	private static TestNG configureTestNgViaCliOptions(TestNGCliConfig cliConfig) {
+		try {
+			return TestNGCliConfigurer_7_13.configure(cliConfig);
+		}
+		catch (Exception e) {
+			return TestNGCliConfigurer_6_14.configure(cliConfig);
+		}
 	}
 
 	@SuppressWarnings("SameParameterValue")
@@ -232,7 +238,6 @@ public class TestNGTestEngine implements TestEngine {
 				.map(method -> () -> (boolean) ReflectionSupport.invokeMethod(method, cancellationToken));
 	}
 
-	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	interface Configurer {
 
 		static Configurer testClasses(Class<?>[] testClasses) {
@@ -247,8 +252,8 @@ public class TestNGTestEngine implements TestEngine {
 		static Configurer testMethods(List<String> methodNames) {
 			return new Configurer() {
 				@Override
-				public void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
-					commandLineArgs.commandLineMethods = methodNames;
+				public void configure(TestNGCliConfig cliConfig, ConfigurationParameters config) {
+					cliConfig.commandLineMethods = methodNames;
 				}
 			};
 		}
@@ -256,12 +261,11 @@ public class TestNGTestEngine implements TestEngine {
 		default void configure(TestNG testNG, ConfigurationParameters config) {
 		}
 
-		default void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
+		default void configure(TestNGCliConfig cliConfig, ConfigurationParameters config) {
 		}
 
 	}
 
-	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	enum Phase implements Configurer {
 
 		DISCOVERY {
@@ -290,21 +294,10 @@ public class TestNGTestEngine implements TestEngine {
 			}
 
 			@Override
-			public void configure(CommandLineArgs commandLineArgs, ConfigurationParameters config) {
+			public void configure(TestNGCliConfig cliConfig, ConfigurationParameters config) {
 				config.get("testng.listeners") //
-						.ifPresent(listeners -> commandLineArgs.listener = listeners);
+						.ifPresent(listeners -> cliConfig.listener = listeners);
 			}
-		};
-	}
-
-	/**
-	 * Needed to make {@link #configure(CommandLineArgs)} accessible.
-	 */
-	private static class ConfigurableTestNG extends TestNG {
-		@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
-		@Override
-		protected void configure(CommandLineArgs cla) {
-			super.configure(cla);
 		}
 	}
 }
