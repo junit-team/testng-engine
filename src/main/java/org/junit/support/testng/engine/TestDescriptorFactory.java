@@ -10,26 +10,41 @@
 
 package org.junit.support.testng.engine;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.platform.engine.TestDescriptor.Type.CONTAINER;
 import static org.junit.platform.engine.TestDescriptor.Type.TEST;
 import static org.junit.support.testng.engine.MethodDescriptor.toMethodId;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.junit.platform.commons.support.ReflectionSupport;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestDescriptor.Type;
 import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
+import org.testng.internal.IParameterInfo;
 import org.testng.internal.annotations.DisabledRetryAnalyzer;
 
 class TestDescriptorFactory {
+
+	// ITestResult.getFactoryInstance() and IFactoryInstance.getIndex() were added in TestNG 7.13
+	// (testng-team/testng#3115) as the non-deprecated replacement for getFactoryMethodParamsInfo().
+	// They are accessed reflectively because the engine compiles against an older TestNG version.
+	private static final Method GET_FACTORY_INSTANCE = ReflectionSupport //
+			.findMethod(ITestResult.class, "getFactoryInstance").orElse(null);
+	private static final Method GET_INDEX = ReflectionSupport.tryToLoadClass("org.testng.IFactoryInstance") //
+			.toOptional() //
+			.flatMap(type -> ReflectionSupport.findMethod(type, "getIndex")) //
+			.orElse(null);
 
 	private final Map<String, TestTag> testTags = new ConcurrentHashMap<>();
 
@@ -68,6 +83,50 @@ class TestDescriptorFactory {
 	}
 
 	private static Integer getFactoryMethodInvocationIndex(ITestResult result) {
+		if (usesFactoryInstanceApi()) {
+			return getFactoryMethodInvocationIndexFromFactoryInstance_7_13(result);
+		}
+		return getFactoryMethodInvocationIndexFromParamsInfo(result);
+	}
+
+	private static Integer getFactoryMethodInvocationIndexFromFactoryInstance_7_13(ITestResult result) {
+		Optional<?> factoryInstance = (Optional<?>) ReflectionSupport.invokeMethod(requireNonNull(GET_FACTORY_INSTANCE),
+			result);
+		return factoryInstance.map(o -> (Integer) ReflectionSupport.invokeMethod(requireNonNull(GET_INDEX), o)).orElse(
+			null);
+	}
+
+	private static Integer getFactoryMethodInvocationIndexFromParamsInfo(ITestResult result) {
+		try {
+			IParameterInfo parameterInfo = getFactoryMethodParamsInfo(result);
+			if (parameterInfo == null) {
+				return null;
+			}
+			// getIndex() reports the data provider row index; for a plain factory (without parameters) it always
+			// returns 0, so the index is instead derived from the instance hash codes.
+			return parameterInfo.getParameters().length == 0 //
+					? getFactoryMethodInvocationIndex_6_14(result) //
+					: Integer.valueOf(getIndex(parameterInfo));
+		}
+		catch (NoSuchMethodError ignore) {
+			// getIndex() was introduced in 7.5
+			return getFactoryMethodInvocationIndex_6_14(result);
+		}
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
+	private static int getIndex(IParameterInfo parameterInfo) {
+		return parameterInfo.getIndex();
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
+	private static IParameterInfo getFactoryMethodParamsInfo(ITestResult result) {
+		return result.getMethod().getFactoryMethodParamsInfo();
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
+	private static Integer getFactoryMethodInvocationIndex_6_14(ITestResult result) {
+		// ITestNGMethod.getFactoryMethodParamsInfo() was added in 7.0 and IParameterInfo.getIndex() in 7.5
 		long[] instanceHashCodes = result.getTestClass().getInstanceHashCodes();
 		if (instanceHashCodes.length > 1) {
 			long hashCode = result.getInstance().hashCode();
@@ -147,5 +206,9 @@ class TestDescriptorFactory {
 
 	private TestTag createTag(String value) {
 		return testTags.computeIfAbsent(value, TestTag::create);
+	}
+
+	private static boolean usesFactoryInstanceApi() {
+		return GET_FACTORY_INSTANCE != null && GET_INDEX != null;
 	}
 }

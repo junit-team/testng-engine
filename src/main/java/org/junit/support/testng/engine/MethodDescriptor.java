@@ -48,6 +48,7 @@ class MethodDescriptor extends AbstractTestDescriptor {
 			nullSafeToString(methodSignature.parameterTypes));
 	}
 
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
 	static String toMethodId(ITestResult result, MethodSignature methodSignature) {
 		String id = methodSignature.stringRepresentation;
 		Object[] instances = result.getTestClass().getInstances(true);
