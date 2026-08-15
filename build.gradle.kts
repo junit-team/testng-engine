@@ -80,7 +80,7 @@ val testNGTestFixturesConfigurationsByVersion = allTestNGVersions.associateWith 
         extendsFrom(testFixturesRuntimeClasspath)
     }
 }
-val latestCompileClasspath: Configuration by configurations.creating {
+val snapshotCompileClasspath: Configuration by configurations.creating {
     extendsFrom(configurations.compileClasspath.get())
 }
 
@@ -107,9 +107,9 @@ dependencies {
                 }
             }
         }
-        latestCompileClasspath("org.testng:testng") {
+        snapshotCompileClasspath("org.testng:testng") {
             version {
-                strictly(libs.versions.latestTestNG.get())
+                strictly(libs.versions.snapshotTestNG.get())
             }
         }
     }
@@ -154,9 +154,9 @@ tasks {
             listOf("--patch-module", "org.junit.support.testng.engine=${files.asPath}")
         }
     }
-    val compileJavaLatest by registering(JavaCompile::class) {
+    val compileJavaSnapshot by registering(JavaCompile::class) {
         source = compileJava.get().source
-        classpath = latestCompileClasspath
+        classpath = snapshotCompileClasspath
         destinationDirectory = layout.buildDirectory.dir("latestClasses")
     }
     withType<JavaCompile>().configureEach {
@@ -241,7 +241,7 @@ tasks {
         dependsOn(testTasks)
     }
     check {
-        dependsOn(compileJavaLatest)
+        dependsOn(compileJavaSnapshot)
     }
 }
 

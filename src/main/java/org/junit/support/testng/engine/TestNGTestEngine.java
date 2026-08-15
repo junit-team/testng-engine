@@ -183,6 +183,7 @@ public class TestNGTestEngine implements TestEngine {
 		listener.executionFinished(engineDescriptor, executionListener.toEngineResult());
 	}
 
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	private static void configureAndRun(ConfigurationParameters configurationParameters, ITestNGListener listener,
 			Configurer... configurers) {
 		CommandLineArgs commandLineArgs = new CommandLineArgs();
@@ -231,6 +232,7 @@ public class TestNGTestEngine implements TestEngine {
 				.map(method -> () -> (boolean) ReflectionSupport.invokeMethod(method, cancellationToken));
 	}
 
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	interface Configurer {
 
 		static Configurer testClasses(Class<?>[] testClasses) {
@@ -259,6 +261,7 @@ public class TestNGTestEngine implements TestEngine {
 
 	}
 
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 	enum Phase implements Configurer {
 
 		DISCOVERY {
@@ -298,6 +301,7 @@ public class TestNGTestEngine implements TestEngine {
 	 * Needed to make {@link #configure(CommandLineArgs)} accessible.
 	 */
 	private static class ConfigurableTestNG extends TestNG {
+		@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
 		@Override
 		protected void configure(CommandLineArgs cla) {
 			super.configure(cla);

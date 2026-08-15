@@ -98,7 +98,7 @@ class TestDescriptorFactory {
 
 	private static Integer getFactoryMethodInvocationIndexFromParamsInfo(ITestResult result) {
 		try {
-			IParameterInfo parameterInfo = result.getMethod().getFactoryMethodParamsInfo();
+			IParameterInfo parameterInfo = getFactoryMethodParamsInfo(result);
 			if (parameterInfo == null) {
 				return null;
 			}
@@ -106,12 +106,22 @@ class TestDescriptorFactory {
 			// returns 0, so the index is instead derived from the instance hash codes.
 			return parameterInfo.getParameters().length == 0 //
 					? getFactoryMethodInvocationIndex_6_14(result) //
-					: Integer.valueOf(parameterInfo.getIndex());
+					: Integer.valueOf(getIndex(parameterInfo));
 		}
 		catch (NoSuchMethodError ignore) {
 			// getIndex() was introduced in 7.5
 			return getFactoryMethodInvocationIndex_6_14(result);
 		}
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
+	private static int getIndex(IParameterInfo parameterInfo) {
+		return parameterInfo.getIndex();
+	}
+
+	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.13
+	private static IParameterInfo getFactoryMethodParamsInfo(ITestResult result) {
+		return result.getMethod().getFactoryMethodParamsInfo();
 	}
 
 	@SuppressWarnings({ "deprecation", "RedundantSuppression" }) // deprecated since 7.10.1
