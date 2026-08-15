@@ -109,7 +109,7 @@ dependencies {
         }
         latestCompileClasspath("org.testng:testng") {
             version {
-                strictly(supportedTestNGVersions.keys.last().value)
+                strictly(libs.versions.latestTestNG.get())
             }
         }
     }
