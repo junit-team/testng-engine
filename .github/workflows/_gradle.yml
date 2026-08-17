@@ -43,7 +43,7 @@ jobs:
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
         run: |
           ./gradlew \
-          -Porg.gradle.java.installations.auto-download=false \
+          -Dorg.gradle.java.installations.auto-download=false \
           -Pjunit.develocity.predictiveTestSelection.selectRemainingTests=${{ github.event_name != 'pull_request' }} \
           "-Dscan.value.GitHub job=${{ github.job }}" \
           -Dscan.tag.JDK_${{ matrix.jdk.version }} \
@@ -82,7 +82,7 @@ jobs:
           JAVA_HOME: ${{ steps.setup-gradle-jdk.outputs.path }}
         run: |
           ./gradlew \
-          -Porg.gradle.java.installations.auto-download=false \
+          -Dorg.gradle.java.installations.auto-download=false \
           -Pjunit.develocity.predictiveTestSelection.selectRemainingTests=${{ github.event_name != 'pull_request' }} \
           "-Dscan.value.GitHub job=${{ github.job }}" \
           -Dscan.tag.JDK_${{ matrix.jdk }} \
@@ -112,7 +112,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         run: |
           ./gradlew \
-          -Porg.gradle.java.installations.auto-download=false \
+          -Dorg.gradle.java.installations.auto-download=false \
           "-Dscan.value.GitHub job=${{ github.job }}" \
           -Dscan.tag.publish \
           --scan \
