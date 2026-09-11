@@ -26,6 +26,7 @@ import static org.junit.platform.testkit.engine.EventConditions.engine;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
+import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.started;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstring;
@@ -223,6 +224,7 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 	}
 
 	@Test
+	@RequiresTestNGVersion(maxExclusive = "7.13")
 	void reportsNoEventsForDataProviderWithZeroInvocations() {
 		var testClass = DataProviderMethodEmptyListTestCase.class;
 
@@ -230,6 +232,21 @@ class DataProviderIntegrationTests extends AbstractIntegrationTests {
 
 		results.allEvents().assertEventsMatchExactly( //
 			event(engine(), started()), //
+			event(engine(), finishedSuccessfully()));
+	}
+
+	@Test
+	@RequiresTestNGVersion(min = "7.13")
+	void reportsSkippedTestForDataProviderWithZeroInvocations() {
+		var testClass = DataProviderMethodEmptyListTestCase.class;
+
+		var results = testNGEngine().selectors(selectClass(testClass)).execute();
+
+		results.allEvents().assertEventsMatchExactly( //
+			event(engine(), started()), //
+			event(testClass(testClass), started()), //
+			event(container("method:test(int)"), skippedWithReason("<unknown>")), //
+			event(testClass(testClass), finishedSuccessfully()), //
 			event(engine(), finishedSuccessfully()));
 	}
 
