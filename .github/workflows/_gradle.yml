@@ -15,6 +15,8 @@ jobs:
           - version: 21
           - version: 25
           - version: 26
+          - version: 27
+            distribution: oracle
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk.version }})"
     steps:
@@ -55,7 +57,7 @@ jobs:
   ea-build:
     strategy:
       matrix:
-        jdk: [ '27', '28' ]
+        jdk: [ '28' ]
     runs-on: ubuntu-latest
     name: "Early Access Build (JDK ${{ matrix.jdk }})"
     steps:
