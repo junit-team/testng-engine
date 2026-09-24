@@ -16,7 +16,6 @@ jobs:
           - version: 25
           - version: 26
           - version: 27
-            distribution: oracle
     runs-on: ubuntu-latest
     name: "Build (JDK ${{ matrix.jdk.version }})"
     steps:
@@ -29,7 +28,7 @@ jobs:
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         if: matrix.jdk.version != '17'
         with:
-          distribution: ${{ matrix.jdk.distribution || 'liberica' }}
+          distribution: ${{ matrix.jdk.distribution || 'temurin' }}
           java-version: ${{ matrix.jdk.version }}
       - name: 'Prepare TOOLCHAIN_JDK env var'
         if: matrix.jdk.version != '17'
