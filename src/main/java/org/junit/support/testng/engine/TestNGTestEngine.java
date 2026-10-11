@@ -273,6 +273,8 @@ public class TestNGTestEngine implements TestEngine {
 			public void configure(TestNG testNG, ConfigurationParameters config) {
 				testNG.setVerbose(0);
 				testNG.setUseDefaultListeners(false);
+				// Prevents TestNG from seeing any ITestNGListener in SPI
+				testNG.setServiceLoaderClassLoader(new EmptyClassLoader());
 			}
 		},
 

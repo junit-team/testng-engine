@@ -71,6 +71,20 @@ class DiscoveryIntegrationTests extends AbstractIntegrationTests {
 		assertThat(methodDescriptor.getChildren()).isEmpty();
 	}
 
+	@Test
+	void discoveryDoesNotLoadListenersFromServiceProvider() {
+		var testClass = DryRunTestCase.class;
+		TestNGListenerServiceProvider.INVOCATIONS = 0;
+		var request = request().selectors(selectClass(testClass)).build();
+
+		var rootDescriptor = testEngine.discover(request, engineId);
+
+		assertThat(TestNGListenerServiceProvider.INVOCATIONS).isEqualTo(0);
+		TestDescriptor classDescriptor = getOnlyElement(rootDescriptor.getChildren());
+		TestDescriptor methodDescriptor = getOnlyElement(classDescriptor.getChildren());
+		assertThat(methodDescriptor.getChildren()).isEmpty();
+	}
+
 	@ParameterizedTest
 	@ValueSource(classes = { SimpleTestCase.class, InheritingSubClassTestCase.class })
 	void discoversAllTestMethodsForClassSelector(Class<?> testClass) {

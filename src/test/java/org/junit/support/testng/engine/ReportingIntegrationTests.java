@@ -10,6 +10,7 @@
 
 package org.junit.support.testng.engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.StringUtils.isBlank;
 import static org.junit.platform.engine.FilterResult.excluded;
 import static org.junit.platform.engine.FilterResult.includedIf;
@@ -100,6 +101,17 @@ class ReportingIntegrationTests extends AbstractIntegrationTests {
 			event(test("method:aborted()"), started()), //
 			event(test("method:aborted()"), abortedWithReason(instanceOf(SkipException.class), message("not today"))), //
 			event(testClass(SimpleTestCase.class), finishedSuccessfully()));
+	}
+
+	@Test
+	void executeLoadsListenersFromServiceProvider() {
+		TestNGListenerServiceProvider.INVOCATIONS = 0;
+
+		var testClass = SimpleTestCase.class;
+		var results = testNGEngine().selectors(selectMethod(testClass, "successful")).execute();
+		results.allEvents().assertEventsMatchLoosely(event(engine(), finishedSuccessfully()));
+
+		assertThat(TestNGListenerServiceProvider.INVOCATIONS).isEqualTo(1);
 	}
 
 	@Test
