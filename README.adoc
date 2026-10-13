@@ -125,15 +125,15 @@ The engine requires at least JUnit Platform 1.5.x.
 
 === Configuration Parameters
 
-The following JUnit Platform https://junit.org/junit5/docs/current/user-guide/#running-tests-config-params[configuration parameters] are supported.
+The following JUnit Platform https://docs.junit.org/current/running-tests/configuration-parameters.html[configuration parameters] are supported.
 
 ==== Execution
 
 `testng.allowReturnValues` (boolean)::
-whether methods annotated with `@Test` that have return values should be considered test methods (default: `false`; see https://testng.org/doc/documentation-main.html#test-methods[documentation])
+whether methods annotated with `@Test` that have return values should be considered test methods (default: `false`; see https://testng.org/#_test_methods[documentation])
 +
 `testng.dataProviderThreadCount` (integer)::
-maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`; see https://testng.org/doc/documentation-main.html#parameters-dataproviders[documentation])
+maximum number of threads to use for running data providers in parallel, if enabled via `@DataProvider(parallel = true)` (default: `10`; see https://testng.org/#_parameters_with_dataproviders[documentation])
 +
 `testng.excludedGroups` (comma-separated list)::
 groups to exclude (see <<groups_vs_tags>>)
@@ -142,24 +142,24 @@ groups to exclude (see <<groups_vs_tags>>)
 groups to be run (see <<groups_vs_tags>>)
 +
 `testng.parallel` (methods|tests|classes|instances|none)::
-TestNG's parallel execution mode for running tests in separate threads (default: `"none"`; see https://testng.org/doc/documentation-main.html#parallel-tests[documentation])
+TestNG's parallel execution mode for running tests in separate threads (default: `"none"`; see https://testng.org/#_parallel_tests_classes_and_methods[documentation])
 +
 `testng.preserveOrder` (boolean)::
-whether classes and methods should be run in a predictable order (default: `true`; see https://testng.org/doc/documentation-main.html#testng-xml[documentation])
+whether classes and methods should be run in a predictable order (default: `true`; see https://testng.org/#_testng_xml[documentation])
 +
 `testng.threadCount` (integer)::
-maximum number of threads for running tests in parallel, if enabled via `testng.parallel` (default: `5`; see https://testng.org/doc/documentation-main.html#parallel-tests[documentation])
+maximum number of threads for running tests in parallel, if enabled via `testng.parallel` (default: `5`; see https://testng.org/#_parallel_tests_classes_and_methods[documentation])
 
 ==== Reporting
 
 `testng.listeners` (comma-separated list of fully-qualified class names)::
-custom listeners that should be registered when executing tests (default: `""`; see https://testng.org/doc/documentation-main.html#testng-listeners[documentation])
+custom listeners that should be registered when executing tests (default: `""`; see https://testng.org/#_testng_listeners[documentation])
 +
 `testng.outputDirectory` (file path)::
-the output directory for reports (default: `"test-output"`; see https://testng.org/doc/documentation-main.html#running-testng[documentation])
+the output directory for reports (default: `"test-output"`; see https://testng.org/#_running_testng[documentation])
 +
 `testng.useDefaultListeners` (boolean)::
-whether TestNG's default report generating listeners should be used (default: `false`; see https://testng.org/doc/documentation-main.html#running-testng[documentation])
+whether TestNG's default report generating listeners should be used (default: `false`; see https://testng.org/#_running_testng[documentation])
 +
 `testng.verbose` (integer)::
 TestNG's level of verbosity for console output (default: `0`)
@@ -280,14 +280,23 @@ tasks.test {
 ----
 ====
 
-
 == Limitations
+
+[#mandatory_dry-run_execution]
+=== Mandatory dry-run execution
+
+The JUnit Platform operates in two phases. During the discovery phase tests are discovered, the discovered tests are executed during execution phase.
+To discover tests, TestNG is executed in https://testng.org/#_dry_run_for_your_tests[dry-run mode] before being executed normally.
+
+During a dry-run https://testng.org/#_testng_listeners[TestNG listeners] are executed normally.
+As a consequence any `ITestNGListener` implementation that expects to be called once per execution should check the dry-run mode and act accordingly.
+Listeners can use `org.testng.internal.RuntimeBehavior.isDryRun()` or check if the `testng.mode.dryrun` system property is set to `true` to determine if TestNG is running in dry-run mode.
 
 [#groups_vs_tags]
 === Groups vs. Tags
 
-https://testng.org/doc/documentation-main.html#test-groups[Groups] declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
-Hence, you can use https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions[tag filter expressions] to include or exclude certain groups.
+https://testng.org/#_test_groups[Groups] declared via the `@Test` annotation on test classes and methods are exposed as tags to the JUnit Platform.
+Hence, you can use https://docs.junit.org/current/running-tests/tags.html[tag filter expressions] to include or exclude certain groups.
 For example, given the following test class, including the tag `included` and excluding `excluded` will run test `a` and `c` but not `b` and `d`.
 
 [source,java]
@@ -429,4 +438,4 @@ tasks.test {
 
 The engine's main intention is integration with build tools like Gradle and Maven.
 Hence, custom suites specified via `testng.xml` files are not supported.
-However, you can use https://junit.org/junit5/docs/current/user-guide/#junit-platform-suite-engine[JUnit's suite support] with this engine.
+However, you can use https://docs.junit.org/current/advanced-topics/junit-platform-suite-engine.html[JUnit's suite support] with this engine.
