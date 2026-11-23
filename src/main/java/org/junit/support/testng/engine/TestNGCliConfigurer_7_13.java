@@ -26,6 +26,9 @@ class TestNGCliConfigurer_7_13 {
 		setField(cliOptions, "commandLineMethods", config.commandLineMethods);
 		setField(cliOptions, "groups", config.groups);
 		setField(cliOptions, "excludedGroups", config.excludedGroups);
+		// TestNG 7.13 reports a throwing data provider as skipped by default; keep the 7.6+ behavior
+		// See https://github.com/testng-team/testng/pull/3588
+		setField(cliOptions, "propagateDataProviderFailureAsTestFailure", true);
 
 		Class<?> cliConfigurerClass = ReflectionSupport.tryToLoadClass("org.testng.cli.CliConfigurer") //
 				.toOptional().get();
